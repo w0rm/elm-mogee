@@ -54,7 +54,7 @@ moveY : Time -> Float -> Float -> List Object -> Object -> Object
 moveY dt dy velocity objects object =
   let
     newVelocity = velocity + gravity * dt
-    deltaY = dt * velocity + 0.5 * gravity * dt * dt
+    deltaY = dt * (velocity + newVelocity) * 0.5
     newObject =
       { object
       | position = (fst object.position, snd object.position + deltaY)
