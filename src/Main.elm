@@ -6,6 +6,31 @@ import Time exposing (Time)
 import View
 import WebGL
 import Window
+import Effects exposing (Effects)
+
+
+animation : Signal.Mailbox (List Time)
+animation =
+  Signal.mailbox []
+
+
+port runAnimation : Signal (Task.Task Effects.Never ())
+port runAnimation =
+  Signal.map (Effects.toTask animation.address << snd) time
+
+
+time : Signal (Time, Effects Time)
+time =
+  Signal.foldp
+    (\t2 (t1, effect) -> (min (t2 - t1) 25, effect))
+    (0, Effects.tick identity)
+    (Signal.filterMap List.head 0 animation.signal)
+
+
+{- A better `Time.fps 60` -}
+fps60 : Signal Time
+fps60 =
+  Signal.map fst time
 
 
 main : Signal Element
@@ -19,10 +44,7 @@ main =
 
 input : Signal (Time, Model.Keys)
 input =
-  let
-    delta = Time.fps 30
-  in
-    Signal.sampleOn delta (Signal.map2 (,) delta Keyboard.arrows)
+  Signal.sampleOn fps60 (Signal.map2 (,) fps60 Keyboard.arrows)
 
 
 size : Signal Int
