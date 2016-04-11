@@ -71,20 +71,20 @@ renderObject texture offset object =
         coloredVertexShader
         coloredFragmentShader
         box
-        { offset = Vec2.sub object.position offset
+        { offset = Vec2.sub (Vec2.fromTuple object.position) offset
         , color = vec3 0 0 0
-        , frameSize = object.size
+        , frameSize = Vec2.fromTuple object.size
         }
     MogeeCategory mogee ->
       GL.render
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = object.position
+        { offset = Vec2.sub (Vec2.fromTuple object.position) offset
         , texture = texture
         , frame = 1
         , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
-        , frameSize = object.size
+        , frameSize = Vec2.fromTuple object.size
         }
 
 

@@ -1,6 +1,5 @@
 module Object (Object, Category(..), update, wall, mogee, collide) where
 
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Mogee exposing (Mogee)
 import Time exposing (Time)
 
@@ -24,8 +23,8 @@ type Physics
 type alias Object =
   { category : Category
   , physics : Physics
-  , size : Vec2 -- dimensions
-  , position : Vec2 -- the top left corner
+  , size : (Float, Float) -- dimensions
+  , position : (Float, Float) -- the top left corner
   }
 
 
@@ -41,12 +40,12 @@ walkVelocity : Float
 walkVelocity = 0.03
 
 
-mogee : Vec2 -> Object
+mogee : (Float, Float) -> Object
 mogee =
-  Object (MogeeCategory Mogee.mogee) (Gravity 0) (vec2 7 10)
+  Object (MogeeCategory Mogee.mogee) (Gravity 0) (7, 10)
 
 
-wall : Vec2 -> Vec2 -> Object
+wall : (Float, Float) -> (Float, Float) -> Object
 wall =
   Object WallCategory Static
 
@@ -58,11 +57,11 @@ moveY dt dy velocity objects object =
     deltaY = dt * velocity + 0.5 * gravity * dt * dt
     newObject =
       { object
-      | position = vec2 0 deltaY |> Vec2.add object.position
+      | position = (fst object.position, snd object.position + deltaY)
       , physics = Gravity newVelocity
       }
     collisions = List.filter (collide newObject) objects
-    x = Vec2.getX object.position
+    x = fst object.position
   in
     case List.head collisions of
       Nothing -> newObject
@@ -71,13 +70,13 @@ moveY dt dy velocity objects object =
           {- Jumping up -}
           { object
           | physics = Gravity -velocity
-          , position = vec2 x (Vec2.getY position + Vec2.getY size)
+          , position = (x, snd position + snd size)
           }
         else
           {- Falling down -}
           { object
           | physics = if dy == 1 then Gravity jumpVelocity else Gravity 0
-          , position = vec2 x (Vec2.getY position - Vec2.getY object.size)
+          , position = (x, snd position - snd object.size)
           }
 
 
@@ -87,10 +86,10 @@ moveX dt dx objects object =
     deltaX = dt * dx * walkVelocity
     newObject =
       { object
-      | position = Vec2.add object.position (vec2 deltaX 0)
+      | position = (fst object.position + deltaX, snd object.position)
       }
     collisions = List.filter (collide newObject) objects
-    y = Vec2.getY object.position
+    y = snd object.position
   in
     case List.head collisions of
       Nothing -> newObject
@@ -98,12 +97,12 @@ moveX dt dx objects object =
         if deltaX < 0 then
           {- Hit the left wall -}
           { object
-          | position = vec2 (Vec2.getX position + Vec2.getX size) y
+          | position = (fst position + fst size, y)
           }
         else
           {- Hit the right wall -}
           { object
-          | position = vec2 (Vec2.getX position - Vec2.getX object.size) y
+          | position = (fst position - fst object.size, y)
           }
 
 
@@ -124,10 +123,10 @@ update (dt, keys) objects object =
 collide : Object -> Object -> Bool
 collide o1 o2 =
   let
-    (x1, y1) = Vec2.toTuple o1.position
-    (w1, h1) = Vec2.toTuple o1.size
-    (x2, y2) = Vec2.toTuple o2.position
-    (w2, h2) = Vec2.toTuple o2.size
+    (x1, y1) = o1.position
+    (w1, h1) = o1.size
+    (x2, y2) = o2.position
+    (w2, h2) = o2.size
   in
     x1 < x2 + w2 && x1 + w1 > x2 &&
     y1 < y2 + h2 && y1 + h1 > y2
