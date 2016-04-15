@@ -64,7 +64,8 @@ moveY dt dy velocity objects object =
     x = fst object.position
   in
     case List.head collisions of
-      Nothing -> newObject
+      Nothing ->
+        newObject
       Just {position, size} ->
         if deltaY < 0 then
           {- Jumping up -}
@@ -92,7 +93,8 @@ moveX dt dx objects object =
     y = snd object.position
   in
     case List.head collisions of
-      Nothing -> newObject
+      Nothing ->
+        newObject
       Just {position, size} ->
         if deltaX < 0 then
           {- Hit the left wall -}
@@ -107,7 +109,7 @@ moveX dt dx objects object =
 
 
 update : (Time, Keys) -> List Object -> Object -> Object
-update (dt, keys) objects object =
+update (dt, {x, y}) objects object =
   case object.physics of
     Static ->
       object
@@ -116,8 +118,8 @@ update (dt, keys) objects object =
         restObjects = List.filter ((/=) object) objects
       in
         object
-        |> moveY dt (toFloat keys.y) velocity restObjects
-        |> moveX dt (toFloat keys.x) restObjects
+        |> moveY dt (toFloat y) velocity restObjects
+        |> moveX dt (toFloat x) restObjects
 
 
 collide : Object -> Object -> Bool
