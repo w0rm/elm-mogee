@@ -55,13 +55,14 @@ moveY dt dy velocity objects object =
   let
     newVelocity = velocity + gravity * dt
     deltaY = dt * (velocity + newVelocity) * 0.5
+    (x, y) = object.position
     newObject =
       { object
-      | position = (fst object.position, snd object.position + deltaY)
+      | position = (x, y + deltaY)
       , physics = Gravity newVelocity
       }
     collisions = List.filter (collide newObject) objects
-    x = fst object.position
+
   in
     case List.head collisions of
       Nothing ->
@@ -85,12 +86,12 @@ moveX : Time -> Float -> List Object -> Object -> Object
 moveX dt dx objects object =
   let
     deltaX = dt * dx * walkVelocity
+    (x, y) = object.position
     newObject =
       { object
-      | position = (fst object.position + deltaX, snd object.position)
+      | position = (x + deltaX, y)
       }
     collisions = List.filter (collide newObject) objects
-    y = snd object.position
   in
     case List.head collisions of
       Nothing ->

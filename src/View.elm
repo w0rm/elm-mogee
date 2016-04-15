@@ -59,8 +59,17 @@ render : GL.Texture -> Model -> List GL.Renderable
 render texture model =
   let
     offset = vec2 0 0
+    bg =
+      GL.render
+        coloredVertexShader
+        coloredFragmentShader
+        box
+        { offset = vec2 0 0
+        , color = vec3 (25 / 255) (30 / 255) (28 / 255)
+        , frameSize = vec2 64 64
+        }
   in
-    List.foldl (renderObject texture offset >> (::)) [] model.objects
+    List.foldl (renderObject texture offset >> (::)) [bg] model.objects
 
 
 renderObject : GL.Texture -> Vec2 -> Object -> GL.Renderable
