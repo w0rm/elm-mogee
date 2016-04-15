@@ -1,8 +1,7 @@
 module Model (Model, Keys, model, update) where
 
-import Object exposing (Object)
-import Screen exposing (Screen)
-import Direction exposing (Direction(..))
+import Model.Object as Object exposing (Object)
+import Model.Screen as Screen exposing (Screen, Direction(..))
 import Time exposing (Time)
 
 

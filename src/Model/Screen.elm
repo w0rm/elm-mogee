@@ -1,7 +1,6 @@
-module Screen (Screen, screen, walls) where
+module Model.Screen (Screen, Direction(..), screen, walls) where
 
-import Direction exposing (Direction(..))
-import Object exposing (Object)
+import Model.Object as Object exposing (Object)
 
 
 size : Float
@@ -10,6 +9,9 @@ size = 64
 
 borderSize : Float
 borderSize = 2
+
+
+type Direction = Left | Right | Top | Bottom
 
 
 type alias Screen =

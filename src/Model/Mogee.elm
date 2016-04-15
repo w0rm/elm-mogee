@@ -1,4 +1,4 @@
-module Mogee (Mogee, mogee) where
+module Model.Mogee (Mogee, mogee) where
 
 
 type alias Mogee =

@@ -1,6 +1,6 @@
-module Object (Object, Category(..), update, wall, mogee, collide) where
+module Model.Object (Object, Category(..), update, wall, mogee, collide) where
 
-import Mogee exposing (Mogee)
+import Model.Mogee as Mogee exposing (Mogee)
 import Time exposing (Time)
 
 
