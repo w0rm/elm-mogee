@@ -13,9 +13,10 @@ type alias Vertex =
 
 
 type alias UniformTextured =
-  { frame : Int
+  { frame : Float
   , frameSize : Vec2
   , offset : Vec2
+  , mirror : Float  -- 1 for right, -1 for left
   , texture : GL.Texture
   , textureSize : Vec2
   }
@@ -65,7 +66,7 @@ render texture model =
         coloredFragmentShader
         box
         { offset = vec2 0 0
-        , color = vec3 (25 / 255) (30 / 255) (28 / 255)
+        , color = vec3 25 30 28
         , frameSize = vec2 64 64
         }
   in
@@ -91,7 +92,8 @@ renderObject texture offset object =
         box
         { offset = Vec2.sub (Vec2.fromTuple object.position) offset
         , texture = texture
-        , frame = 1
+        , frame = 6
+        , mirror = -1
         , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
         , frameSize = Vec2.fromTuple object.size
         }
@@ -125,14 +127,14 @@ texturedFragmentShader = [glsl|
   uniform sampler2D texture;
   uniform vec2 textureSize;
   uniform vec2 frameSize;
-  uniform int frame;
+  uniform float frame;
+  uniform float mirror;
   varying vec2 texturePos;
 
   void main () {
     vec2 size = frameSize / textureSize;
-    int frames = int(1.0 / size.x);
-    vec2 frameOffset = size * vec2(float(frame - frame / frames * frames), -float(frame / frames));
-    vec2 textureClipSpace = size * texturePos - 1.0;
+    vec2 frameOffset = size * vec2((1.0 - mirror) / 2.0 + frame, 0);
+    vec2 textureClipSpace = size * vec2(texturePos.x * mirror, texturePos.y) - 1.0;
     vec4 temp = texture2D(texture, vec2(textureClipSpace.x, -textureClipSpace.y) + frameOffset);
     float a = temp.a;
     gl_FragColor = vec4(temp.r * a, temp.g * a, temp.b * a, a);
@@ -165,7 +167,7 @@ coloredFragmentShader = [glsl|
   uniform vec3 color;
 
   void main () {
-    gl_FragColor = vec4(color, 1);
+    gl_FragColor = vec4(color / 255.0, 1);
   }
 
 |]
