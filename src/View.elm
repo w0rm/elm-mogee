@@ -59,7 +59,32 @@ view maybeTexture size model =
 render : GL.Texture -> Model -> List GL.Renderable
 render texture model =
   let
-    offset = vec2 0 0
+    (x, y) = model.objects
+      |> List.filter Object.isMogee
+      |> List.head
+      |> Maybe.map .position
+      |> Maybe.withDefault (0, 0)
+
+    offset = vec2 (x - 32 + 4) (y - 32 + 5)
+
+    allScr = List.map (.offset >> \(x, y) -> (x / 64, y / 64)) model.screens
+    maxX = List.maximum (List.map fst allScr) |> Maybe.withDefault 0
+    minY = List.minimum (List.map snd allScr) |> Maybe.withDefault 0
+
+    dot (x1, y1) =
+      GL.render
+        coloredVertexShader
+        coloredFragmentShader
+        box
+        { offset = vec2 (63 - maxX - 1 + x1) (y1 - minY + 1)
+        , color =
+            if floor x1 == floor (x / 64) && floor y1 == floor (y / 64) then
+              vec3 255 255 0
+            else
+              vec3 100 100 100
+        , frameSize = vec2 1 1
+        }
+
     bg =
       GL.render
         coloredVertexShader
@@ -70,6 +95,7 @@ render texture model =
         , frameSize = vec2 64 64
         }
   in
+    List.map dot allScr ++
     List.foldl (renderObject texture offset >> (::)) [bg] model.objects
 
 
@@ -92,8 +118,8 @@ renderObject texture offset object =
         box
         { offset = Vec2.sub (Vec2.fromTuple object.position) offset
         , texture = texture
-        , frame = 6
-        , mirror = -1
+        , frame = List.head mogee.frames |> Maybe.withDefault 0
+        , mirror = if fst object.velocity < 0 then -1 else 1
         , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
         , frameSize = Vec2.fromTuple object.size
         }

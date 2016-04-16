@@ -1,7 +1,7 @@
-module Model.Screen (Screen, Direction(..), screen, walls) where
+module Model.Screen (Screen, Direction(..), screen, next, walls) where
 
 import Model.Object as Object exposing (Object)
-
+import Random exposing (Generator)
 
 size : Float
 size = 64
@@ -24,14 +24,70 @@ screen : (Float, Float) -> Direction -> Screen
 screen = Screen
 
 
+getDirection : (Float, Float) -> (Float, Float) -> Maybe Direction
+getDirection p1 (x2, y2) =
+  if p1 == (x2 - size, y2) then
+    Just Right
+  else if p1 == (x2 + size, y2) then
+    Just Left
+  else if p1 == (x2, y2 - size) then
+    Just Bottom
+  else if p1 == (x2, y2 + size) then
+    Just Top
+  else
+    Nothing
+
+
+offsetScreen : (Float, Float) -> Direction -> (Float, Float)
+offsetScreen (x, y) dir =
+  case dir of
+    Left -> (x - size, y)
+    Right -> (x + size, y)
+    Top -> (x, y - size)
+    Bottom -> (x, y + size)
+
+
+opposite : Direction -> Direction
+opposite dir =
+  case dir of
+    Left -> Right
+    Right -> Left
+    Top -> Bottom
+    Bottom -> Top
+
+
+next : List Screen -> Generator Screen
+next screens =
+  let
+    scr = Maybe.withDefault (screen (0, 0) Right) (List.head screens)
+    oppositeDirection = opposite scr.direction
+    nextOffset = offsetScreen scr.offset scr.direction
+    possibleDirections = List.filter ((/=) (opposite scr.direction)) [Right, Top, Bottom]
+    closedDirections = List.filterMap (.offset >> getDirection nextOffset) screens
+    leftDirections = List.filter (\d -> List.all ((/=) d) closedDirections) possibleDirections
+    nextScreen maybeDirection =
+      case maybeDirection of
+        Just nextDirection ->
+          screen nextOffset nextDirection
+        Nothing ->
+          screen nextOffset Right
+  in
+    Random.map nextScreen (pickRandom leftDirections)
+
+
 walls : Direction -> Screen -> List Object
 walls from {offset, direction} =
   let
     (dx, dy) = offset
-    corner (x, y) = Object.wall (borderSize, borderSize) (x + dx, y + dx)
-    horizontal (x, y) = Object.wall (size - 2 * borderSize, borderSize) (x + dx, y + dx)
-    vertical (x, y) = Object.wall (borderSize, size - 2 * borderSize) (x + dx, y + dx)
+    corner (x, y) = Object.wall (borderSize, borderSize) (x + dx, y + dy)
+    horizontal (x, y) = Object.wall (size - 2 * borderSize, borderSize) (x + dx, y + dy)
+    vertical (x, y) = Object.wall (borderSize, size - 2 * borderSize) (x + dx, y + dy)
+    oppositeDir = opposite from
   in
+    Object.wall (20, 2) (30 + dx, 20 + dy) ::
+    Object.wall (20, 2) (10 + dx, 30 + dy) ::
+    Object.wall (20, 2) (40 + dx, 40 + dy) ::
+    Object.wall (20, 2) (20 + dx, 50 + dy) ::
     List.map
       corner
       [ (0, 0)
@@ -40,7 +96,7 @@ walls from {offset, direction} =
       , (0, size - borderSize)
       ]
     ++
-    ( List.filter (\d -> d /= from && d /= direction) [Left, Top, Right, Bottom] |>
+    ( List.filter (\d -> d /= oppositeDir && d /= direction) [Left, Right, Top, Bottom] |>
       List.map (\d ->
         case d of
           Left -> vertical (0, borderSize)
@@ -49,3 +105,11 @@ walls from {offset, direction} =
           Bottom -> horizontal (borderSize, size - borderSize)
       )
     )
+
+
+{-| generate random element from the list -}
+pickRandom : List a -> Random.Generator (Maybe a)
+pickRandom list =
+  Random.map
+    (\index -> List.head (List.drop index list))
+    (Random.int 0 (List.length list - 1))

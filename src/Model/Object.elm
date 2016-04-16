@@ -1,4 +1,4 @@
-module Model.Object (Object, Category(..), update, wall, mogee, collide) where
+module Model.Object (Object, Category(..), update, wall, mogee, isMogee, collide) where
 
 import Model.Mogee as Mogee exposing (Mogee)
 import Time exposing (Time)
@@ -15,14 +15,9 @@ type alias Keys =
   }
 
 
-type Physics
-  = Static
-  | Gravity Float
-
-
 type alias Object =
   { category : Category
-  , physics : Physics
+  , velocity : (Float, Float)
   , size : (Float, Float) -- dimensions
   , position : (Float, Float) -- the top left corner
   }
@@ -32,8 +27,12 @@ gravity : Float
 gravity = 0.0001
 
 
+friction : Float
+friction = 0.001
+
+
 jumpVelocity : Float
-jumpVelocity = -0.05
+jumpVelocity = 0.05
 
 
 walkVelocity : Float
@@ -42,42 +41,49 @@ walkVelocity = 0.03
 
 mogee : (Float, Float) -> Object
 mogee =
-  Object (MogeeCategory Mogee.mogee) (Gravity 0) (7, 10)
+  Object (MogeeCategory Mogee.mogee) (0, 0) (7, 10)
 
 
 wall : (Float, Float) -> (Float, Float) -> Object
 wall =
-  Object WallCategory Static
+  Object WallCategory (0, 0)
 
 
-moveY : Time -> Float -> Float -> List Object -> Object -> Object
-moveY dt dy velocity objects object =
+isMogee : Object -> Bool
+isMogee obj =
+  case obj.category of
+    MogeeCategory _ -> True
+    _ -> False
+
+
+moveY : Time -> Float -> List Object -> Object -> Object
+moveY dt dy objects object =
   let
-    newVelocity = velocity + gravity * dt
-    deltaY = dt * (velocity + newVelocity) * 0.5
+    (vx, vy) = object.velocity
     (x, y) = object.position
+    newVelocity = vy + gravity * dt
+    deltaY = dt * (vy + newVelocity) * 0.5
     newObject =
       { object
       | position = (x, y + deltaY)
-      , physics = Gravity newVelocity
+      , velocity = (vx, newVelocity)
       }
     collisions = List.filter (collide newObject) objects
-
   in
     case List.head collisions of
       Nothing ->
         newObject
       Just {position, size} ->
         if deltaY < 0 then
-          {- Jumping up -}
+          {- Hit the top wall -}
           { object
-          | physics = Gravity -velocity
+          | velocity = (vx, -vy)
           , position = (x, snd position + snd size)
           }
         else
-          {- Falling down -}
+          {- Hit the bottom wall -}
           { object
-          | physics = if dy == 1 then Gravity jumpVelocity else Gravity 0
+          | velocity = (vx, if dy == 1 then -jumpVelocity else 0)
           , position = (x, snd position - snd object.size)
           }
 
@@ -85,11 +91,27 @@ moveY dt dy velocity objects object =
 moveX : Time -> Float -> List Object -> Object -> Object
 moveX dt dx objects object =
   let
-    deltaX = dt * dx * walkVelocity
+    (vx, vy) = object.velocity
     (x, y) = object.position
+    newVelocity =
+      if dx == 0 then
+        if vx /= 0 then
+          let
+            new = (abs vx - friction * dt)
+          in
+            if new > 0 then
+              (vx / abs vx) * new
+            else
+              0
+        else
+          0
+      else
+        dx * walkVelocity
+    deltaX = dt * (vx + newVelocity) * 0.5
     newObject =
       { object
       | position = (x + deltaX, y)
+      , velocity = (newVelocity, vy)
       }
     collisions = List.filter (collide newObject) objects
   in
@@ -101,26 +123,31 @@ moveX dt dx objects object =
           {- Hit the left wall -}
           { object
           | position = (fst position + fst size, y)
+          , velocity = (0, vy)
           }
         else
           {- Hit the right wall -}
           { object
           | position = (fst position - fst object.size, y)
+          , velocity = (0, vy)
           }
 
 
 update : (Time, Keys) -> List Object -> Object -> Object
 update (dt, {x, y}) objects object =
-  case object.physics of
-    Static ->
+  case object.category of
+    WallCategory ->
       object
-    Gravity velocity ->
+    MogeeCategory mogee ->
       let
-        restObjects = List.filter ((/=) object) objects
+        rest = List.filter ((/=) object) objects
       in
-        object
-        |> moveY dt (toFloat y) velocity restObjects
-        |> moveX dt (toFloat x) restObjects
+        { object
+        | category = MogeeCategory (Mogee.update dt object.velocity mogee)
+        }
+          |> moveY dt (toFloat y) rest
+          |> moveX dt (toFloat x) rest
+
 
 
 collide : Object -> Object -> Bool
