@@ -1,4 +1,4 @@
-module Model.Object (Object, Category(..), update, wall, mogee, isMogee, collide) where
+module Model.Object (Object, Category(..), update, wall, mogee, isMogee, collide, offset) where
 
 import Model.Mogee as Mogee exposing (Mogee)
 import Time exposing (Time)
@@ -23,6 +23,13 @@ type alias Object =
   }
 
 
+offset : (Float, Float) -> Object -> Object
+offset (dx, dy) object =
+  { object
+  | position = (fst object.position - dx, snd object.position - dy)
+  }
+
+
 gravity : Float
 gravity = 0.0001
 
@@ -32,7 +39,7 @@ friction = 0.001
 
 
 jumpVelocity : Float
-jumpVelocity = 0.05
+jumpVelocity = 0.06
 
 
 walkVelocity : Float
@@ -41,7 +48,7 @@ walkVelocity = 0.03
 
 mogee : (Float, Float) -> Object
 mogee =
-  Object (MogeeCategory Mogee.mogee) (0, 0) (7, 10)
+  Object (MogeeCategory Mogee.mogee) (0, 0) Mogee.size
 
 
 wall : (Float, Float) -> (Float, Float) -> Object
@@ -53,6 +60,13 @@ isMogee : Object -> Bool
 isMogee obj =
   case obj.category of
     MogeeCategory _ -> True
+    _ -> False
+
+
+isWall : Object -> Bool
+isWall obj =
+  case obj.category of
+    WallCategory -> True
     _ -> False
 
 
@@ -147,7 +161,6 @@ update (dt, {x, y}) objects object =
         }
           |> moveY dt (toFloat y) rest
           |> moveX dt (toFloat x) rest
-
 
 
 collide : Object -> Object -> Bool

@@ -1,4 +1,4 @@
-module Model.Screen (Screen, Direction(..), screen, next, walls) where
+module Model.Screen (Screen, Direction(..), screen, next, offset, walls) where
 
 import Model.Object as Object exposing (Object)
 import Random exposing (Generator)
@@ -8,7 +8,7 @@ size = 64
 
 
 borderSize : Float
-borderSize = 2
+borderSize = 1
 
 
 type Direction = Left | Right | Top | Bottom
@@ -22,6 +22,13 @@ type alias Screen =
 
 screen : (Float, Float) -> Direction -> Screen
 screen = Screen
+
+
+offset : (Float, Float) -> Screen -> Screen
+offset (dx, dy) screen =
+  { screen
+  | offset = (fst screen.offset - dx, snd screen.offset - dy)
+  }
 
 
 getDirection : (Float, Float) -> (Float, Float) -> Maybe Direction
@@ -63,8 +70,6 @@ next screens =
     oppositeDirection = opposite scr.direction
     nextOffset = offsetScreen scr.offset scr.direction
     possibleDirections = List.filter ((/=) (opposite scr.direction)) [Right, Top, Bottom]
-    closedDirections = List.filterMap (.offset >> getDirection nextOffset) screens
-    leftDirections = List.filter (\d -> List.all ((/=) d) closedDirections) possibleDirections
     nextScreen maybeDirection =
       case maybeDirection of
         Just nextDirection ->
@@ -72,7 +77,7 @@ next screens =
         Nothing ->
           screen nextOffset Right
   in
-    Random.map nextScreen (pickRandom leftDirections)
+    Random.map nextScreen (pickRandom possibleDirections)
 
 
 walls : Direction -> Screen -> List Object
@@ -84,10 +89,18 @@ walls from {offset, direction} =
     vertical (x, y) = Object.wall (borderSize, size - 2 * borderSize) (x + dx, y + dy)
     oppositeDir = opposite from
   in
-    Object.wall (20, 2) (30 + dx, 20 + dy) ::
-    Object.wall (20, 2) (10 + dx, 30 + dy) ::
-    Object.wall (20, 2) (40 + dx, 40 + dy) ::
-    Object.wall (20, 2) (20 + dx, 50 + dy) ::
+    Object.wall (7, 2) (0 + dx, 11 + dy) ::
+    Object.wall (16, 2) (24 + dx, 11 + dy) ::
+
+    Object.wall (11, 2) (6 + dx, 27 + dy) ::
+    Object.wall (13, 2) (51 + dx, 27 + dy) ::
+
+    Object.wall (11, 2) (0 + dx, 43 + dy) ::
+    Object.wall (33, 2) (31 + dx, 43 + dy) ::
+
+    Object.wall (19, 2) (17 + dx, 59 + dy) ::
+
+
     List.map
       corner
       [ (0, 0)

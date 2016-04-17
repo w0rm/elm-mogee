@@ -1,4 +1,4 @@
-module Model.Mogee (Mogee, mogee, update) where
+module Model.Mogee (Mogee, mogee, update, size) where
 
 import Time exposing (Time)
 
@@ -11,6 +11,11 @@ type alias Mogee =
   , frames : List Float
   , state : AnimationState
   }
+
+
+size : (Float, Float)
+size =
+  (7, 10)
 
 
 walking : List Float
