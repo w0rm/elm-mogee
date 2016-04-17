@@ -2,6 +2,8 @@
 
 A 2D WebGL game that fits into 64x64 px screen.
 
+![Screencast](mogee.png)
+
 **Work in progress.**
 
 ## Instructions to run
