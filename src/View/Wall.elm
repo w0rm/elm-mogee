@@ -27,7 +27,7 @@ render texture (w, h) position =
     { offset = Vec2.fromTuple position
     , texture = texture
     , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
-    , size = vec2 w (h + 3)
+    , size = vec2 w (if w == 1 || h == 1 then h else h + 3) -- only expand wider walls
     }
 
 

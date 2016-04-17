@@ -1,9 +1,9 @@
-module Model.Mogee (Mogee, mogee, update, size) where
+module Model.Mogee (Mogee, AnimationState(..), mogee, update, die, size) where
 
 import Time exposing (Time)
 
 
-type AnimationState = Walking | Standing
+type AnimationState = Walking | Standing | Dead
 
 
 type alias Mogee =
@@ -33,6 +33,14 @@ mogee =
   { elapsed = 0
   , frames = standing
   , state = Standing
+  }
+
+
+die : Mogee -> Mogee
+die mogee =
+  { mogee
+  | state = Dead
+  , frames = [7]
   }
 
 
@@ -73,6 +81,8 @@ updateState velocity mogee =
         }
       else
         mogee
+    Dead ->
+      mogee
 
 
 rotate : List a -> List a

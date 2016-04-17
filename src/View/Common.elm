@@ -45,8 +45,9 @@ coloredVertexShader = [glsl|
   uniform vec2 size;
 
   void main () {
-    vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
-    vec2 clipSpace = (position * size + roundOffset) / 32.0 - 1.0;
+    vec2 pos = position * size + offset;
+    vec2 roundOffset = vec2(floor(pos.x + 0.5), floor(pos.y + 0.5));
+    vec2 clipSpace = roundOffset / 32.0 - 1.0;
     gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
   }
 

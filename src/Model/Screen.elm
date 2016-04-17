@@ -1,7 +1,9 @@
-module Model.Screen (Screen, Direction(..), screen, next, offset, walls) where
+module Model.Screen (Screen, screen, next, offset, walls) where
 
+import Model.Direction exposing (Direction(..))
 import Model.Object as Object exposing (Object)
 import Random exposing (Generator)
+
 
 size : Float
 size = 64
@@ -11,16 +13,14 @@ borderSize : Float
 borderSize = 1
 
 
-type Direction = Left | Right | Top | Bottom
-
-
 type alias Screen =
   { offset : (Float, Float) -- screen offset
+  , number : Int
   , direction : Direction -- direction to
   }
 
 
-screen : (Float, Float) -> Direction -> Screen
+screen : (Float, Float) -> Int -> Direction -> Screen
 screen = Screen
 
 
@@ -66,40 +66,41 @@ opposite dir =
 next : List Screen -> Generator Screen
 next screens =
   let
-    scr = Maybe.withDefault (screen (0, 0) Right) (List.head screens)
+    scr = Maybe.withDefault (screen (0, 0) 0 Right) (List.head screens)
     oppositeDirection = opposite scr.direction
     nextOffset = offsetScreen scr.offset scr.direction
     possibleDirections = List.filter ((/=) (opposite scr.direction)) [Right, Top, Bottom]
     nextScreen maybeDirection =
       case maybeDirection of
         Just nextDirection ->
-          screen nextOffset nextDirection
+          screen nextOffset (scr.number + 1) nextDirection
         Nothing ->
-          screen nextOffset Right
+          screen nextOffset (scr.number + 1) Right
   in
     Random.map nextScreen (pickRandom possibleDirections)
 
 
 walls : Direction -> Screen -> List Object
-walls from {offset, direction} =
+walls from ({offset, direction, number} as screen) =
   let
     (dx, dy) = offset
-    corner (x, y) = Object.wall (borderSize, borderSize) (x + dx, y + dy)
-    horizontal (x, y) = Object.wall (size - 2 * borderSize, borderSize) (x + dx, y + dy)
-    vertical (x, y) = Object.wall (borderSize, size - 2 * borderSize) (x + dx, y + dy)
+    corner (x, y) = Object.wall number (borderSize, borderSize) (x + dx, y + dy)
+    horizontal (x, y) = Object.wall number (size - 2 * borderSize, borderSize) (x + dx, y + dy)
+    vertical (x, y) = Object.wall number (borderSize, size - 2 * borderSize) (x + dx, y + dy)
     oppositeDir = opposite from
   in
-    Object.wall (7, 2) (0 + dx, 11 + dy) ::
-    Object.wall (16, 2) (24 + dx, 11 + dy) ::
+    Object.space direction number offset ::
 
-    Object.wall (11, 2) (6 + dx, 27 + dy) ::
-    Object.wall (13, 2) (51 + dx, 27 + dy) ::
+    Object.wall number (7, 2) (0 + dx, 11 + dy) ::
+    Object.wall number (16, 2) (24 + dx, 11 + dy) ::
 
-    Object.wall (11, 2) (0 + dx, 43 + dy) ::
-    Object.wall (33, 2) (31 + dx, 43 + dy) ::
+    Object.wall number (11, 2) (6 + dx, 27 + dy) ::
+    Object.wall number (13, 2) (51 + dx, 27 + dy) ::
 
-    Object.wall (19, 2) (17 + dx, 59 + dy) ::
+    Object.wall number (11, 2) (0 + dx, 43 + dy) ::
+    Object.wall number (33, 2) (31 + dx, 43 + dy) ::
 
+    Object.wall number (19, 2) (17 + dx, 59 + dy) ::
 
     List.map
       corner

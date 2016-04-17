@@ -5,6 +5,7 @@ import Graphics.Element exposing (Element)
 import Model exposing (Model)
 import View.Common as Common
 import View.Object as Object
+import Model.Object exposing (invertSpace)
 import View.Lives as Lives
 
 
@@ -20,10 +21,12 @@ view maybeTexture size model =
           []
         Just texture ->
           render texture model
+          |> List.sortBy fst
+          |> List.map snd
     )
 
 
-render : GL.Texture -> Model -> List GL.Renderable
+render : GL.Texture -> Model -> List (Int, GL.Renderable)
 render texture model =
   let
     (x, y) = Model.offset model
@@ -43,9 +46,22 @@ render texture model =
           else
             (100, 100, 100)
         )
+      |> (,) 0
 
-    bg = Common.rectangle (64, 64) (0, 0) (25, 30, 28)
+    bg = (6, Common.rectangle (64, 64) (0, 0) (22, 17, 22))
+
+    monster {position, size} =
+      (2, Common.rectangle size (fst position - fst offset, snd position - snd offset) (22, 17, 22))
+
   in
-    Lives.render texture (1, 1) model.lives ++
-    List.map dot allScr ++
-    List.foldl (Object.render texture offset >> (::)) [bg] model.objects
+    if model.state == Model.Stopped then
+      [ Lives.renderTitle texture (3, 14)
+      , Lives.renderPlay texture (5, 44)
+      , bg
+      ]
+    else
+      (if model.state == Model.Paused then [Lives.renderPlay texture (5, 44)] else []) ++
+      Lives.render texture (1, 1) model.lives ++
+      List.map monster (List.filterMap invertSpace model.objects) ++
+      List.map dot allScr ++
+      List.foldl (Object.render texture offset) [bg] model.objects

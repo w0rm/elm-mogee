@@ -1,12 +1,15 @@
-module Model.Object (Object, Category(..), update, wall, mogee, isMogee, collide, offset) where
+module Model.Object (Object, Category(..), isDead, update, wall, mogee, space, isMogee, isSpace, collide, offset, invertSpace) where
 
 import Model.Mogee as Mogee exposing (Mogee)
+import Model.Space as Space exposing (Space)
 import Time exposing (Time)
+import Model.Direction exposing (Direction(..))
 
 
 type Category
   = WallCategory
   | MogeeCategory Mogee
+  | SpaceCategory Space
 
 
 type alias Keys =
@@ -17,6 +20,7 @@ type alias Keys =
 
 type alias Object =
   { category : Category
+  , number : Int -- screen number
   , velocity : (Float, Float)
   , size : (Float, Float) -- dimensions
   , position : (Float, Float) -- the top left corner
@@ -46,14 +50,27 @@ walkVelocity : Float
 walkVelocity = 0.03
 
 
+spaceVelocity : Float
+spaceVelocity = 0.01
+
+
+space : Direction -> Int -> (Float, Float) -> Object
+space direction number =
+  Object
+    (SpaceCategory (Space.space direction (number == 0)))
+    number
+    (spaceVelocity + 0.001 * number, spaceVelocity + 0.001 * number)
+    (64, 64)
+
+
 mogee : (Float, Float) -> Object
 mogee =
-  Object (MogeeCategory Mogee.mogee) (0, 0) Mogee.size
+  Object (MogeeCategory Mogee.mogee) 0 (0, 0) Mogee.size
 
 
-wall : (Float, Float) -> (Float, Float) -> Object
-wall =
-  Object WallCategory (0, 0)
+wall : Int -> (Float, Float) -> (Float, Float) -> Object
+wall number =
+  Object WallCategory number (0, 0)
 
 
 isMogee : Object -> Bool
@@ -67,6 +84,13 @@ isWall : Object -> Bool
 isWall obj =
   case obj.category of
     WallCategory -> True
+    _ -> False
+
+
+isSpace : Object -> Bool
+isSpace obj =
+  case obj.category of
+    SpaceCategory _ -> True
     _ -> False
 
 
@@ -147,20 +171,117 @@ moveX dt dx objects object =
           }
 
 
-update : (Time, Keys) -> List Object -> Object -> Object
+invertSpace : Object -> Maybe Object
+invertSpace ({size, position, category} as object) =
+  case category of
+    SpaceCategory {direction, active} ->
+      let
+        (x, y) = position
+        (w, h) = size
+      in
+        if active then
+          Just ( case direction of
+            Left ->
+              { object
+              | size = (64 - w, h)
+              , position = (x + w, y)
+              }
+            Right ->
+              { object
+              | size = (64 - w, h)
+              , position = (x - (64 - w), y)
+              }
+            Top ->
+              { object
+              | size = (w, 64 - h)
+              , position = (x, y + h)
+              }
+            Bottom ->
+              { object
+              | size = (w, 64 - h)
+              , position = (x, y - (64 - h))
+              }
+          )
+        else
+          Nothing
+    _ -> Nothing
+
+
+shrink : Time -> Direction -> Object -> Object
+shrink dt direction object =
+  let
+    (x, y) = object.position
+    (w, h) = object.size
+    newW = max 0 (w - dt * fst object.velocity)
+    newH = max 0 (h - dt * snd object.velocity)
+  in
+    if w == 0 || h == 0 then
+      object
+    else
+      case direction of
+        Left ->
+          { object
+          | size = (newW, 64)
+          }
+        Right ->
+          { object
+          | size = (newW, 64)
+          , position = (x - newW + w, y)
+          }
+        Top ->
+          { object
+          | size = (64, newH)
+          }
+        Bottom ->
+          { object
+          | size = (64, newH)
+          , position = (x, y - newH + h)
+          }
+
+
+activate : Space -> List Object -> Object -> Object
+activate space objects object =
+  let
+    isPrevious {category, size, number} =
+      (fst size == 0 || snd size == 0) && number == object.number - 1
+    newSpace =
+      if List.any isPrevious objects then
+        { space | active = True }
+      else
+        space
+  in
+    { object | category = SpaceCategory newSpace }
+
+
+update : (Time, Keys) -> List Object -> Object -> List Object -> List Object
 update (dt, {x, y}) objects object =
   case object.category of
+    SpaceCategory space ->
+      if space.active then
+        shrink dt space.direction object |> (::)
+      else
+        activate space (List.filter isSpace objects) object |> (::)
     WallCategory ->
-      object
+      if List.any (collide object) (List.filter isSpace objects) then
+        object |> (::)
+      else
+        identity
     MogeeCategory mogee ->
       let
-        rest = List.filter ((/=) object) objects
+        rest = List.filter isWall objects
       in
-        { object
-        | category = MogeeCategory (Mogee.update dt object.velocity mogee)
-        }
-          |> moveY dt (toFloat y) rest
-          |> moveX dt (toFloat x) rest
+        if List.any (collide object) (List.filter isSpace objects) then
+          { object
+          | category = MogeeCategory (Mogee.update dt object.velocity mogee)
+          }
+            |> moveY dt (toFloat y) rest
+            |> moveX dt (toFloat x) rest
+            |> (::)
+        else
+          { object
+          | category = MogeeCategory (Mogee.die mogee)
+          }
+            |> (::)
 
 
 collide : Object -> Object -> Bool
@@ -173,3 +294,23 @@ collide o1 o2 =
   in
     x1 < x2 + w2 && x1 + w1 > x2 &&
     y1 < y2 + h2 && y1 + h1 > y2
+
+
+expandSpaces : List Object -> List (Object, Space)
+expandSpaces =
+  List.filterMap
+    (\o ->
+      case o.category of
+        SpaceCategory space -> Just (o, space)
+        _ -> Nothing
+    )
+
+
+isDead : List Object -> Bool
+isDead =
+  List.any
+    (\{category} ->
+      case category of
+        MogeeCategory {state} -> state == Mogee.Dead
+        _ -> False
+    )

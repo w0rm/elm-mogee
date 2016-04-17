@@ -1,6 +1,6 @@
 module View.Mogee (render) where
 
-import Model.Mogee exposing (Mogee, size)
+import Model.Mogee exposing (Mogee, size, AnimationState(..))
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import WebGL as GL
 import View.Common exposing (box)
@@ -20,19 +20,23 @@ type alias Varying =
   { texturePos : Vec2 }
 
 
-render : GL.Texture -> (Float, Float) -> Mogee -> Float -> GL.Renderable
+render : GL.Texture -> (Float, Float) -> Mogee -> Float -> (Int, GL.Renderable)
 render texture position mogee mirror =
-  GL.render
-    texturedVertexShader
-    texturedFragmentShader
-    box
-    { offset = Vec2.fromTuple position
-    , texture = texture
-    , frame = List.head mogee.frames |> Maybe.withDefault 0
-    , mirror = mirror
-    , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
-    , frameSize = Vec2.fromTuple size
-    }
+  let
+    layer = if mogee.state == Dead then 1 else 4
+  in
+    GL.render
+      texturedVertexShader
+      texturedFragmentShader
+      box
+      { offset = Vec2.fromTuple position
+      , texture = texture
+      , frame = List.head mogee.frames |> Maybe.withDefault 0
+      , mirror = mirror
+      , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
+      , frameSize = Vec2.fromTuple size
+      }
+      |> (,) layer
 
 
 -- Shaders
