@@ -1,10 +1,12 @@
-# Mogee
+![Mogee](logo.png)
 
 A 2D WebGL game that fits into 64x64 px screen.
 
-![Screencast](mogee.png)
 
-**Work in progress.**
+<a href="http://unsoundscapes.com/elm-mogee.html">
+![Screencast](mogee.png)
+</a>
+
 
 ## Instructions to run
 
