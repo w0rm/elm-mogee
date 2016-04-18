@@ -2,9 +2,9 @@
 
 A WebGL platformer that fits into 64x64px screen.
 
-Submitted to the [\#LOWREZJAM 2016](https://itch.io/jam/lowrezjam2016/rate/62488).
+Submitted to the [\#LOWREZJAM 2016](https://unsoundscapes.itch.io/mogee).
 
-<a href="https://itch.io/jam/lowrezjam2016/rate/62488">
+<a href="https://unsoundscapes.itch.io/mogee">
 ![Screencast](mogee.png)
 </a>
 
