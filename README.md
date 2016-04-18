@@ -1,12 +1,12 @@
 ![Mogee](logo.png)
 
-A 2D WebGL game that fits into 64x64 px screen.
+A WebGL platformer that fits into 64x64px screen.
 
+Submitted to the [\#LOWREZJAM 2016](https://itch.io/jam/lowrezjam2016/rate/62488).
 
-<a href="http://unsoundscapes.com/elm-mogee.html">
+<a href="https://itch.io/jam/lowrezjam2016/rate/62488">
 ![Screencast](mogee.png)
 </a>
-
 
 ## Instructions to run
 
