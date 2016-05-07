@@ -5,7 +5,7 @@ import Graphics.Element exposing (Element)
 import Model exposing (Model)
 import View.Common as Common
 import View.Object as Object
-import Model.Object exposing (invertSpace)
+import Model.Object exposing (invertSpace, isSpace)
 import View.Lives as Lives
 
 
@@ -26,14 +26,26 @@ view maybeTexture size model =
     )
 
 
+toMinimap : (Float, Float) -> (Float, Float)
+toMinimap (x, y) =
+  ( floor (x / 64) |> toFloat
+  , floor (y / 64) |> toFloat
+  )
+
+
 render : GL.Texture -> Model -> List (Int, GL.Renderable)
 render texture model =
   let
-    (x, y) = Model.offset model
+    (x, y) = Model.mogee model |> .position
 
     offset = (x - 32 + 4, y - 32 + 5)
 
-    allScr = List.map (.offset >> \(x, y) -> (x / 64, y / 64)) model.screens
+    (cx, cy) = toMinimap (x, y)
+
+    allScr = model.objects
+      |> List.filter isSpace
+      |> List.map (.position >> toMinimap)
+
     maxX = List.maximum (List.map fst allScr) |> Maybe.withDefault 0
     minY = List.minimum (List.map snd allScr) |> Maybe.withDefault 0
 
@@ -41,7 +53,7 @@ render texture model =
       Common.rectangle
         (1, 1)
         (63 - maxX - 1 + x1, y1 - minY + 1)
-        ( if floor x1 == floor (x / 64) && floor y1 == floor (y / 64) then
+        ( if x1 == cx && y1 == cy then
             (255, 255, 0)
           else
             (100, 100, 100)
@@ -53,8 +65,14 @@ render texture model =
     monster {position, size} =
       (2, Common.rectangle size (fst position - fst offset, snd position - snd offset) (22, 17, 22))
 
+    offsetObject ({position} as object) =
+      { object
+      | position = (fst position - fst offset, snd position - snd offset)
+      }
+
   in
     if model.state == Model.Stopped then
+      (if model.score > 0 then (Lives.renderScore texture (32, 1) model.score) else []) ++
       [ Lives.renderTitle texture (3, 14)
       , Lives.renderPlay texture (5, 44)
       , bg
@@ -62,6 +80,6 @@ render texture model =
     else
       (if model.state == Model.Paused then [Lives.renderPlay texture (5, 44)] else []) ++
       Lives.render texture (1, 1) model.lives ++
-      List.map monster (List.filterMap invertSpace model.objects) ++
+      Lives.renderScore texture (32, 1) (model.currentScore + model.score) ++
       List.map dot allScr ++
-      List.foldl (Object.render texture offset) [bg] model.objects
+      List.foldl (Object.render texture) [bg] (List.map offsetObject model.objects)

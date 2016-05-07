@@ -1,8 +1,7 @@
-module Model (Model, Keys, model, update, offset, GameState(..)) where
+module Model (Model, Keys, model, update, mogee, GameState(..)) where
 
 import Model.Object as Object exposing (Object)
-import Model.Screen as Screen exposing (Screen)
-import Model.Direction exposing (Direction(..))
+import Model.Direction as Direction exposing (Direction(..))
 import Time exposing (Time)
 import Random
 
@@ -12,10 +11,13 @@ type GameState = Paused | Playing | Stopped
 
 type alias Model =
   { objects : List Object
-  , screens : List Screen
+  , direction : Direction
   , seed : Random.Seed
   , state : GameState
   , lives : Int
+  , score : Int
+  , currentScore : Int
+  , screens : Int
   }
 
 
@@ -24,15 +26,15 @@ type alias Keys = {x : Int, y : Int}
 
 model : Model
 model =
-  let
-    screen = Screen.screen (0, 0) 0 Right
-  in
-    { objects = Screen.walls Left screen ++ [Object.mogee (28, 27)]
-    , screens = [screen]
-    , seed = Random.initialSeed 1
-    , lives = 3
-    , state = Stopped
-    }
+  { objects = Object.mogee (28, 27) :: Object.walls Left Right 0
+  , direction = Right
+  , seed = Random.initialSeed 1
+  , lives = 3
+  , screens = 0
+  , score = 0
+  , currentScore = 0
+  , state = Stopped
+  }
 
 
 update : (Time, Keys, Bool) -> Model -> Model
@@ -44,72 +46,71 @@ update (elapsed, keys, enter) m =
         | state = Playing
         , lives = m.lives
         , seed = m.seed
+        , score = m.score
         }
       else
         m
     Stopped ->
       if enter then
-        { m | state = Playing }
+        { m
+        | state = Playing
+        , score = 0
+        }
       else
         m
     Playing ->
-      { m
-      | objects = List.foldr (Object.update (elapsed, keys) m.objects) [] m.objects
-      }
+      m
+      |> updateObjects elapsed keys
       |> addScreen
-      |> removeScreens
       |> checkLives
 
 
-offset : Model -> (Float, Float)
-offset {objects} =
+mogee : Model -> Object
+mogee {objects} =
   objects
     |> List.filter Object.isMogee
     |> List.head
-    |> Maybe.map .position
-    |> Maybe.withDefault (0, 0)
+    |> Maybe.withDefault (Object.mogee (28, 27))
+
+
+updateObjects : Time -> Keys -> Model -> Model
+updateObjects elapsed keys model =
+  let
+    objects = Object.cleanup model.objects
+    spaces = List.filter Object.isSpace objects
+    number = spaces
+      |> List.filter (Object.collide (mogee model))
+      |> List.map .number
+      |> List.maximum
+      |> Maybe.withDefault 0
+    walls = List.filter Object.isWall objects
+    updateObject = Object.update elapsed keys spaces walls
+  in
+    { model
+    | objects = List.foldr updateObject [] objects
+    , currentScore = max number model.currentScore
+    }
 
 
 addScreen : Model -> Model
 addScreen model =
   let
-    (x, y) = offset model
-
-    pos = (round (x / 64), round (y / 64))
-
-    lastScrOffsets = List.take 3 model.screens
-      |> List.map (\{offset} -> (round (fst offset / 64), round (snd offset / 64)))
-
-    lastScr = Maybe.withDefault (Screen.screen (0, 0) 0 Right) (List.head model.screens)
-    (scr, seed) = Random.generate (Screen.next model.screens) model.seed
+    (x, y) = model |> mogee |> .position
+    (screenX, screenY) = (x - 32 + 4, y - 32 + 5)
+    (direction, seed) = Random.generate (Direction.next model.direction) model.seed
   in
-    if List.any ((==) pos) lastScrOffsets then
+    if abs screenX < 64 && abs screenY < 64 then
       { model
       | seed = seed
-      , screens =
-          (scr :: model.screens)
-          |> List.map (Screen.offset scr.offset)
+      , direction = direction
+      , screens = model.screens + 1
       , objects =
-          (Screen.walls lastScr.direction scr ++ model.objects)
-          |> List.map (Object.offset scr.offset)
+          ( Object.walls model.direction direction (model.screens + 1) ++
+            List.map (Object.offset (Direction.opposite model.direction)) model.objects
+          )
       }
     else
       model
-
-
-removeScreens : Model -> Model
-removeScreens model =
-  let
-    numbers = model.objects
-      |> List.filter (\o -> Object.isSpace o && (fst o.size == 0 || snd o.size == 0))
-      |> List.map .number
-  in
-    { model
-    | screens =
-        List.filter
-          (\{number} -> List.all ((/=) number) numbers)
-          model.screens
-    }
 
 
 checkLives : Model -> Model
@@ -118,11 +119,15 @@ checkLives m =
     if m.lives == 1 then
       { model
       | seed = m.seed
+      , score = m.score + m.currentScore
+      , currentScore = 0
       }
     else
       { m
       | lives = m.lives - 1
       , state = Paused
+      , score = m.score + m.currentScore
+      , currentScore = 0
       }
   else
     m
