@@ -1,15 +1,28 @@
-module Model.Object (Object, Category(..), isDead, update, wall, mogee, space, isMogee, isSpace, collide, offset, invertSpace) where
+module Model.Object
+  ( Object
+  , Category(..)
+  , isDead
+  , update
+  , walls
+  , mogee
+  , isMogee
+  , isSpace
+  , isWall
+  , collide
+  , offset
+  , invertSpace
+  , cleanup
+  ) where
 
 import Model.Mogee as Mogee exposing (Mogee)
-import Model.Space as Space exposing (Space)
 import Time exposing (Time)
-import Model.Direction exposing (Direction(..))
+import Model.Direction as Direction exposing (Direction(..))
 
 
 type Category
   = WallCategory
   | MogeeCategory Mogee
-  | SpaceCategory Space
+  | SpaceCategory Direction
 
 
 type alias Keys =
@@ -19,18 +32,18 @@ type alias Keys =
 
 
 type alias Object =
-  { category : Category
-  , number : Int -- screen number
+  { number : Int
+  , category : Category
   , velocity : (Float, Float)
   , size : (Float, Float) -- dimensions
   , position : (Float, Float) -- the top left corner
   }
 
 
-offset : (Float, Float) -> Object -> Object
-offset (dx, dy) object =
+offset : Direction -> Object -> Object
+offset direction object =
   { object
-  | position = (fst object.position - dx, snd object.position - dy)
+  | position = Direction.offset (64, 64) object.position direction
   }
 
 
@@ -54,23 +67,66 @@ spaceVelocity : Float
 spaceVelocity = 0.01
 
 
-space : Direction -> Int -> (Float, Float) -> Object
-space direction number =
+space : Int -> Direction -> (Float, Float) -> Object
+space number direction =
   Object
-    (SpaceCategory (Space.space direction (number == 0)))
     number
-    (spaceVelocity + 0.001 * number, spaceVelocity + 0.001 * number)
+    (SpaceCategory direction)
+    (0, 0)
     (64, 64)
 
 
 mogee : (Float, Float) -> Object
 mogee =
-  Object (MogeeCategory Mogee.mogee) 0 (0, 0) Mogee.size
+  Object -1 (MogeeCategory Mogee.mogee) (0, 0) Mogee.size
+
+
+size : Float
+size = 64
+
+
+borderSize : Float
+borderSize = 1
 
 
 wall : Int -> (Float, Float) -> (Float, Float) -> Object
 wall number =
-  Object WallCategory number (0, 0)
+  Object number WallCategory (0, 0)
+
+
+walls : Direction -> Direction -> Int -> List Object
+walls from direction number =
+  let
+    corner = wall number (borderSize, borderSize)
+    horizontal = wall number (size - 2 * borderSize, borderSize)
+    vertical = wall number (borderSize, size - 2 * borderSize)
+    oppositeDir = Direction.opposite from
+  in
+    space number direction (0, 0) ::
+    wall number (7, 2) (0, 11) ::
+    wall number (16, 2) (24, 11) ::
+    wall number (11, 2) (6, 27) ::
+    wall number (13, 2) (51, 27) ::
+    wall number (11, 2) (0, 43) ::
+    wall number (33, 2) (31, 43) ::
+    wall number (19, 2) (17, 58) ::
+    List.map
+      corner
+      [ (0, 0)
+      , (size - borderSize, 0)
+      , (size - borderSize, size - borderSize)
+      , (0, size - borderSize)
+      ]
+    ++
+    ( List.filter (\d -> d /= oppositeDir && d /= direction) [Left, Right, Top, Bottom] |>
+      List.map (\d ->
+        case d of
+          Left -> vertical (0, borderSize)
+          Right -> vertical (size - borderSize, borderSize)
+          Top -> horizontal (borderSize, 0)
+          Bottom -> horizontal (borderSize, size - borderSize)
+      )
+    )
 
 
 isMogee : Object -> Bool
@@ -95,39 +151,40 @@ isSpace obj =
 
 
 moveY : Time -> Float -> List Object -> Object -> Object
-moveY dt dy objects object =
+moveY dt dy walls object =
   let
     (vx, vy) = object.velocity
     (x, y) = object.position
     newVelocity = vy + gravity * dt
     deltaY = dt * (vy + newVelocity) * 0.5
-    newObject =
+  in
+    List.foldl
+      (\({position, size} as wall) object ->
+        if collide object wall then
+          if deltaY < 0 then
+            {- Hit the top wall -}
+            { object
+            | velocity = (vx, 0)
+            , position = (x, snd position + snd size)
+            }
+          else
+            {- Hit the bottom wall -}
+            { object
+            | velocity = (vx, if dy == 1 then -jumpVelocity else 0)
+            , position = (x, snd position - snd object.size)
+            }
+        else
+          object
+      )
       { object
       | position = (x, y + deltaY)
       , velocity = (vx, newVelocity)
       }
-    collisions = List.filter (collide newObject) objects
-  in
-    case List.head collisions of
-      Nothing ->
-        newObject
-      Just {position, size} ->
-        if deltaY < 0 then
-          {- Hit the top wall -}
-          { object
-          | velocity = (vx, -vy)
-          , position = (x, snd position + snd size)
-          }
-        else
-          {- Hit the bottom wall -}
-          { object
-          | velocity = (vx, if dy == 1 then -jumpVelocity else 0)
-          , position = (x, snd position - snd object.size)
-          }
+      walls
 
 
 moveX : Time -> Float -> List Object -> Object -> Object
-moveX dt dx objects object =
+moveX dt dx walls object =
   let
     (vx, vy) = object.velocity
     (x, y) = object.position
@@ -135,76 +192,71 @@ moveX dt dx objects object =
       if dx == 0 then
         if vx /= 0 then
           let
-            new = (abs vx - friction * dt)
+            new = max (abs vx - friction * dt) 0
           in
-            if new > 0 then
-              (vx / abs vx) * new
-            else
-              0
+            (vx / abs vx) * new
         else
           0
       else
         dx * walkVelocity
     deltaX = dt * (vx + newVelocity) * 0.5
-    newObject =
+  in
+    List.foldl
+      (\({position, size} as wall) object ->
+        if collide object wall then
+          if deltaX < 0 then
+            {- Hit the left wall -}
+            { object
+            | velocity = (-0.000001, vy) -- keep the sign of the direction
+            , position = (fst position + fst size, y)
+            }
+          else
+            {- Hit the right wall -}
+            { object
+            | velocity = (0.000001, vy) -- keep the sign of the direction
+            , position = (fst position - fst object.size, y)
+            }
+        else
+          object
+      )
       { object
       | position = (x + deltaX, y)
       , velocity = (newVelocity, vy)
       }
-    collisions = List.filter (collide newObject) objects
-  in
-    case List.head collisions of
-      Nothing ->
-        newObject
-      Just {position, size} ->
-        if deltaX < 0 then
-          {- Hit the left wall -}
-          { object
-          | position = (fst position + fst size, y)
-          , velocity = (0, vy)
-          }
-        else
-          {- Hit the right wall -}
-          { object
-          | position = (fst position - fst object.size, y)
-          , velocity = (0, vy)
-          }
+      walls
 
 
-invertSpace : Object -> Maybe Object
-invertSpace ({size, position, category} as object) =
+invertSpace : Object -> Object
+invertSpace ({size, position, velocity, category} as object) =
   case category of
-    SpaceCategory {direction, active} ->
+    SpaceCategory direction ->
       let
         (x, y) = position
         (w, h) = size
       in
-        if active then
-          Just ( case direction of
-            Left ->
-              { object
-              | size = (64 - w, h)
-              , position = (x + w, y)
-              }
-            Right ->
-              { object
-              | size = (64 - w, h)
-              , position = (x - (64 - w), y)
-              }
-            Top ->
-              { object
-              | size = (w, 64 - h)
-              , position = (x, y + h)
-              }
-            Bottom ->
-              { object
-              | size = (w, 64 - h)
-              , position = (x, y - (64 - h))
-              }
-          )
-        else
-          Nothing
-    _ -> Nothing
+        ( case direction of
+          Left ->
+            { object
+            | size = (64 - w, h)
+            , position = (x + w, y)
+            }
+          Right ->
+            { object
+            | size = (64 - w, h)
+            , position = (x - (64 - w), y)
+            }
+          Top ->
+            { object
+            | size = (w, 64 - h)
+            , position = (x, y + h)
+            }
+          Bottom ->
+            { object
+            | size = (w, 64 - h)
+            , position = (x, y - (64 - h))
+            }
+        )
+    _ -> object
 
 
 shrink : Time -> Direction -> Object -> Object
@@ -216,7 +268,7 @@ shrink dt direction object =
     newH = max 0 (h - dt * snd object.velocity)
   in
     if w == 0 || h == 0 then
-      object
+      Debug.log "d" object
     else
       case direction of
         Left ->
@@ -239,71 +291,67 @@ shrink dt direction object =
           }
 
 
-activate : Space -> List Object -> Object -> Object
-activate space objects object =
-  let
-    isPrevious {category, size, number} =
-      (fst size == 0 || snd size == 0) && number == object.number - 1
-    newSpace =
-      if List.any isPrevious objects then
-        { space | active = True }
-      else
-        space
-  in
-    { object | category = SpaceCategory newSpace }
+activate : List Object -> Object -> Object
+activate objects object =
+  if List.all (\{number} -> number /= object.number - 1) objects then
+    { object
+    | velocity =
+        ( spaceVelocity + 0.001 * toFloat object.number
+        , spaceVelocity + 0.001 * toFloat object.number
+        )
+    }
+  else
+    object
 
 
-update : (Time, Keys) -> List Object -> Object -> List Object -> List Object
-update (dt, {x, y}) objects object =
+update : Time -> Keys -> List Object -> List Object -> Object -> List Object -> List Object
+update dt {x, y} spaces walls object =
   case object.category of
-    SpaceCategory space ->
-      if space.active then
-        shrink dt space.direction object |> (::)
-      else
-        activate space (List.filter isSpace objects) object |> (::)
+    SpaceCategory direction ->
+      object
+        |> shrink dt direction
+        |> activate spaces
+        |> (::)
     WallCategory ->
-      if List.any (collide object) (List.filter isSpace objects) then
+      if List.any (collide object) spaces then
         object |> (::)
       else
         identity
     MogeeCategory mogee ->
-      let
-        rest = List.filter isWall objects
-      in
-        if List.any (collide object) (List.filter isSpace objects) then
-          { object
-          | category = MogeeCategory (Mogee.update dt object.velocity mogee)
-          }
-            |> moveY dt (toFloat y) rest
-            |> moveX dt (toFloat x) rest
-            |> (::)
-        else
-          { object
-          | category = MogeeCategory (Mogee.die mogee)
-          }
-            |> (::)
+      if List.any (collide object) spaces then
+        { object
+        | category = MogeeCategory (Mogee.update dt object.velocity mogee)
+        }
+          |> moveY dt (toFloat y) walls
+          |> moveX dt (toFloat x) walls
+          |> (::)
+      else
+        { object
+        | category = MogeeCategory (Mogee.die mogee)
+        }
+          |> (::)
+
+
+cleanup : List Object -> List Object
+cleanup =
+  List.filter (\{size} -> fst size /= 0 && snd size /= 0)
+
+
+toIntTuple : (Float, Float) -> (Int, Int)
+toIntTuple (x, y) =
+  (round x, round y)
 
 
 collide : Object -> Object -> Bool
 collide o1 o2 =
   let
-    (x1, y1) = o1.position
-    (w1, h1) = o1.size
-    (x2, y2) = o2.position
-    (w2, h2) = o2.size
+    (x1, y1) = toIntTuple o1.position
+    (w1, h1) = toIntTuple o1.size
+    (x2, y2) = toIntTuple o2.position
+    (w2, h2) = toIntTuple o2.size
   in
     x1 < x2 + w2 && x1 + w1 > x2 &&
     y1 < y2 + h2 && y1 + h1 > y2
-
-
-expandSpaces : List Object -> List (Object, Space)
-expandSpaces =
-  List.filterMap
-    (\o ->
-      case o.category of
-        SpaceCategory space -> Just (o, space)
-        _ -> Nothing
-    )
 
 
 isDead : List Object -> Bool

@@ -1,4 +1,4 @@
-module View.Lives (render, renderTitle, renderPlay) where
+module View.Lives (render, renderScore, renderTitle, renderPlay) where
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import WebGL as GL
@@ -21,6 +21,42 @@ type alias Varying =
 render : GL.Texture -> (Float, Float) -> Int -> List (Int, GL.Renderable)
 render texture (x, y) lives =
   List.map (\i -> renderLive texture (x + toFloat i * 6, y)) [0..lives - 1]
+
+
+digitsList : Int -> List Int
+digitsList n =
+  let
+    nn = n // 10
+    r = n % 10
+  in
+    if nn == 0 && r == 0 then
+      []
+    else
+      r :: digitsList nn
+
+
+renderScore : GL.Texture -> (Float, Float) -> Int -> List (Int, GL.Renderable)
+renderScore texture (x, y) value =
+  let
+    digits = digitsList value |> List.reverse
+    position = (x - toFloat (List.length digits) * 2, y)
+  in
+    List.indexedMap (renderDigit texture position) digits
+
+
+renderDigit : GL.Texture -> (Float, Float) -> Int -> Int -> (Int, GL.Renderable)
+renderDigit texture (x, y) index number =
+  GL.render
+    texturedVertexShader
+    texturedFragmentShader
+    box
+    { offset = Vec2.fromTuple (x + toFloat index * 4, y)
+    , texture = texture
+    , textureOffset = vec2 (toFloat number * 3) 50
+    , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
+    , size = vec2 3 4
+    }
+  |> (,) 0
 
 
 renderLive : GL.Texture -> (Float, Float) -> (Int, GL.Renderable)
