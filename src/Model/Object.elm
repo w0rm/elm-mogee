@@ -6,11 +6,11 @@ module Model.Object
   , walls
   , mogee
   , isMogee
-  , isSpace
+  , isScreen
   , isWall
   , collide
   , offset
-  , invertSpace
+  , invertScreen
   , cleanup
   ) where
 
@@ -22,7 +22,7 @@ import Model.Direction as Direction exposing (Direction(..))
 type Category
   = WallCategory
   | MogeeCategory Mogee
-  | SpaceCategory Direction
+  | ScreenCategory Direction
 
 
 type alias Keys =
@@ -63,15 +63,15 @@ walkVelocity : Float
 walkVelocity = 0.03
 
 
-spaceVelocity : Float
-spaceVelocity = 0.01
+screenVelocity : Float
+screenVelocity = 0.01
 
 
-space : Int -> Direction -> (Float, Float) -> Object
-space number direction =
+screen : Int -> Direction -> (Float, Float) -> Object
+screen number direction =
   Object
     number
-    (SpaceCategory direction)
+    (ScreenCategory direction)
     (0, 0)
     (64, 64)
 
@@ -102,7 +102,7 @@ walls from direction number =
     vertical = wall number (borderSize, size - 2 * borderSize)
     oppositeDir = Direction.opposite from
   in
-    space number direction (0, 0) ::
+    screen number direction (0, 0) ::
     wall number (7, 2) (0, 11) ::
     wall number (16, 2) (24, 11) ::
     wall number (11, 2) (6, 27) ::
@@ -143,10 +143,10 @@ isWall obj =
     _ -> False
 
 
-isSpace : Object -> Bool
-isSpace obj =
+isScreen : Object -> Bool
+isScreen obj =
   case obj.category of
-    SpaceCategory _ -> True
+    ScreenCategory _ -> True
     _ -> False
 
 
@@ -226,10 +226,10 @@ moveX dt dx walls object =
       walls
 
 
-invertSpace : Object -> Object
-invertSpace ({size, position, velocity, category} as object) =
+invertScreen : Object -> Object
+invertScreen ({size, position, velocity, category} as object) =
   case category of
-    SpaceCategory direction ->
+    ScreenCategory direction ->
       let
         (x, y) = position
         (w, h) = size
@@ -296,8 +296,8 @@ activate objects object =
   if List.all (\{number} -> number /= object.number - 1) objects then
     { object
     | velocity =
-        ( spaceVelocity + 0.001 * toFloat object.number
-        , spaceVelocity + 0.001 * toFloat object.number
+        ( screenVelocity + 0.001 * toFloat object.number
+        , screenVelocity + 0.001 * toFloat object.number
         )
     }
   else
@@ -305,20 +305,20 @@ activate objects object =
 
 
 update : Time -> Keys -> List Object -> List Object -> Object -> List Object -> List Object
-update dt {x, y} spaces walls object =
+update dt {x, y} screens walls object =
   case object.category of
-    SpaceCategory direction ->
+    ScreenCategory direction ->
       object
         |> shrink dt direction
-        |> activate spaces
+        |> activate screens
         |> (::)
     WallCategory ->
-      if List.any (collide object) spaces then
+      if List.any (collide object) screens then
         object |> (::)
       else
         identity
     MogeeCategory mogee ->
-      if List.any (collide object) spaces then
+      if List.any (collide object) screens then
         { object
         | category = MogeeCategory (Mogee.update dt object.velocity mogee)
         }

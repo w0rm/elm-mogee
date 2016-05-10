@@ -5,7 +5,7 @@ import Graphics.Element exposing (Element)
 import Model exposing (Model)
 import View.Common as Common
 import View.Object as Object
-import Model.Object exposing (invertSpace, isSpace)
+import Model.Object exposing (invertScreen, isScreen)
 import View.Lives as Lives
 
 
@@ -43,7 +43,7 @@ render texture model =
     (cx, cy) = toMinimap (x, y)
 
     allScr = model.objects
-      |> List.filter isSpace
+      |> List.filter isScreen
       |> List.map (.position >> toMinimap)
 
     maxX = List.maximum (List.map fst allScr) |> Maybe.withDefault 0

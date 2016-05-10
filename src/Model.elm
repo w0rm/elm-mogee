@@ -77,14 +77,14 @@ updateObjects : Time -> Keys -> Model -> Model
 updateObjects elapsed keys model =
   let
     objects = Object.cleanup model.objects
-    spaces = List.filter Object.isSpace objects
-    number = spaces
+    screens = List.filter Object.isScreen objects
+    number = screens
       |> List.filter (Object.collide (mogee model))
       |> List.map .number
       |> List.maximum
       |> Maybe.withDefault 0
     walls = List.filter Object.isWall objects
-    updateObject = Object.update elapsed keys spaces walls
+    updateObject = Object.update elapsed keys screens walls
   in
     { model
     | objects = List.foldr updateObject [] objects
