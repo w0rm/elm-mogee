@@ -2,6 +2,8 @@
 
 A WebGL platformer that fits into 64x64px screen.
 
+Note: this project uses an old version of Elm 0.16.
+
 Submitted to the [\#LOWREZJAM 2016](https://unsoundscapes.itch.io/mogee).
 
 <a href="https://unsoundscapes.itch.io/mogee">
