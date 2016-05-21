@@ -1,4 +1,4 @@
-module Model.Object
+module Model.Object exposing
   ( Object
   , Category(..)
   , isDead
@@ -12,7 +12,7 @@ module Model.Object
   , offset
   , invertScreen
   , cleanup
-  ) where
+  )
 
 import Model.Mogee as Mogee exposing (Mogee)
 import Time exposing (Time)

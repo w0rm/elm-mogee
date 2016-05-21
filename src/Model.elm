@@ -1,10 +1,18 @@
-module Model (Model, Keys, model, update, mogee, GameState(..)) where
+module Model exposing
+  ( Model
+  , model
+  , update
+  , mogee
+  , GameState(..)
+  )
 
 import Model.Object as Object exposing (Object)
 import Model.Direction as Direction exposing (Direction(..))
+import Model.Keys as Keys exposing (Keys)
 import Time exposing (Time)
 import Random
-
+import WebGL exposing (Texture)
+import Actions exposing (Action(..))
 
 type GameState = Paused | Playing | Stopped
 
@@ -18,10 +26,10 @@ type alias Model =
   , score : Int
   , currentScore : Int
   , screens : Int
+  , size : Int
+  , texture : Maybe Texture
+  , keys : Keys
   }
-
-
-type alias Keys = {x : Int, y : Int}
 
 
 model : Model
@@ -34,24 +42,44 @@ model =
   , score = 0
   , currentScore = 0
   , state = Stopped
+  , size = 0
+  , texture = Nothing
+  , keys = Keys False False False False False False
   }
 
 
-update : (Time, Keys, Bool) -> Model -> Model
-update (elapsed, keys, enter) m =
+update : Action -> Model -> (Model, Cmd Action)
+update action model =
+  case action of
+    Resize {width, height} ->
+      {model | size = min width height // 64 * 64} ! []
+    Animate elapsed ->
+      animate (min elapsed 25 * 1.5) model ! []
+    KeyChange func ->
+      {model | keys = func model.keys} ! []
+    TextureLoaded texture ->
+      {model | texture = Just texture} ! []
+    _ ->
+      model ! []
+
+
+animate : Time -> Model -> Model
+animate elapsed m =
   case m.state of
     Paused ->
-      if enter then
+      if m.keys.enter then
         { model
         | state = Playing
         , lives = m.lives
         , seed = m.seed
+        , texture = m.texture
+        , size = m.size
         , score = m.score
         }
       else
         m
     Stopped ->
-      if enter then
+      if m.keys.enter then
         { m
         | state = Playing
         , score = 0
@@ -60,7 +88,7 @@ update (elapsed, keys, enter) m =
         m
     Playing ->
       m
-      |> updateObjects elapsed keys
+      |> updateObjects elapsed (Keys.directions m.keys)
       |> addScreen
       |> checkLives
 
@@ -73,7 +101,7 @@ mogee {objects} =
     |> Maybe.withDefault (Object.mogee (28, 27))
 
 
-updateObjects : Time -> Keys -> Model -> Model
+updateObjects : Time -> {x : Int, y : Int} -> Model -> Model
 updateObjects elapsed keys model =
   let
     objects = Object.cleanup model.objects
@@ -97,7 +125,7 @@ addScreen model =
   let
     (x, y) = model |> mogee |> .position
     (screenX, screenY) = (x - 32 + 4, y - 32 + 5)
-    (direction, seed) = Random.generate (Direction.next model.direction) model.seed
+    (direction, seed) = Random.step (Direction.next model.direction) model.seed
   in
     if abs screenX < 64 && abs screenY < 64 then
       { model
@@ -120,6 +148,8 @@ checkLives m =
       { model
       | seed = m.seed
       , score = m.score + m.currentScore
+      , texture = m.texture
+      , size = m.size
       , currentScore = 0
       }
     else

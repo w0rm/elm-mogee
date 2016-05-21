@@ -1,4 +1,4 @@
-module View.Mogee (render) where
+module View.Mogee exposing (render)
 
 import Model.Mogee exposing (Mogee, size, AnimationState(..))
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)

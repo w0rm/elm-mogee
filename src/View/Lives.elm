@@ -1,4 +1,9 @@
-module View.Lives (render, renderScore, renderTitle, renderPlay) where
+module View.Lives exposing
+  ( render
+  , renderScore
+  , renderTitle
+  , renderPlay
+  )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import WebGL as GL

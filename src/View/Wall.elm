@@ -1,5 +1,4 @@
-module View.Wall (render) where
-
+module View.Wall exposing (render)
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import WebGL as GL

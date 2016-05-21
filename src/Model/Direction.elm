@@ -1,4 +1,9 @@
-module Model.Direction (Direction(..), opposite, offset, next) where
+module Model.Direction exposing
+  ( Direction(..)
+  , opposite
+  , offset
+  , next
+  )
 
 import Random exposing (Generator)
 

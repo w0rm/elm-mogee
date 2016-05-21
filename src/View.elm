@@ -1,22 +1,27 @@
-module View (view) where
+module View exposing (view)
 
 import WebGL as GL
-import Graphics.Element exposing (Element)
 import Model exposing (Model)
 import View.Common as Common
 import View.Object as Object
 import Model.Object exposing (invertScreen, isScreen)
 import View.Lives as Lives
+import Html exposing (Html)
+import Html.Attributes exposing (width, height, style)
+import Actions exposing (Action)
 
 
-view : Maybe GL.Texture -> Int -> Model -> Element
-view maybeTexture size model =
-  GL.webglWithConfig
+view : Model -> Html Action
+view model =
+  GL.toHtmlWith
     [ GL.Enable GL.Blend
     , GL.BlendFunc (GL.One, GL.OneMinusSrcAlpha)
     ]
-    (size, size)
-    ( case maybeTexture of
+    [ width model.size
+    , height model.size
+    , style [("display", "block")]
+    ]
+    ( case model.texture of
         Nothing ->
           []
         Just texture ->
