@@ -305,11 +305,11 @@ activate objects object =
 
 
 update : Time -> Keys -> List Object -> List Object -> Object -> List Object -> List Object
-update dt {x, y} screens walls object =
+update elapsed {x, y} screens walls object =
   case object.category of
     ScreenCategory direction ->
       object
-        |> shrink dt direction
+        |> shrink elapsed direction
         |> activate screens
         |> (::)
     WallCategory ->
@@ -320,10 +320,10 @@ update dt {x, y} screens walls object =
     MogeeCategory mogee ->
       if List.any (collide object) screens then
         { object
-        | category = MogeeCategory (Mogee.update dt object.velocity mogee)
+        | category = MogeeCategory (Mogee.update elapsed object.velocity mogee)
         }
-          |> moveY dt (toFloat y) walls
-          |> moveX dt (toFloat x) walls
+          |> moveY elapsed (toFloat y) walls
+          |> moveX elapsed (toFloat x) walls
           |> (::)
       else
         { object
