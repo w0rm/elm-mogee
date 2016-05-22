@@ -1,0 +1,4 @@
+[submodule "elm-webgl"]
+	path = elm-webgl
+	url = git@github.com:w0rm/elm-webgl.git
+	branch = 0.17-native-to-html

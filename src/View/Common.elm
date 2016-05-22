@@ -1,4 +1,8 @@
-module View.Common (Vertex, box, rectangle) where
+module View.Common exposing
+  ( Vertex
+  , box
+  , rectangle
+  )
 
 import WebGL as GL
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)

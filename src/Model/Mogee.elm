@@ -1,4 +1,11 @@
-module Model.Mogee (Mogee, AnimationState(..), mogee, update, die, size) where
+module Model.Mogee exposing
+  ( Mogee
+  , AnimationState(..)
+  , mogee
+  , update
+  , die
+  , size
+  )
 
 import Time exposing (Time)
 

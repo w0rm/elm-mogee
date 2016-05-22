@@ -1,17 +1,22 @@
 {
     "version": "1.0.0",
     "summary": "A 2D WebGL game that fits into 64x64 px screen",
-    "repository": "https://github.com/w0rm/elm-mogee.git",
+    "repository": "https://github.com/elm-community/elm-webgl.git",
     "license": "",
     "source-directories": [
-        "src"
+        "src",
+        "elm-webgl/src"
     ],
     "exposed-modules": [],
+    "native-modules": true,
     "dependencies": {
-        "elm-community/elm-linear-algebra": "1.0.1 <= v < 2.0.0",
-        "elm-community/elm-webgl": "1.0.0 <= v < 2.0.0",
-        "elm-lang/core": "3.0.0 <= v < 4.0.0",
-        "evancz/elm-effects": "2.0.1 <= v < 3.0.0"
+        "elm-community/elm-linear-algebra": "2.0.1 <= v < 3.0.0",
+        "elm-lang/animation-frame": "1.0.0 <= v < 2.0.0",
+        "elm-lang/core": "4.0.0 <= v < 5.0.0",
+        "elm-lang/dom": "1.0.0 <= v < 2.0.0",
+        "elm-lang/html": "1.0.0 <= v < 2.0.0",
+        "elm-lang/keyboard": "1.0.0 <= v < 2.0.0",
+        "elm-lang/window": "1.0.0 <= v < 2.0.0"
     },
-    "elm-version": "0.16.0 <= v < 0.17.0"
+    "elm-version": "0.17.0 <= v < 0.18.0"
 }

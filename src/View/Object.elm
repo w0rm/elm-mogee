@@ -1,4 +1,4 @@
-module View.Object (render) where
+module View.Object exposing (render)
 
 import Model.Object as Object exposing (Object, Category(..))
 import WebGL as GL
