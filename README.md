@@ -11,6 +11,6 @@ Submitted to the [\#LOWREZJAM 2016](https://unsoundscapes.itch.io/mogee).
 ## Instructions to run
 
 1. Install elm [elm-lang.org/install](http://elm-lang.org/install)
-2. Clone this repo with elm-webgl submodule and `cd` into it
+2. Clone this repo
 3. Run `elm reactor`
 4. Open [localhost:8000/src/Main.elm](http://localhost:8000/src/Main.elm) in the browser
