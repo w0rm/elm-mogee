@@ -14,8 +14,7 @@ import Actions exposing (Action)
 view : Model -> Html Action
 view model =
   GL.toHtmlWith
-    [ GL.Enable GL.Blend
-    , GL.BlendFunc (GL.One, GL.OneMinusSrcAlpha)
+    [ GL.Enable GL.DepthTest
     ]
     [ width model.size
     , height model.size
@@ -26,8 +25,6 @@ view model =
           []
         Just texture ->
           render texture model
-          |> List.sortBy fst
-          |> List.map snd
     )
 
 
@@ -38,7 +35,7 @@ toMinimap (x, y) =
   )
 
 
-render : GL.Texture -> Model -> List (Int, GL.Renderable)
+render : GL.Texture -> Model -> List GL.Renderable
 render texture model =
   let
     (x, y) = Model.mogee model |> .position
@@ -57,18 +54,17 @@ render texture model =
     dot (x1, y1) =
       Common.rectangle
         (1, 1)
-        (63 - maxX - 1 + x1, y1 - minY + 1)
+        (63 - maxX - 1 + x1, y1 - minY + 1, 0)
         ( if x1 == cx && y1 == cy then
             (255, 255, 0)
           else
             (100, 100, 100)
         )
-      |> (,) 0
 
-    bg = (6, Common.rectangle (64, 64) (0, 0) (22, 17, 22))
+    bg = Common.rectangle (64, 64) (0, 0, 6) (22, 17, 22)
 
     monster {position, size} =
-      (2, Common.rectangle size (fst position - fst offset, snd position - snd offset) (22, 17, 22))
+      Common.rectangle size (fst position - fst offset, snd position - snd offset, 2) (22, 17, 22)
 
     offsetObject ({position} as object) =
       { object
@@ -77,14 +73,14 @@ render texture model =
 
   in
     if model.state == Model.Stopped then
-      (if model.score > 0 then (Lives.renderScore texture (32, 1) model.score) else []) ++
+      (if model.score > 0 then (Lives.renderScore texture (32, 1, 0) model.score) else []) ++
       [ Lives.renderTitle texture (3, 14)
-      , Lives.renderPlay texture (5, 44)
+      , Lives.renderPlay texture (5, 44, 0)
       , bg
       ]
     else
-      (if model.state == Model.Paused then [Lives.renderPlay texture (5, 44)] else []) ++
-      Lives.render texture (1, 1) model.lives ++
-      Lives.renderScore texture (32, 1) (model.currentScore + model.score) ++
+      (if model.state == Model.Paused then [Lives.renderPlay texture (5, 44, 0)] else []) ++
+      Lives.renderLives texture (1, 1, 0) model.lives ++
+      Lives.renderScore texture (32, 1, 0) (model.currentScore + model.score) ++
       List.map dot allScr ++
       List.foldl (Object.render texture) [bg] (List.map offsetObject model.objects)

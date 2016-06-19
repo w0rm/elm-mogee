@@ -14,7 +14,7 @@ type alias Vertex =
 
 
 type alias UniformColored =
-  { offset : Vec2
+  { offset : Vec3
   , size : Vec2
   , color : Vec3
   }
@@ -28,13 +28,13 @@ box =
     ]
 
 
-rectangle : (Float, Float) -> (Float, Float) -> (Int, Int, Int) -> GL.Renderable
+rectangle : (Float, Float) -> (Float, Float, Float) -> (Int, Int, Int) -> GL.Renderable
 rectangle size offset (r, g, b) =
   GL.render
     coloredVertexShader
     coloredFragmentShader
     box
-    { offset = Vec2.fromTuple offset
+    { offset = Vec3.fromTuple offset
     , color = Vec3.fromTuple (toFloat r, toFloat g, toFloat b)
     , size = Vec2.fromTuple size
     }
@@ -45,14 +45,14 @@ coloredVertexShader = [glsl|
 
   precision mediump float;
   attribute vec2 position;
-  uniform vec2 offset;
+  uniform vec3 offset;
   uniform vec2 size;
 
   void main () {
-    vec2 pos = position * size + offset;
+    vec2 pos = position * size + offset.xy;
     vec2 roundOffset = vec2(floor(pos.x + 0.5), floor(pos.y + 0.5));
     vec2 clipSpace = roundOffset / 32.0 - 1.0;
-    gl_Position = vec4(clipSpace.x, -clipSpace.y, 0, 1);
+    gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z / 10.0, 1);
   }
 
 |]
