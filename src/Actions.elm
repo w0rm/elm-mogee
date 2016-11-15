@@ -1,7 +1,7 @@
-module Actions exposing
-  ( Action(..)
-  )
-
+module Actions
+    exposing
+        ( Action(..)
+        )
 
 import Window exposing (Size)
 import Time exposing (Time)
@@ -10,8 +10,8 @@ import WebGL exposing (Error, Texture)
 
 
 type Action
-  = Resize Size
-  | Animate Time
-  | KeyChange (Keys -> Keys)
-  | TextureError Error
-  | TextureLoaded Texture
+    = Resize Size
+    | Animate Time
+    | KeyChange (Keys -> Keys)
+    | TextureError Error
+    | TextureLoaded Texture
