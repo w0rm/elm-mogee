@@ -7,34 +7,44 @@ import View.Common exposing (box)
 
 
 type alias UniformTextured =
-  { size : Vec2
-  , offset : Vec3
-  , texture : GL.Texture
-  , textureSize : Vec2
-  }
+    { size : Vec2
+    , offset : Vec3
+    , texture : GL.Texture
+    , textureSize : Vec2
+    }
 
 
 type alias Varying =
-  { texturePos : Vec2 }
+    { texturePos : Vec2 }
 
 
-render : GL.Texture -> (Float, Float) -> (Float, Float, Float) -> GL.Renderable
-render texture (w, h) position =
-  GL.render
-    texturedVertexShader
-    texturedFragmentShader
-    box
-    { offset = Vec3.fromTuple position
-    , texture = texture
-    , textureSize = vec2 (toFloat (fst (GL.textureSize texture))) (toFloat (snd (GL.textureSize texture)))
-    , size = vec2 w (if w == 1 || h == 1 then h else h + 3) -- only expand wider walls
-    }
+render : GL.Texture -> ( Float, Float ) -> ( Float, Float, Float ) -> GL.Renderable
+render texture ( w, h ) position =
+    GL.render
+        texturedVertexShader
+        texturedFragmentShader
+        box
+        { offset = Vec3.fromTuple position
+        , texture = texture
+        , textureSize = vec2 (toFloat (Tuple.first (GL.textureSize texture))) (toFloat (Tuple.second (GL.textureSize texture)))
+        , size =
+            vec2 w
+                (if w == 1 || h == 1 then
+                    h
+                 else
+                    h + 3
+                )
+            -- only expand wider walls
+        }
+
 
 
 -- Shaders
 
+
 texturedVertexShader : GL.Shader View.Common.Vertex UniformTextured Varying
-texturedVertexShader = [glsl|
+texturedVertexShader =
+    [glsl|
 
   precision mediump float;
   attribute vec2 position;
@@ -53,7 +63,8 @@ texturedVertexShader = [glsl|
 
 
 texturedFragmentShader : GL.Shader {} UniformTextured Varying
-texturedFragmentShader = [glsl|
+texturedFragmentShader =
+    [glsl|
 
   precision mediump float;
   uniform sampler2D texture;
