@@ -1,12 +1,9 @@
-module Actions
-    exposing
-        ( Action(..)
-        )
+module Actions exposing (Action(..))
 
 import Window exposing (Size)
 import Time exposing (Time)
 import Model.Keys exposing (Keys)
-import WebGL exposing (Error, Texture)
+import WebGL.Texture exposing (Error, Texture)
 
 
 type Action

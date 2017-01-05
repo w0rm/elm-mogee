@@ -1,13 +1,13 @@
 module View.Object exposing (render)
 
 import Model.Object as Object exposing (Object, Category(..))
-import WebGL as GL
 import View.Common exposing (rectangle)
 import View.Mogee as Mogee
 import View.Wall as Wall
+import WebGL exposing (Texture, Entity)
 
 
-render : GL.Texture -> Object -> List GL.Renderable -> List GL.Renderable
+render : Texture -> Object -> List Entity -> List Entity
 render texture ({ position, category, velocity, size } as object) =
     case category of
         WallCategory ->

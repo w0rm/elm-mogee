@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import WebGL as GL
+import WebGL exposing (Texture, Entity)
 import Model exposing (Model)
 import View.Common as Common
 import View.Object as Object
@@ -13,8 +13,9 @@ import Actions exposing (Action)
 
 view : Model -> Html Action
 view model =
-    GL.toHtmlWith
-        [ GL.Enable GL.DepthTest
+    WebGL.toHtmlWith
+        [ WebGL.depth 1
+        , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
         ]
         [ width model.size
         , height model.size
@@ -36,7 +37,7 @@ toMinimap ( x, y ) =
     )
 
 
-render : GL.Texture -> Model -> List GL.Renderable
+render : Texture -> Model -> List Entity
 render texture model =
     let
         ( x, y ) =
@@ -69,9 +70,6 @@ render texture model =
                     ( 100, 100, 100 )
                 )
 
-        bg =
-            Common.rectangle ( 64, 64 ) ( 0, 0, 6 ) ( 22, 17, 22 )
-
         monster { position, size } =
             Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) ( 22, 17, 22 )
 
@@ -88,7 +86,6 @@ render texture model =
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
                    , Lives.renderPlay texture ( 5, 44, 0 )
-                   , bg
                    ]
         else
             (if model.state == Model.Paused then
@@ -99,4 +96,4 @@ render texture model =
                 ++ Lives.renderLives texture ( 1, 1, 0 ) model.lives
                 ++ Lives.renderScore texture ( 32, 1, 0 ) (model.currentScore + model.score)
                 ++ List.map dot allScr
-                ++ List.foldl (Object.render texture) [ bg ] (List.map offsetObject model.objects)
+                ++ List.foldl (Object.render texture) [] (List.map offsetObject model.objects)
