@@ -7,27 +7,30 @@ import View.Object as Object
 import Model.Object exposing (invertScreen, isScreen)
 import View.Lives as Lives
 import Html exposing (Html)
-import Html.Attributes exposing (width, height, style)
+import Html.Attributes exposing (width, height, style, src, autoplay)
 import Actions exposing (Action)
 
 
 view : Model -> Html Action
 view model =
-    WebGL.toHtmlWith
-        [ WebGL.depth 1
-        , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
-        ]
-        [ width model.size
-        , height model.size
-        , style [ ( "display", "block" ) ]
-        ]
-        (case model.texture of
-            Nothing ->
-                []
+    Html.div []
+        [ Html.audio [ src "snd/theme.ogg", autoplay True ] []
+        , WebGL.toHtmlWith
+            [ WebGL.depth 1
+            , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+            ]
+            [ width model.size
+            , height model.size
+            , style [ ( "display", "block" ) ]
+            ]
+            (case model.texture of
+                Nothing ->
+                    []
 
-            Just texture ->
-                render texture model
-        )
+                Just texture ->
+                    render texture model
+            )
+        ]
 
 
 toMinimap : ( Float, Float ) -> ( Float, Float )
