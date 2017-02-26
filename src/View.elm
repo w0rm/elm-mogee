@@ -7,14 +7,14 @@ import View.Object as Object
 import Model.Object exposing (invertScreen, isScreen)
 import View.Lives as Lives
 import Html exposing (Html)
-import Html.Attributes exposing (width, height, style, src, autoplay)
+import Html.Attributes exposing (width, height, style, src, autoplay, loop)
 import Actions exposing (Action)
 
 
 view : Model -> Html Action
 view model =
     Html.div []
-        [ Html.audio [ src "snd/theme.ogg", autoplay True ] []
+        [ Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] []
         , WebGL.toHtmlWith
             [ WebGL.depth 1
             , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0

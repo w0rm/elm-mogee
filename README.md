@@ -14,3 +14,8 @@ Submitted to the [\#LOWREZJAM 2016](https://unsoundscapes.itch.io/mogee).
 2. Clone this repo
 3. Run `elm reactor`
 4. Open [localhost:8000/src/Main.elm](http://localhost:8000/src/Main.elm) in the browser
+
+## Special Credits
+
+* Pixel art by [Nadya Kuzmina](https://github.com/kuzminadya)
+* Theme music by [Carlos Pazuzu](https://twitter.com/carlospazuzu)
