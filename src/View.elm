@@ -1,7 +1,7 @@
 module View exposing (view)
 
 import WebGL exposing (Texture, Entity)
-import Model exposing (Model)
+import Model exposing (Model, GameState(Playing))
 import View.Common as Common
 import View.Object as Object
 import Model.Object exposing (invertScreen, isScreen)
@@ -14,23 +14,28 @@ import Actions exposing (Action)
 view : Model -> Html Action
 view model =
     Html.div []
-        [ Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] []
-        , WebGL.toHtmlWith
-            [ WebGL.depth 1
-            , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
-            ]
-            [ width model.size
-            , height model.size
-            , style [ ( "display", "block" ) ]
-            ]
-            (case model.texture of
-                Nothing ->
-                    []
+        ((if model.state == Playing then
+            (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
+          else
+            identity
+         )
+            [ WebGL.toHtmlWith
+                [ WebGL.depth 1
+                , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+                ]
+                [ width model.size
+                , height model.size
+                , style [ ( "display", "block" ) ]
+                ]
+                (case model.texture of
+                    Nothing ->
+                        []
 
-                Just texture ->
-                    render texture model
-            )
-        ]
+                    Just texture ->
+                        render texture model
+                )
+            ]
+        )
 
 
 toMinimap : ( Float, Float ) -> ( Float, Float )
