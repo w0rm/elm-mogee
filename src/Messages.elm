@@ -1,4 +1,4 @@
-module Actions exposing (Action(..))
+module Messages exposing (Msg(..))
 
 import Window exposing (Size)
 import Time exposing (Time)
@@ -6,9 +6,8 @@ import Model.Keys exposing (Keys)
 import WebGL.Texture exposing (Error, Texture)
 
 
-type Action
+type Msg
     = Resize Size
     | Animate Time
     | KeyChange (Keys -> Keys)
-    | TextureError Error
-    | TextureLoaded Texture
+    | TextureLoaded (Result Error Texture)

@@ -12,8 +12,8 @@ import Model.Direction as Direction exposing (Direction(..))
 import Model.Keys as Keys exposing (Keys)
 import Time exposing (Time)
 import Random
-import WebGL exposing (Texture)
-import Actions exposing (Action(..))
+import WebGL.Texture exposing (Texture, Error)
+import Messages exposing (Msg(..))
 
 
 type GameState
@@ -53,7 +53,7 @@ model =
     }
 
 
-update : Action -> Model -> ( Model, Cmd Action )
+update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         Resize { width, height } ->
@@ -66,10 +66,7 @@ update action model =
             { model | keys = func model.keys } ! []
 
         TextureLoaded texture ->
-            { model | texture = Just texture } ! []
-
-        _ ->
-            model ! []
+            { model | texture = Result.toMaybe texture } ! []
 
 
 animate : Time -> Model -> Model
