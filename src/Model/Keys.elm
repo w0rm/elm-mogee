@@ -43,7 +43,7 @@ keyChange on keyCode =
             identity
 
 
-directions : Keys -> { x : Int, y : Int }
+directions : Keys -> { x : Float, y : Float }
 directions { left, right, up, down } =
     let
         direction a b =

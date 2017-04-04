@@ -60,7 +60,7 @@ update action model =
             { model | size = min width height // 64 * 64 } ! []
 
         Animate elapsed ->
-            animate (min elapsed 25 * 1.5) model ! []
+            animate (min elapsed 60 * 1.5) model ! []
 
         KeyChange func ->
             { model | keys = func model.keys } ! []
@@ -109,14 +109,14 @@ mogee { objects } =
         |> Maybe.withDefault (Object.mogee ( 28, 27 ))
 
 
-updateObjects : Time -> { x : Int, y : Int } -> Model -> Model
+updateObjects : Time -> { x : Float, y : Float } -> Model -> Model
 updateObjects elapsed keys model =
     let
-        objects =
-            Object.cleanup model.objects
-
         screens =
-            List.filter Object.isScreen objects
+            List.filter Object.isScreen model.objects
+
+        walls =
+            List.filter Object.isWall model.objects
 
         number =
             screens
@@ -125,14 +125,11 @@ updateObjects elapsed keys model =
                 |> List.maximum
                 |> Maybe.withDefault 0
 
-        walls =
-            List.filter Object.isWall objects
-
         updateObject =
             Object.update elapsed keys screens walls
     in
         { model
-            | objects = List.foldr updateObject [] objects
+            | objects = List.foldr updateObject [] model.objects
             , currentScore = max number model.currentScore
         }
 
@@ -155,9 +152,8 @@ addScreen model =
                 , direction = direction
                 , screens = model.screens + 1
                 , objects =
-                    (Object.walls model.direction direction (model.screens + 1)
+                    Object.walls model.direction direction (model.screens + 1)
                         ++ List.map (Object.offset (Direction.opposite model.direction)) model.objects
-                    )
             }
         else
             model
