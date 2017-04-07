@@ -12,23 +12,23 @@ module Model.Object
         , collide
         , offset
         , invertScreen
-        , cleanup
         )
 
-import Model.Mogee as Mogee exposing (Mogee)
-import Time exposing (Time)
 import Model.Direction as Direction exposing (Direction(..))
+import Model.Mogee as Mogee exposing (Mogee)
+import Model.Screen as Screen exposing (AnimationState(Moving), Screen)
+import Time exposing (Time)
 
 
 type Category
     = WallCategory
     | MogeeCategory Mogee
-    | ScreenCategory Direction
+    | ScreenCategory Screen
 
 
 type alias Keys =
-    { x : Int
-    , y : Int
+    { x : Float
+    , y : Float
     }
 
 
@@ -36,20 +36,14 @@ type alias Object =
     { number : Int
     , category : Category
     , velocity : ( Float, Float )
-    , size :
-        ( Float, Float )
-        -- dimensions
-    , position :
-        ( Float, Float )
-        -- the top left corner
+    , size : ( Float, Float )
+    , position : ( Float, Float )
     }
 
 
 offset : Direction -> Object -> Object
 offset direction object =
-    { object
-        | position = Direction.offset ( 64, 64 ) object.position direction
-    }
+    { object | position = Direction.offset ( 64, 64 ) object.position direction }
 
 
 gravity : Float
@@ -77,12 +71,14 @@ screenVelocity =
     0.01
 
 
-screen : Int -> Direction -> ( Float, Float ) -> Object
-screen number direction =
+screen : Int -> Direction -> Direction -> ( Float, Float ) -> Object
+screen number from to =
     Object
         number
-        (ScreenCategory direction)
-        ( 0, 0 )
+        (ScreenCategory (Screen.screen from to))
+        ( screenVelocity + 0.001 * toFloat number
+        , screenVelocity + 0.001 * toFloat number
+        )
         ( 64, 64 )
 
 
@@ -107,7 +103,7 @@ wall number =
 
 
 walls : Direction -> Direction -> Int -> List Object
-walls from direction number =
+walls from to number =
     let
         corner =
             wall number ( borderSize, borderSize )
@@ -121,7 +117,7 @@ walls from direction number =
         oppositeDir =
             Direction.opposite from
     in
-        screen number direction ( 0, 0 )
+        screen number from to ( 0, 0 )
             :: wall number ( 7, 2 ) ( 0, 11 )
             :: wall number ( 16, 2 ) ( 24, 11 )
             :: wall number ( 11, 2 ) ( 6, 27 )
@@ -136,7 +132,7 @@ walls from direction number =
                 , ( size - borderSize, size - borderSize )
                 , ( 0, size - borderSize )
                 ]
-            ++ (List.filter (\d -> d /= oppositeDir && d /= direction) [ Left, Right, Top, Bottom ]
+            ++ (List.filter (\d -> d /= oppositeDir && d /= to) [ Left, Right, Top, Bottom ]
                     |> List.map
                         (\d ->
                             case d of
@@ -288,7 +284,7 @@ moveX dt dx walls object =
 invertScreen : Object -> Object
 invertScreen ({ size, position, velocity, category } as object) =
     case category of
-        ScreenCategory direction ->
+        ScreenCategory { to } ->
             let
                 ( x, y ) =
                     position
@@ -296,7 +292,7 @@ invertScreen ({ size, position, velocity, category } as object) =
                 ( w, h ) =
                     size
             in
-                (case direction of
+                (case to of
                     Left ->
                         { object
                             | size = ( 64 - w, h )
@@ -326,8 +322,8 @@ invertScreen ({ size, position, velocity, category } as object) =
             object
 
 
-shrink : Time -> Direction -> Object -> Object
-shrink dt direction object =
+shrink : Time -> Screen -> Object -> List Object -> List Object
+shrink dt { to, state } object =
     let
         ( x, y ) =
             object.position
@@ -341,10 +337,12 @@ shrink dt direction object =
         newH =
             max 0 (h - dt * Tuple.second object.velocity)
     in
-        if w == 0 || h == 0 then
-            Debug.log "d" object
+        if state /= Moving then
+            (::) object
+        else if w == 0 || h == 0 then
+            identity
         else
-            case direction of
+            (case to of
                 Left ->
                     { object
                         | size = ( newW, 64 )
@@ -366,17 +364,14 @@ shrink dt direction object =
                         | size = ( 64, newH )
                         , position = ( x, y - newH + h )
                     }
+            )
+                |> (::)
 
 
-activate : List Object -> Object -> Object
-activate objects object =
+activate : List Object -> Screen -> Object -> Object
+activate objects screen object =
     if List.all (\{ number } -> number /= object.number - 1) objects then
-        { object
-            | velocity =
-                ( screenVelocity + 0.001 * toFloat object.number
-                , screenVelocity + 0.001 * toFloat object.number
-                )
-        }
+        { object | category = ScreenCategory (Screen.activate screen) }
     else
         object
 
@@ -384,36 +379,29 @@ activate objects object =
 update : Time -> Keys -> List Object -> List Object -> Object -> List Object -> List Object
 update elapsed { x, y } screens walls object =
     case object.category of
-        ScreenCategory direction ->
-            object
-                |> shrink elapsed direction
-                |> activate screens
-                |> (::)
+        ScreenCategory screen ->
+            let
+                newScreen =
+                    Screen.update elapsed object.velocity screen
+            in
+                { object | category = ScreenCategory newScreen }
+                    |> activate screens newScreen
+                    |> shrink elapsed newScreen
 
         WallCategory ->
             if List.any (collide object) screens then
-                object |> (::)
+                (::) object
             else
                 identity
 
         MogeeCategory mogee ->
             if List.any (collide object) screens then
-                { object
-                    | category = MogeeCategory (Mogee.update elapsed object.velocity mogee)
-                }
-                    |> moveY elapsed (toFloat y) walls
-                    |> moveX elapsed (toFloat x) walls
+                { object | category = MogeeCategory (Mogee.update elapsed object.velocity mogee) }
+                    |> moveY elapsed y walls
+                    |> moveX elapsed x walls
                     |> (::)
             else
-                { object
-                    | category = MogeeCategory (Mogee.die mogee)
-                }
-                    |> (::)
-
-
-cleanup : List Object -> List Object
-cleanup =
-    List.filter (\{ size } -> Tuple.first size /= 0 && Tuple.second size /= 0)
+                (::) { object | category = MogeeCategory (Mogee.die mogee) }
 
 
 toIntTuple : ( Float, Float ) -> ( Int, Int )
@@ -436,18 +424,7 @@ collide o1 o2 =
         ( w2, h2 ) =
             toIntTuple o2.size
     in
-        x1
-            < x2
-            + w2
-            && x1
-            + w1
-            > x2
-            && y1
-            < y2
-            + h2
-            && y1
-            + h1
-            > y2
+        x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2
 
 
 isDead : List Object -> Bool

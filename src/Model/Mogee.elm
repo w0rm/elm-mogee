@@ -82,10 +82,10 @@ update dt velocity mogee =
 
 
 updateState : ( Float, Float ) -> Mogee -> Mogee
-updateState velocity mogee =
+updateState ( vx, _ ) mogee =
     case mogee.state of
         Standing ->
-            if Tuple.first velocity /= 0 then
+            if vx /= 0 then
                 { mogee
                     | state = Walking
                     , frames = walking
@@ -94,7 +94,7 @@ updateState velocity mogee =
                 mogee
 
         Walking ->
-            if Tuple.first velocity == 0 then
+            if vx == 0 then
                 { mogee
                     | state = Standing
                     , frames = standing
