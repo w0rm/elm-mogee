@@ -29,7 +29,7 @@ screen : Direction -> Direction -> Screen
 screen from to =
     { from = from
     , to = to
-    , elapsed = 64
+    , elapsed = 0
     , state = Initial
     }
 
@@ -41,7 +41,7 @@ update dt ( vx, vy ) screen =
             screen
 
         _ ->
-            if screen.elapsed - vx * dt <= 0 then
+            if screen.elapsed - vx * dt <= 1 then
                 { screen
                     | elapsed = 64
                     , state = Moving
@@ -57,24 +57,9 @@ activate screen =
     case screen.state of
         Initial ->
             if screen.to == screen.from then
-                { screen | state = Moving }
+                { screen | state = Moving, elapsed = 64 }
             else
-                { screen | state = Rotating }
+                { screen | state = Rotating, elapsed = 16 }
 
         _ ->
             screen
-
-
-move : List Float
-move =
-    [ 1, 2, 3, 0, 4, 5, 6, 0 ]
-
-
-fadeIn : List Float
-fadeIn =
-    [ 7, 8, 9, 10, 11, 12, 18, 18 ]
-
-
-fadeOut : List Float
-fadeOut =
-    [ 18, 18, 13, 14, 15, 16, 17, 0 ]
