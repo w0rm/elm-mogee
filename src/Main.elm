@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Mogee exposing (main)
 
 import WebGL.Texture as Texture exposing (defaultOptions)
 import Keyboard
