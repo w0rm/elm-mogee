@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import Html exposing (Html)
+import Html exposing (Html, div)
 import Html.Attributes exposing (autoplay, height, loop, src, style, width)
 import Messages exposing (Msg)
 import Model exposing (GameState(Playing), Model)
@@ -11,32 +11,50 @@ import View.Object as Object
 import WebGL exposing (Entity, Texture)
 
 
-withSound : GameState -> List (Html Msg) -> Html Msg
-withSound state content =
+withSound : GameState -> List (Html Msg) -> List (Html Msg)
+withSound state =
     case state of
         Playing ->
-            Html.div [] (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [] :: content)
+            (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
 
         _ ->
-            Html.div [] content
+            identity
 
 
 view : Model -> Html Msg
 view model =
-    withSound model.state
-        [ WebGL.toHtmlWith
-            [ WebGL.depth 1
-            , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+    div
+        [ style
+            [ ( "position", "absolute" )
+            , ( "left", "0" )
+            , ( "top", "0" )
+            , ( "width", "100%" )
+            , ( "height", "100%" )
+            , ( "background", "#000" )
             ]
-            [ width model.size
-            , height model.size
-            , style [ ( "display", "block" ) ]
-            ]
-            (model.texture
-                |> Maybe.map (render model)
-                |> Maybe.withDefault []
-            )
         ]
+        (withSound model.state
+            [ WebGL.toHtmlWith
+                [ WebGL.depth 1
+                , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+                ]
+                [ width model.size
+                , height model.size
+                , style
+                    [ ( "display", "block" )
+                    , ( "position", "absolute" )
+                    , ( "top", "50%" )
+                    , ( "left", "50%" )
+                    , ( "margin-top", toString (-model.size // 2) ++ "px" )
+                    , ( "margin-left", toString (-model.size // 2) ++ "px" )
+                    ]
+                ]
+                (model.texture
+                    |> Maybe.map (render model)
+                    |> Maybe.withDefault []
+                )
+            ]
+        )
 
 
 toMinimap : ( Float, Float ) -> ( Float, Float )
