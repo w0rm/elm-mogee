@@ -15,14 +15,14 @@ move =
     [ 1, 2, 3, 0, 4, 5, 6, 0 ]
 
 
-fadeOut : List Int
-fadeOut =
-    [ 7, 8, 9, 10, 11, 12, 18, 18 ]
-
-
 fadeIn : List Int
 fadeIn =
-    [ 18, 18, 13, 14, 15, 16, 17, 0 ]
+    [ 12, 12, 7, 8, 9, 10, 11, 0 ]
+
+
+fadeOut : List Int
+fadeOut =
+    List.reverse fadeIn
 
 
 frame : List Int -> Float -> Float
