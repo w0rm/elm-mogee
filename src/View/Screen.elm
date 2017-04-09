@@ -12,7 +12,7 @@ import Model.Direction exposing (Direction(..))
 
 move : List Int
 move =
-    [ 1, 2, 3, 0, 4, 5, 6, 0 ]
+    [ 0, 1, 2, 3, 0, 4, 5, 6 ]
 
 
 fadeIn : List Int
@@ -25,10 +25,10 @@ fadeOut =
     List.reverse fadeIn
 
 
-frame : List Int -> Float -> Float
-frame list elapsed =
+frameOffset : List Int -> Float -> Float
+frameOffset list frame =
     list
-        |> List.drop ((64 - round (elapsed / 2)) % 8)
+        |> List.drop (truncate frame)
         |> List.head
         |> Maybe.withDefault 0
         |> toFloat
@@ -129,7 +129,7 @@ type alias Varying =
 
 
 render : Texture -> ( Float, Float ) -> ( Float, Float ) -> Screen -> List Entity -> List Entity
-render texture position size { state, from, to, elapsed } =
+render texture position size { state, from, to, frame } =
     case state of
         Initial ->
             identity
@@ -143,7 +143,7 @@ render texture position size { state, from, to, elapsed } =
                     { offset = fadeOffset position
                     , texture = texture
                     , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                    , textureOffset = vec2 (64 + 10 * frame fadeIn elapsed) 0
+                    , textureOffset = vec2 (64 + 10 * frameOffset fadeIn frame) 0
                     , frameSize = vec2 10 64
                     , transform = fadeInTransform from to
                     }
@@ -156,7 +156,7 @@ render texture position size { state, from, to, elapsed } =
                         { offset = fadeOffset position
                         , texture = texture
                         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                        , textureOffset = vec2 (64 + 10 * frame fadeOut elapsed) 0
+                        , textureOffset = vec2 (64 + 10 * frameOffset fadeOut frame) 0
                         , frameSize = vec2 10 64
                         , transform = fadeOutTransform from to
                         }
@@ -171,7 +171,7 @@ render texture position size { state, from, to, elapsed } =
                     { offset = screenOffset position size to
                     , texture = texture
                     , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                    , textureOffset = vec2 (64 + 10 * frame move elapsed) 0
+                    , textureOffset = vec2 (64 + 10 * frameOffset move frame) 0
                     , frameSize = vec2 10 64
                     , transform = movingTransform to
                     }
@@ -215,9 +215,8 @@ texturedFragmentShader =
         varying vec2 texturePos;
 
         void main () {
-          vec2 textureClipSpace = texturePos * frameSize / textureSize - 1.0;
-          vec2 offset = textureOffset / textureSize;
-          gl_FragColor = texture2D(texture, vec2(textureClipSpace.x + offset.x, -textureClipSpace.y - offset.y));
+          vec2 textureClipSpace = (texturePos * frameSize + textureOffset) / textureSize - 1.0;
+          gl_FragColor = texture2D(texture, vec2(textureClipSpace.x, -textureClipSpace.y));
           if (gl_FragColor.a == 0.0) discard;
         }
 

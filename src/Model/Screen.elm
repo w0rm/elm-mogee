@@ -20,7 +20,7 @@ type AnimationState
 type alias Screen =
     { from : Direction
     , to : Direction
-    , elapsed : Time
+    , frame : Time
     , state : AnimationState
     }
 
@@ -29,7 +29,7 @@ screen : Direction -> Direction -> Screen
 screen from to =
     { from = from
     , to = to
-    , elapsed = 0
+    , frame = 0
     , state = Initial
     }
 
@@ -41,15 +41,14 @@ update dt ( vx, vy ) screen =
             screen
 
         _ ->
-            if screen.elapsed - vx * dt <= 1 then
-                { screen
-                    | elapsed = 64
-                    , state = Moving
-                }
-            else
-                { screen
-                    | elapsed = screen.elapsed - vx * dt
-                }
+            let
+                frame =
+                    screen.frame + vx * dt / 2
+            in
+                if frame >= 8 then
+                    { screen | frame = 8 - frame, state = Moving }
+                else
+                    { screen | frame = frame }
 
 
 activate : Screen -> Screen
@@ -57,9 +56,9 @@ activate screen =
     case screen.state of
         Initial ->
             if screen.to == screen.from then
-                { screen | state = Moving, elapsed = 64 }
+                { screen | state = Moving, frame = 0 }
             else
-                { screen | state = Rotating, elapsed = 16 }
+                { screen | state = Rotating, frame = 0 }
 
         _ ->
             screen
