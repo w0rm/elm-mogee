@@ -1,38 +1,57 @@
 module View exposing (view)
 
-import WebGL exposing (Texture, Entity)
-import Model exposing (Model, GameState(Playing))
-import View.Common as Common
-import View.Object as Object
+import Html exposing (Html, div)
+import Html.Attributes exposing (autoplay, height, loop, src, style, width)
+import Messages exposing (Msg)
+import Model exposing (GameState(Playing), Model)
 import Model.Object exposing (invertScreen, isScreen)
+import View.Common as Common
 import View.Lives as Lives
-import Html exposing (Html)
-import Html.Attributes exposing (width, height, style, src, autoplay, loop)
-import Actions exposing (Action)
+import View.Object as Object
+import WebGL exposing (Entity, Texture)
 
 
-view : Model -> Html Action
-view model =
-    Html.div []
-        ((if model.state == Playing then
+withSound : GameState -> List (Html Msg) -> List (Html Msg)
+withSound state =
+    case state of
+        Playing ->
             (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
-          else
+
+        _ ->
             identity
-         )
+
+
+view : Model -> Html Msg
+view model =
+    div
+        [ style
+            [ ( "position", "absolute" )
+            , ( "left", "0" )
+            , ( "top", "0" )
+            , ( "width", "100%" )
+            , ( "height", "100%" )
+            , ( "background", "#000" )
+            ]
+        ]
+        (withSound model.state
             [ WebGL.toHtmlWith
                 [ WebGL.depth 1
                 , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
                 ]
                 [ width model.size
                 , height model.size
-                , style [ ( "display", "block" ) ]
+                , style
+                    [ ( "display", "block" )
+                    , ( "position", "absolute" )
+                    , ( "top", "50%" )
+                    , ( "left", "50%" )
+                    , ( "margin-top", toString (-model.size // 2) ++ "px" )
+                    , ( "margin-left", toString (-model.size // 2) ++ "px" )
+                    ]
                 ]
-                (case model.texture of
-                    Nothing ->
-                        []
-
-                    Just texture ->
-                        render texture model
+                (model.texture
+                    |> Maybe.map (render model)
+                    |> Maybe.withDefault []
                 )
             ]
         )
@@ -45,8 +64,8 @@ toMinimap ( x, y ) =
     )
 
 
-render : Texture -> Model -> List Entity
-render texture model =
+render : Model -> Texture -> List Entity
+render model texture =
     let
         ( x, y ) =
             Model.mogee model |> .position

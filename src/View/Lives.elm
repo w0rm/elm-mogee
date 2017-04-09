@@ -130,8 +130,8 @@ texturedVertexShader =
 
         void main () {
             vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
-            vec2 clipSpace = (position * size + roundOffset) / 32.0 - 1.0;
-            gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z / 10.0, 1);
+            vec2 clipSpace = position * size + roundOffset - 32.0;
+            gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
             texturePos = position * size;
         }
 
