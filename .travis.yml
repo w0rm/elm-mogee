@@ -1,0 +1,23 @@
+language: node_js
+cache:
+  directories:
+  - node_modules
+  - elm-stuff
+git:
+  depth: 150
+branches:
+  only:
+  - master
+install:
+- npm install -g elm@0.18.0
+- curl -OL http://dl.itch.ovh/butler/linux-amd64/head/butler
+- chmod +x butler
+env:
+  global:
+    secure: t338wvOixHjIc1J+e7ELki1ncpV1rwoVsjSkonxDsrEsKCj9JiOBINggJSXeM+Pbs8L9ZBMMmtWVXI7O9JFR0/AcSLNWMAaxgfqyPP8cT7fmmwHTE2pMbH9p2wc7c+zQ3YR2EgnoTiXchq2V4GMPgN8cLy4qegXEAOr17x8Z+tqUv21kkNoA/7pFw+vyd6HRg4B5cIT7EgAeqClqWVFVtrsDm6+rJ6OISTuMzO9sI/cEtdOFthPvuJkMvoCh8RlAeIenc+j6xncKhHUaUIsEflwp8ZYdUQiHp2/pcp/NDNDQ15KOzIG1pv4hXuwGr1t839MPTblwXEUYzVL8vFvVi2wmLWnFo3/Faeg/P7Oi/TZJwsksXlBj69b8McjgB+Hco3tcg1elalJo1rUVzxRDCdTDRqazWCjyglbyN4tB/s8/0BeS93JSA5O/LEPmo4pHG3sgF388Appvp9hPiyZY3wMkwo42IiNB/0DgmqvG2cr0Bp7UBVJg8rkCx3HJSsdcfUMJpIXUUbHiLb8SonT5z/t87OneyAqf5R5QCk5Mfx56jRGrUvN/rmVDS1qn80bKyCoaWP14I84gre2Ur0YgTB8A84NXlKEHGbCTDCcmpUgIKfF49IC5cdjrfk8PAUTooGfKLHm0zj2ussrFkNqTq1hO3l+s7qv+WuxZoAOuCaw=
+script:
+- ./deploy.sh
+notifications:
+  email:
+    recipients:
+    - unsoundscapes@gmail.com
