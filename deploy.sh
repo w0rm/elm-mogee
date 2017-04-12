@@ -14,4 +14,4 @@ elm make src/Main.elm --yes --output dest/index.html
 sed 's/\.\.\/snd\/theme.ogg/snd\/theme.ogg/g' dest/index.html > dest/index.html.tmp && mv dest/index.html.tmp dest/index.html
 
 # publish to itch.io
-butler push dest unsoundscapes/mogee:html
+./butler push dest unsoundscapes/mogee:html
