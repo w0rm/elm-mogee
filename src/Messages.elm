@@ -2,12 +2,12 @@ module Messages exposing (Msg(..))
 
 import Window exposing (Size)
 import Time exposing (Time)
-import Model.Keys exposing (Keys)
 import WebGL.Texture exposing (Error, Texture)
+import Keyboard exposing (KeyCode)
 
 
 type Msg
     = Resize Size
     | Animate Time
-    | KeyChange (Keys -> Keys)
+    | KeyChange Bool KeyCode
     | TextureLoaded (Result Error Texture)

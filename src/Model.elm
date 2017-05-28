@@ -62,8 +62,8 @@ update action model =
         Animate elapsed ->
             animate (min elapsed 60 * 1.5) model ! []
 
-        KeyChange func ->
-            { model | keys = func model.keys } ! []
+        KeyChange pressed keyCode ->
+            { model | keys = Keys.keyChange pressed keyCode model.keys } ! []
 
         TextureLoaded texture ->
             { model | texture = Result.toMaybe texture } ! []

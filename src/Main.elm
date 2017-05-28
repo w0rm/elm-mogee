@@ -3,7 +3,6 @@ module Mogee exposing (main)
 import WebGL.Texture as Texture exposing (defaultOptions)
 import Keyboard
 import Model exposing (Model)
-import Model.Keys as Keys
 import Task exposing (Task)
 import Messages exposing (Msg(..))
 import View
@@ -16,8 +15,8 @@ subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
         [ AnimationFrame.diffs Animate
-        , Keyboard.downs (Keys.keyChange True >> KeyChange)
-        , Keyboard.ups (Keys.keyChange False >> KeyChange)
+        , Keyboard.downs (KeyChange True)
+        , Keyboard.ups (KeyChange False)
         , Window.resizes Resize
         ]
 
