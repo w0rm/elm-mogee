@@ -8,14 +8,14 @@ module View.Lives
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
-import View.Common exposing (box)
+import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
 
 
 type alias UniformTextured =
     { offset : Vec3
-    , size : Vec2
+    , frameSize : Vec2
     , textureOffset : Vec2
     , texture : Texture
     , textureSize : Vec2
@@ -68,7 +68,7 @@ renderDigit texture ( x, y, z ) index number =
         , texture = texture
         , textureOffset = vec2 (toFloat number * 3) 50
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , size = vec2 3 4
+        , frameSize = vec2 3 4
         }
 
 
@@ -82,7 +82,7 @@ renderLive texture offset =
         , texture = texture
         , textureOffset = vec2 56 0
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , size = vec2 5 6
+        , frameSize = vec2 5 6
         }
 
 
@@ -96,7 +96,7 @@ renderTitle texture ( x, y ) =
         , texture = texture
         , textureOffset = vec2 0 15
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , size = vec2 58 24
+        , frameSize = vec2 58 24
         }
 
 
@@ -110,7 +110,7 @@ renderPlay texture offset =
         , texture = texture
         , textureOffset = vec2 0 39
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , size = vec2 54 11
+        , frameSize = vec2 54 11
         }
 
 
@@ -125,34 +125,14 @@ texturedVertexShader =
         precision mediump float;
         attribute vec2 position;
         uniform vec3 offset;
-        uniform vec2 size;
+        uniform vec2 frameSize;
         varying vec2 texturePos;
 
         void main () {
             vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
-            vec2 clipSpace = position * size + roundOffset - 32.0;
+            vec2 clipSpace = position * frameSize + roundOffset - 32.0;
             gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
-            texturePos = position * size;
-        }
-
-    |]
-
-
-texturedFragmentShader : Shader {} UniformTextured Varying
-texturedFragmentShader =
-    [glsl|
-
-        precision mediump float;
-        uniform sampler2D texture;
-        uniform vec2 textureSize;
-        varying vec2 texturePos;
-        uniform vec2 textureOffset;
-
-        void main () {
-          vec2 textureClipSpace = texturePos / textureSize - 1.0;
-          vec2 offset = textureOffset / textureSize;
-          gl_FragColor = texture2D(texture, vec2(textureClipSpace.x + offset.x, -textureClipSpace.y - offset.y));
-          if (gl_FragColor.a == 0.0) discard;
+            texturePos = position * frameSize;
         }
 
     |]

@@ -4,7 +4,7 @@ import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Model.Screen exposing (Screen, AnimationState(..))
-import View.Common exposing (box)
+import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
 import Model.Direction exposing (Direction(..))
@@ -197,27 +197,7 @@ texturedVertexShader =
           vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
           vec2 clipSpace = vec2(transform * vec4(position * frameSize, 0, 1)) + roundOffset - 32.0;
           gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
-          texturePos = position;
-        }
-
-    |]
-
-
-texturedFragmentShader : Shader {} UniformTextured Varying
-texturedFragmentShader =
-    [glsl|
-
-        precision mediump float;
-        uniform sampler2D texture;
-        uniform vec2 textureSize;
-        uniform vec2 textureOffset;
-        uniform vec2 frameSize;
-        varying vec2 texturePos;
-
-        void main () {
-          vec2 textureClipSpace = (texturePos * frameSize + textureOffset) / textureSize - 1.0;
-          gl_FragColor = texture2D(texture, vec2(textureClipSpace.x, -textureClipSpace.y));
-          if (gl_FragColor.a == 0.0) discard;
+          texturePos = position * frameSize;
         }
 
     |]

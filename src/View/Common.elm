@@ -3,11 +3,12 @@ module View.Common
         ( Vertex
         , box
         , rectangle
+        , texturedFragmentShader
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
-import WebGL exposing (Shader, Mesh, Entity)
+import WebGL exposing (Shader, Mesh, Entity, Texture)
 
 
 type alias Vertex =
@@ -69,6 +70,43 @@ coloredFragmentShader =
 
         void main () {
           gl_FragColor = vec4(color / 255.0, 1);
+        }
+
+    |]
+
+
+type alias UniformTextured a =
+    { a
+        | texture : Texture
+        , textureSize : Vec2
+        , textureOffset : Vec2
+        , frameSize : Vec2
+    }
+
+
+type alias Varying =
+    { texturePos : Vec2 }
+
+
+texturedFragmentShader : Shader {} (UniformTextured a) Varying
+texturedFragmentShader =
+    [glsl|
+
+        precision mediump float;
+        uniform sampler2D texture;
+        uniform vec2 textureSize;
+        uniform vec2 textureOffset;
+        uniform vec2 frameSize;
+        varying vec2 texturePos;
+
+        void main () {
+          vec2 pos = vec2(
+            float(int(texturePos.x) - int(texturePos.x) / int(frameSize.x) * int(frameSize.x)),
+            float(int(texturePos.y) - int(texturePos.y) / int(frameSize.y) * int(frameSize.y))
+          );
+          vec2 offset = (pos + textureOffset) / textureSize;
+          gl_FragColor = texture2D(texture, offset);
+          if (gl_FragColor.a == 0.0) discard;
         }
 
     |]
