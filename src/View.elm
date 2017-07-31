@@ -49,8 +49,7 @@ view model =
                     , ( "margin-left", toString (-model.size // 2) ++ "px" )
                     ]
                 ]
-                (model.texture
-                    |> Maybe.map (render model)
+                (Maybe.map2 (render model) model.texture model.font
                     |> Maybe.withDefault []
                 )
             ]
@@ -64,8 +63,8 @@ toMinimap ( x, y ) =
     )
 
 
-render : Model -> Texture -> List Entity
-render model texture =
+render : Model -> Texture -> Texture -> List Entity
+render model texture font =
     let
         ( x, y ) =
             Model.mogee model |> .position
@@ -112,7 +111,7 @@ render model texture =
                 []
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , Lives.renderPlay texture ( 5, 44, 0 )
+                   , Lives.renderPlay font ( 5, 44, 0 )
                    ]
         else
             (if model.state == Model.Paused then

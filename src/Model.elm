@@ -33,6 +33,7 @@ type alias Model =
     , screens : Int
     , size : Int
     , texture : Maybe Texture
+    , font : Maybe Texture
     , keys : Keys
     }
 
@@ -49,6 +50,7 @@ model =
     , state = Stopped
     , size = 0
     , texture = Nothing
+    , font = Nothing
     , keys = Keys False False False False False False
     }
 
@@ -67,6 +69,9 @@ update action model =
 
         TextureLoaded texture ->
             { model | texture = Result.toMaybe texture } ! []
+
+        FontLoaded font ->
+            { model | font = Result.toMaybe font } ! []
 
 
 animate : Time -> Model -> Model

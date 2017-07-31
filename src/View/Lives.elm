@@ -11,6 +11,7 @@ import Math.Vector3 as Vec3 exposing (Vec3)
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
+import View.Font as Font
 
 
 type alias UniformTextured =
@@ -100,18 +101,14 @@ renderTitle texture ( x, y ) =
         }
 
 
+playText : Mesh Font.Vertex
+playText =
+    Font.textMesh 64 "press to play"
+
+
 renderPlay : Texture -> ( Float, Float, Float ) -> Entity
-renderPlay texture offset =
-    WebGL.entity
-        texturedVertexShader
-        texturedFragmentShader
-        box
-        { offset = Vec3.fromTuple offset
-        , texture = texture
-        , textureOffset = vec2 0 39
-        , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , frameSize = vec2 54 11
-        }
+renderPlay =
+    Font.renderText ( 1, 1, 1 ) playText
 
 
 
