@@ -89,8 +89,8 @@ textMeshHelper prevChar text currentX currentY list =
         Just ( char, rest ) ->
             case Dict.get char font of
                 Just charInfo ->
-                    addLetter charInfo ( currentX + (letterSpace prevChar char), currentY ) <|
-                        textMeshHelper (Just char) rest (currentX + charInfo.w + (letterSpace prevChar char)) currentY list
+                    addLetter charInfo ( currentX + (letterSpacing prevChar char), currentY ) <|
+                        textMeshHelper (Just char) rest (currentX + charInfo.w + (letterSpacing prevChar char)) currentY list
 
                 Nothing ->
                     textMeshHelper prevChar rest currentX currentY list
@@ -99,8 +99,8 @@ textMeshHelper prevChar text currentX currentY list =
             list
 
 
-letterSpace : Maybe Char -> Char -> Float
-letterSpace prevChar nextChar =
+letterSpacing : Maybe Char -> Char -> Float
+letterSpacing prevChar nextChar =
     case prevChar of
         Nothing ->
             0
