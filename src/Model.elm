@@ -173,6 +173,7 @@ checkLives m =
                 | seed = m.seed
                 , score = m.score + m.currentScore
                 , texture = m.texture
+                , font = m.font
                 , size = m.size
                 , currentScore = 0
             }

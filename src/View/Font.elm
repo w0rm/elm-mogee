@@ -82,12 +82,8 @@ textMeshHelper text width currentX currentY list =
         Just ( char, rest ) ->
             case Dict.get char font of
                 Just char ->
-                    if currentX + char.w < width then
-                        addLetter char ( currentX, currentY ) <|
-                            textMeshHelper rest width (currentX + char.w + 1) currentY list
-                    else
-                        addLetter char ( currentX, currentY ) <|
-                            textMeshHelper rest width 0 (currentY + fontHeight) list
+                    addLetter char ( currentX, currentY ) <|
+                        textMeshHelper rest width (currentX + char.w + 1) currentY list
 
                 Nothing ->
                     textMeshHelper rest width currentX currentY list
