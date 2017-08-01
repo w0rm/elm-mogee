@@ -6,6 +6,7 @@ import Messages exposing (Msg)
 import Model exposing (GameState(Playing), Model)
 import Model.Object exposing (invertScreen, isScreen)
 import View.Common as Common
+import View.Color as Color
 import View.Lives as Lives
 import View.Object as Object
 import WebGL exposing (Entity, Texture)
@@ -91,13 +92,13 @@ render model texture font =
                 ( 1, 1 )
                 ( 63 - maxX - 1 + x1, y1 - minY + 1, 0 )
                 (if x1 == cx && y1 == cy then
-                    ( 255, 255, 0 )
+                    Color.yellow
                  else
-                    ( 100, 100, 100 )
+                    Color.gray
                 )
 
         monster { position, size } =
-            Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) ( 22, 17, 22 )
+            Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) Color.darkBlue
 
         offsetObject ({ position } as object) =
             { object
@@ -111,11 +112,11 @@ render model texture font =
                 []
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , Lives.renderPlay font ( 5, 40, 0 )
+                   , Lives.renderPlay font ( 11, 40, 0 )
                    ]
         else
             (if model.state == Model.Paused then
-                [ Lives.renderPlay font ( 5, 40, 0 ) ]
+                [ Lives.renderPlay font ( 11, 40, 0 ) ]
              else
                 []
             )

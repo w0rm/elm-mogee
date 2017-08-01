@@ -103,7 +103,7 @@ renderTitle texture ( x, y ) =
 
 playText : Text
 playText =
-    Font.text "press enter\nto play"
+    Font.text "press enter\n   to play"
 
 
 renderPlay : Texture -> ( Float, Float, Float ) -> Entity

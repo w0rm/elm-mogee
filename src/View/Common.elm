@@ -30,14 +30,14 @@ box =
         ]
 
 
-rectangle : ( Float, Float ) -> ( Float, Float, Float ) -> ( Int, Int, Int ) -> Entity
-rectangle size offset ( r, g, b ) =
+rectangle : ( Float, Float ) -> ( Float, Float, Float ) -> Vec3 -> Entity
+rectangle size offset color =
     WebGL.entity
         coloredVertexShader
         coloredFragmentShader
         box
         { offset = Vec3.fromTuple offset
-        , color = Vec3.fromTuple ( toFloat r, toFloat g, toFloat b )
+        , color = color
         , size = Vec2.fromTuple size
         }
 
@@ -69,7 +69,7 @@ coloredFragmentShader =
         uniform vec3 color;
 
         void main () {
-          gl_FragColor = vec4(color / 255.0, 1);
+          gl_FragColor = vec4(color, 1);
         }
 
     |]

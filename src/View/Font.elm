@@ -9,10 +9,46 @@ module View.Font
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture exposing (defaultOptions)
+import WebGL.Texture as Texture exposing (Error, defaultOptions)
 import Dict exposing (Dict)
 import String
 import Task
+
+
+font : Dict Char CharInfo
+font =
+    Dict.fromList
+        [ ( 'a', CharInfo 0 0 3 )
+        , ( 'b', CharInfo 3 0 3 )
+        , ( 'c', CharInfo 6 0 3 )
+        , ( 'd', CharInfo 9 0 3 )
+        , ( 'e', CharInfo 12 0 3 )
+        , ( 'f', CharInfo 15 0 4 )
+        , ( 'g', CharInfo 19 0 3 )
+        , ( 'h', CharInfo 22 0 3 )
+        , ( 'i', CharInfo 25 0 1 )
+        , ( 'j', CharInfo 26 0 3 )
+        , ( 'k', CharInfo 29 0 3 )
+        , ( 'l', CharInfo 32 0 1 )
+        , ( 'm', CharInfo 33 0 5 )
+        , ( 'n', CharInfo 38 0 3 )
+        , ( 'o', CharInfo 41 0 3 )
+        , ( 'p', CharInfo 44 0 3 )
+        , ( 'q', CharInfo 47 0 3 )
+        , ( 'r', CharInfo 50 0 3 )
+        , ( 's', CharInfo 53 0 3 )
+        , ( 't', CharInfo 56 0 3 )
+        , ( 'u', CharInfo 59 0 3 )
+        , ( 'v', CharInfo 0 11 3 )
+        , ( 'w', CharInfo 3 11 5 )
+        , ( 'x', CharInfo 8 11 3 )
+        , ( 'y', CharInfo 11 11 3 )
+        ]
+
+
+fontSrc : String
+fontSrc =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQAAAACCEkxzAAAAlElEQVR4nO3NoQ3CYBiE4ff/UlECMyDRlcgKRAkdAYFHIJAgqpiDMACCBZoQTDeo7AAVGPKTQHKIUkODxHHqSe6SQ5KXpODKcXjJwKAaAxmjJDoF57Tvivmk8I9VafEWgVUW7wYOetj0cIfbJkFae/lcBmEJYFBHAE40MTqYpZ1q0WL/xjJs4PQMPsd1W32/+OOXeAH8QSv4tLvk/QAAAABJRU5ErkJggg=="
 
 
 type alias CharInfo =
@@ -36,31 +72,10 @@ type Text
     = Text (Mesh Vertex)
 
 
-font : Dict Char CharInfo
-font =
-    Dict.fromList
-        [ ( 'a', CharInfo 0 0 3 )
-        , ( 'e', CharInfo 3 0 3 )
-        , ( 'l', CharInfo 6 0 1 )
-        , ( 'o', CharInfo 7 0 3 )
-        , ( 'p', CharInfo 10 0 3 )
-        , ( 'r', CharInfo 13 0 3 )
-        , ( 's', CharInfo 16 0 3 )
-        , ( 't', CharInfo 19 0 3 )
-        , ( 'y', CharInfo 22 0 3 )
-        ]
-
-
-fontSrc : String
-fontSrc =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAp0lEQVR4nO3WUQrDIAwAUFN2/yu7n7nJ1JWOSiu8B/2o2qBJA0bOOaeOiEiDqcMiIk4JNMF29QaudnoCblzsrkdKn03nnJsDlFborSkt0vtmFO9utrrXv/t+7/AR8V5TnjK3iqYFjlZshSr/0iSgruSeuuKrJmEb/db1+6hFylhvfJWkxOge0Cz8817wSsJtM+EeMCvwqDUAAAAAAAAAAAAAAAAAmOgJA/tfHXyVBbYAAAAASUVORK5CYII="
-
-
 kerning : Dict ( Char, Char ) Float
 kerning =
     Dict.fromList
-        [ ( ( 't', 'o' ), 0 )
-        ]
+        []
 
 
 type alias Vertex =
@@ -69,7 +84,7 @@ type alias Vertex =
     }
 
 
-load : (Result Texture.Error Texture -> msg) -> Cmd msg
+load : (Result Error Texture -> msg) -> Cmd msg
 load msg =
     Texture.loadWith
         { defaultOptions
