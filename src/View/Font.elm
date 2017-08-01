@@ -76,6 +76,9 @@ textMeshHelper text width currentX currentY list =
         Just ( ' ', rest ) ->
             textMeshHelper rest width (currentX + spaceWidth) currentY list
 
+        Just ( '\n', rest ) ->
+            textMeshHelper rest width 0 (currentY + fontHeight) list
+
         Just ( char, rest ) ->
             case Dict.get char font of
                 Just char ->

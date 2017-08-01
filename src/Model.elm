@@ -84,6 +84,7 @@ animate elapsed m =
                     , lives = m.lives
                     , seed = m.seed
                     , texture = m.texture
+                    , font = m.font
                     , size = m.size
                     , score = m.score
                 }

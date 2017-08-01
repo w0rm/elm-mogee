@@ -111,11 +111,11 @@ render model texture font =
                 []
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , Lives.renderPlay font ( 5, 44, 0 )
+                   , Lives.renderPlay font ( 5, 40, 0 )
                    ]
         else
             (if model.state == Model.Paused then
-                [ Lives.renderPlay texture ( 5, 44, 0 ) ]
+                [ Lives.renderPlay font ( 5, 40, 0 ) ]
              else
                 []
             )
