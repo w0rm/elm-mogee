@@ -11,3 +11,4 @@ type Msg
     | Animate Time
     | KeyChange Bool KeyCode
     | TextureLoaded (Result Error Texture)
+    | FontLoaded (Result Error Texture)

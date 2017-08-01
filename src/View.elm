@@ -6,6 +6,7 @@ import Messages exposing (Msg)
 import Model exposing (GameState(Playing), Model)
 import Model.Object exposing (invertScreen, isScreen)
 import View.Common as Common
+import View.Color as Color
 import View.Lives as Lives
 import View.Object as Object
 import WebGL exposing (Entity, Texture)
@@ -49,8 +50,7 @@ view model =
                     , ( "margin-left", toString (-model.size // 2) ++ "px" )
                     ]
                 ]
-                (model.texture
-                    |> Maybe.map (render model)
+                (Maybe.map2 (render model) model.texture model.font
                     |> Maybe.withDefault []
                 )
             ]
@@ -64,8 +64,8 @@ toMinimap ( x, y ) =
     )
 
 
-render : Model -> Texture -> List Entity
-render model texture =
+render : Model -> Texture -> Texture -> List Entity
+render model texture font =
     let
         ( x, y ) =
             Model.mogee model |> .position
@@ -92,13 +92,13 @@ render model texture =
                 ( 1, 1 )
                 ( 63 - maxX - 1 + x1, y1 - minY + 1, 0 )
                 (if x1 == cx && y1 == cy then
-                    ( 255, 255, 0 )
+                    Color.yellow
                  else
-                    ( 100, 100, 100 )
+                    Color.gray
                 )
 
         monster { position, size } =
-            Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) ( 22, 17, 22 )
+            Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) Color.darkBlue
 
         offsetObject ({ position } as object) =
             { object
@@ -112,11 +112,11 @@ render model texture =
                 []
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , Lives.renderPlay texture ( 5, 44, 0 )
+                   , Lives.renderPlay font ( 11, 40, 0 )
                    ]
         else
             (if model.state == Model.Paused then
-                [ Lives.renderPlay texture ( 5, 44, 0 ) ]
+                [ Lives.renderPlay font ( 11, 40, 0 ) ]
              else
                 []
             )

@@ -27,14 +27,20 @@ getFrame frames =
     List.head frames |> Maybe.withDefault 0
 
 
-render : Texture -> ( Float, Float ) -> Mogee -> Float -> Entity
-render texture position mogee mirror =
+render : Texture -> ( Float, Float ) -> ( Float, Float ) -> Mogee -> Entity
+render texture position velocity mogee =
     let
         layer =
             if mogee.state == Dead then
                 1
             else
                 4
+
+        mirror =
+            if Tuple.first velocity < 0 then
+                -1
+            else
+                1
     in
         WebGL.entity
             texturedVertexShader

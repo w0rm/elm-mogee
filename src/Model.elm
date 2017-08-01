@@ -33,6 +33,7 @@ type alias Model =
     , screens : Int
     , size : Int
     , texture : Maybe Texture
+    , font : Maybe Texture
     , keys : Keys
     }
 
@@ -49,6 +50,7 @@ model =
     , state = Stopped
     , size = 0
     , texture = Nothing
+    , font = Nothing
     , keys = Keys False False False False False False
     }
 
@@ -68,6 +70,9 @@ update action model =
         TextureLoaded texture ->
             { model | texture = Result.toMaybe texture } ! []
 
+        FontLoaded font ->
+            { model | font = Result.toMaybe font } ! []
+
 
 animate : Time -> Model -> Model
 animate elapsed m =
@@ -79,6 +84,7 @@ animate elapsed m =
                     , lives = m.lives
                     , seed = m.seed
                     , texture = m.texture
+                    , font = m.font
                     , size = m.size
                     , score = m.score
                 }
@@ -167,6 +173,7 @@ checkLives m =
                 | seed = m.seed
                 , score = m.score + m.currentScore
                 , texture = m.texture
+                , font = m.font
                 , size = m.size
                 , currentScore = 0
             }
