@@ -11,7 +11,7 @@ import Math.Vector3 as Vec3 exposing (Vec3)
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
-import View.Font as Font
+import View.Font as Font exposing (Text)
 
 
 type alias UniformTextured =
@@ -101,14 +101,14 @@ renderTitle texture ( x, y ) =
         }
 
 
-playText : Mesh Font.Vertex
+playText : Text
 playText =
-    Font.textMesh "press enter\nto play"
+    Font.text "press enter\nto play"
 
 
 renderPlay : Texture -> ( Float, Float, Float ) -> Entity
 renderPlay =
-    Font.renderText ( 1, 1, 1 ) playText
+    Font.render ( 1, 1, 1 ) playText
 
 
 

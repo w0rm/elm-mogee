@@ -1,16 +1,18 @@
 module View.Font
     exposing
-        ( textMesh
-        , renderText
-        , Vertex
+        ( text
+        , render
+        , Text
+        , load
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture
+import WebGL.Texture as Texture exposing (defaultOptions)
 import Dict exposing (Dict)
 import String
+import Task
 
 
 type alias CharInfo =
@@ -30,6 +32,10 @@ spaceWidth =
     3
 
 
+type Text
+    = Text (Mesh Vertex)
+
+
 font : Dict Char CharInfo
 font =
     Dict.fromList
@@ -45,6 +51,11 @@ font =
         ]
 
 
+fontSrc : String
+fontSrc =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAp0lEQVR4nO3WUQrDIAwAUFN2/yu7n7nJ1JWOSiu8B/2o2qBJA0bOOaeOiEiDqcMiIk4JNMF29QaudnoCblzsrkdKn03nnJsDlFborSkt0vtmFO9utrrXv/t+7/AR8V5TnjK3iqYFjlZshSr/0iSgruSeuuKrJmEb/db1+6hFylhvfJWkxOge0Cz8817wSsJtM+EeMCvwqDUAAAAAAAAAAAAAAAAAmOgJA/tfHXyVBbYAAAAASUVORK5CYII="
+
+
 kerning : Dict ( Char, Char ) Float
 kerning =
     Dict.fromList
@@ -58,8 +69,20 @@ type alias Vertex =
     }
 
 
-renderText : ( Float, Float, Float ) -> Mesh Vertex -> Texture -> ( Float, Float, Float ) -> Entity
-renderText color mesh texture offset =
+load : (Result Texture.Error Texture -> msg) -> Cmd msg
+load msg =
+    Texture.loadWith
+        { defaultOptions
+            | magnify = Texture.nearest
+            , minify = Texture.nearest
+            , flipY = False
+        }
+        fontSrc
+        |> Task.attempt msg
+
+
+render : ( Float, Float, Float ) -> Text -> Texture -> ( Float, Float, Float ) -> Entity
+render color (Text mesh) texture offset =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
@@ -72,9 +95,9 @@ renderText color mesh texture offset =
         }
 
 
-textMesh : String -> Mesh Vertex
-textMesh text =
-    WebGL.triangles (textMeshHelper Nothing text 0 0 [])
+text : String -> Text
+text text =
+    Text (WebGL.triangles (textMeshHelper Nothing text 0 0 []))
 
 
 textMeshHelper : Maybe Char -> String -> Float -> Float -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )

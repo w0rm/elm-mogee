@@ -33,14 +33,13 @@ render texture position ( w, h ) =
         , textureOffset = vec2 0 10
         , frameSize = vec2 64 5
         , size =
+            -- only expand wider walls
             vec2 w
                 (if w == 1 || h == 1 then
                     h
                  else
                     h + 3
                 )
-
-        -- only expand wider walls
         }
 
 
