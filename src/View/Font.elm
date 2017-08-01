@@ -27,7 +27,7 @@ fontHeight =
 
 spaceWidth : Float
 spaceWidth =
-    2
+    3
 
 
 font : Dict Char CharInfo
@@ -42,6 +42,13 @@ font =
         , ( 's', CharInfo 16 0 3 )
         , ( 't', CharInfo 19 0 3 )
         , ( 'y', CharInfo 22 0 3 )
+        ]
+
+
+kerning : Dict ( Char, Char ) Float
+kerning =
+    Dict.fromList
+        [ ( ( 't', 'o' ), 0 )
         ]
 
 
@@ -65,31 +72,48 @@ renderText color mesh texture offset =
         }
 
 
-textMesh : Float -> String -> Mesh Vertex
-textMesh width text =
-    WebGL.triangles (textMeshHelper text width 0 0 [])
+textMesh : String -> Mesh Vertex
+textMesh text =
+    WebGL.triangles (textMeshHelper Nothing text 0 0 [])
 
 
-textMeshHelper : String -> Float -> Float -> Float -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )
-textMeshHelper text width currentX currentY list =
+textMeshHelper : Maybe Char -> String -> Float -> Float -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )
+textMeshHelper prevChar text currentX currentY list =
     case String.uncons text of
         Just ( ' ', rest ) ->
-            textMeshHelper rest width (currentX + spaceWidth) currentY list
+            textMeshHelper (Just ' ') rest (currentX + spaceWidth) currentY list
 
         Just ( '\n', rest ) ->
-            textMeshHelper rest width 0 (currentY + fontHeight) list
+            textMeshHelper (Just '\n') rest 0 (currentY + fontHeight) list
 
         Just ( char, rest ) ->
             case Dict.get char font of
-                Just char ->
-                    addLetter char ( currentX, currentY ) <|
-                        textMeshHelper rest width (currentX + char.w + 1) currentY list
+                Just charInfo ->
+                    addLetter charInfo ( currentX + (letterSpace prevChar char), currentY ) <|
+                        textMeshHelper (Just char) rest (currentX + charInfo.w + (letterSpace prevChar char)) currentY list
 
                 Nothing ->
-                    textMeshHelper rest width currentX currentY list
+                    textMeshHelper prevChar rest currentX currentY list
 
         Nothing ->
             list
+
+
+letterSpace : Maybe Char -> Char -> Float
+letterSpace prevChar nextChar =
+    case prevChar of
+        Nothing ->
+            0
+
+        Just ' ' ->
+            0
+
+        Just '\n' ->
+            0
+
+        Just char ->
+            Dict.get ( char, nextChar ) kerning
+                |> Maybe.withDefault 1
 
 
 addLetter : CharInfo -> ( Float, Float ) -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )

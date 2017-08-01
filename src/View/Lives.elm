@@ -103,7 +103,7 @@ renderTitle texture ( x, y ) =
 
 playText : Mesh Font.Vertex
 playText =
-    Font.textMesh 64 "press enter\nto play"
+    Font.textMesh "press enter\nto play"
 
 
 renderPlay : Texture -> ( Float, Float, Float ) -> Entity
