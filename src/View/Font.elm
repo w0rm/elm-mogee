@@ -58,14 +58,15 @@ font =
         , ( 'w', CharInfo 43 11 5 )
         , ( 'x', CharInfo 48 11 3 )
         , ( 'y', CharInfo 51 11 3 )
-        , ( '{', CharInfo 54 11 3 )
-        , ( '}', CharInfo 57 11 3 )
+        , ( 'z', CharInfo 54 11 3 )
+        , ( '{', CharInfo 57 11 3 )
+        , ( '}', CharInfo 60 11 3 )
         ]
 
 
 fontSrc : String
 fontSrc =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQAAAACCEkxzAAAA0ElEQVR4nO2PoU5CcRxGz/83p9y53XGfAAMGmASTxY0bSHQbGw9AsmkC5hM4ww0W2ShWCyb1CdCZnHOCSWa5TgrD+99ngPEIJk466Xz7nFhgT4A/zCY2uQz2gw4zY6txVxsmFXd6U87VoiTacO2D/m2p8GNqb4dZ/uPMDaKjza8kvGYgyd/rjUdJWVXvbll+dd6WE8djAGILgTG6Yq9bvLB6fWQ7we75C2A84E5o5o0Yi+l9GwSF51YOvHwqzUdM5VPpt4rkU+lTbvWCtfyr/AGuUk8ayHCEdgAAAABJRU5ErkJggg=="
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABAAQAAAACCEkxzAAAAzUlEQVR4nGP8zwABTBcYGBj+2vx5wfRiNqchZwPDDyYG9ph9Luem6zJWbtLicBGcLsjCWG++ZIem/Cem//XcfH8EHjYzbhcMZXs1nW8lw/b/////3f//DsP5/////7H/f48RavItxr9MUCsKHzAwMDAwvGDiY2BgeMDA8IVlA+vi/HyPf8JMCpyqE28wMDMw+vz7f0f3R4IwE4MDA5MDw3w5JgYGTvlL2ewNDH///33////v20zfIObxMPz///f9///P/zPCfcEwyqArAwBEIUx+get51wAAAABJRU5ErkJggg=="
 
 
 type alias CharInfo =
