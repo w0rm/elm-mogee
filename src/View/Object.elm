@@ -12,19 +12,10 @@ render : Texture -> Object -> List Entity -> List Entity
 render texture ({ position, category, velocity, size } as object) =
     case category of
         WallCategory ->
-            (::) (Wall.render texture size ( Tuple.first position, Tuple.second position, 3 ))
+            (::) (Wall.render texture position size)
 
         MogeeCategory mogee ->
-            (::)
-                (Mogee.render texture
-                    position
-                    mogee
-                    (if Tuple.first velocity < 0 then
-                        -1
-                     else
-                        1
-                    )
-                )
+            (::) (Mogee.render texture position velocity mogee)
 
         ScreenCategory screen ->
             let

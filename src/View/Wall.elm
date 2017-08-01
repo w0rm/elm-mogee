@@ -21,13 +21,13 @@ type alias Varying =
     { texturePos : Vec2 }
 
 
-render : Texture -> ( Float, Float ) -> ( Float, Float, Float ) -> Entity
-render texture ( w, h ) position =
+render : Texture -> ( Float, Float ) -> ( Float, Float ) -> Entity
+render texture position ( w, h ) =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = Vec3.fromTuple position
+        { offset = Vec3.fromTuple ( Tuple.first position, Tuple.second position, 3 )
         , texture = texture
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
         , textureOffset = vec2 0 10
