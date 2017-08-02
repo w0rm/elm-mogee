@@ -25,6 +25,9 @@ def main():
                 img = Image.open(image_path)
                 width, _ = img.size
                 name, _ = os.path.splitext(os.path.basename(filename))
+                name = chr(int(name, 16))
+                if name == '\'':
+                    name = '\\\''
                 if x_dest + width > SIZE:
                     x_dest = 0
                     y_dest += LINE_HEIGHT
