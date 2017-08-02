@@ -9,14 +9,14 @@ import View.Color as Color
 import WebGL exposing (Texture, Entity)
 
 
-render : Texture -> Object -> List Entity -> List Entity
-render texture ({ position, category, velocity, size } as object) =
+render : Texture -> Float -> Object -> List Entity -> List Entity
+render texture directionX ({ position, category, velocity, size } as object) =
     case category of
         WallCategory ->
             (::) (Wall.render texture position size)
 
         MogeeCategory mogee ->
-            (::) (Mogee.render texture position velocity mogee)
+            (::) (Mogee.render texture position directionX mogee)
 
         ScreenCategory screen ->
             let

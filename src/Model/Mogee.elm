@@ -55,11 +55,11 @@ die mogee =
     }
 
 
-update : Time -> ( Float, Float ) -> Mogee -> Mogee
-update dt velocity mogee =
+update : Time -> Float -> Mogee -> Mogee
+update dt directionX mogee =
     let
         newMogee =
-            updateState velocity mogee
+            updateState directionX mogee
 
         timeout =
             if newMogee.state == Standing then
@@ -81,11 +81,11 @@ update dt velocity mogee =
             }
 
 
-updateState : ( Float, Float ) -> Mogee -> Mogee
-updateState ( vx, _ ) mogee =
+updateState : Float -> Mogee -> Mogee
+updateState directionX mogee =
     case mogee.state of
         Standing ->
-            if vx /= 0 then
+            if directionX /= 0 then
                 { mogee
                     | state = Walking
                     , frames = walking
@@ -94,7 +94,7 @@ updateState ( vx, _ ) mogee =
                 mogee
 
         Walking ->
-            if vx == 0 then
+            if directionX == 0 then
                 { mogee
                     | state = Standing
                     , frames = standing

@@ -27,8 +27,8 @@ getFrame frames =
     List.head frames |> Maybe.withDefault 0
 
 
-render : Texture -> ( Float, Float ) -> ( Float, Float ) -> Mogee -> Entity
-render texture position velocity mogee =
+render : Texture -> ( Float, Float ) -> Float -> Mogee -> Entity
+render texture ( x, y ) directionX mogee =
     let
         layer =
             if mogee.state == Dead then
@@ -37,7 +37,7 @@ render texture position velocity mogee =
                 4
 
         mirror =
-            if Tuple.first velocity < 0 then
+            if directionX < 0 then
                 -1
             else
                 1
@@ -46,7 +46,7 @@ render texture position velocity mogee =
             texturedVertexShader
             texturedFragmentShader
             box
-            { offset = Vec3.fromTuple ( Tuple.first position, Tuple.second position, layer )
+            { offset = Vec3.fromTuple ( toFloat (round x), toFloat (round y), layer )
             , texture = texture
             , mirror = mirror
             , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
@@ -71,8 +71,7 @@ texturedVertexShader =
         varying vec2 texturePos;
 
         void main () {
-          vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
-          vec2 clipSpace = position * frameSize + roundOffset - 32.0;
+          vec2 clipSpace = position * frameSize + offset.xy - 32.0;
           gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
           texturePos = vec2((position.x - 0.5) * mirror + 0.5, position.y) * frameSize;
         }

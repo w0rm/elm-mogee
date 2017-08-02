@@ -7,7 +7,7 @@ module View.Common
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3)
+import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Shader, Mesh, Entity, Texture)
 
 
@@ -31,14 +31,14 @@ box =
 
 
 rectangle : ( Float, Float ) -> ( Float, Float, Float ) -> Vec3 -> Entity
-rectangle size offset color =
+rectangle ( w, h ) ( x, y, l ) color =
     WebGL.entity
         coloredVertexShader
         coloredFragmentShader
         box
-        { offset = Vec3.fromTuple offset
+        { offset = vec3 (toFloat (round x)) (toFloat (round y)) l
         , color = color
-        , size = Vec2.fromTuple size
+        , size = vec2 (toFloat (round w)) (toFloat (round h))
         }
 
 
@@ -52,9 +52,7 @@ coloredVertexShader =
         uniform vec2 size;
 
         void main () {
-          vec2 pos = position * size + offset.xy;
-          vec2 roundOffset = vec2(floor(pos.x + 0.5), floor(pos.y + 0.5));
-          vec2 clipSpace = roundOffset - 32.0;
+          vec2 clipSpace = position * size + offset.xy - 32.0;
           gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
         }
 

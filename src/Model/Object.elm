@@ -104,51 +104,36 @@ wall number =
 
 walls : Direction -> Direction -> Int -> List Object
 walls from to number =
-    let
-        corner =
-            wall number ( borderSize, borderSize )
+    List.foldl
+        (\d ->
+            if d == Direction.opposite from || d == to then
+                identity
+            else
+                (case d of
+                    Left ->
+                        wall number ( borderSize, size ) ( 0, 0 )
 
-        horizontal =
-            wall number ( size - 2 * borderSize, borderSize )
+                    Right ->
+                        wall number ( borderSize, size ) ( size - borderSize, 0 )
 
-        vertical =
-            wall number ( borderSize, size - 2 * borderSize )
+                    Top ->
+                        wall number ( size, borderSize ) ( 0, 0 )
 
-        oppositeDir =
-            Direction.opposite from
-    in
-        screen number from to ( 0, 0 )
-            :: wall number ( 7, 2 ) ( 0, 11 )
-            :: wall number ( 16, 2 ) ( 24, 11 )
-            :: wall number ( 11, 2 ) ( 6, 27 )
-            :: wall number ( 13, 2 ) ( 51, 27 )
-            :: wall number ( 11, 2 ) ( 0, 43 )
-            :: wall number ( 33, 2 ) ( 31, 43 )
-            :: wall number ( 19, 2 ) ( 17, 58 )
-            :: List.map
-                corner
-                [ ( 0, 0 )
-                , ( size - borderSize, 0 )
-                , ( size - borderSize, size - borderSize )
-                , ( 0, size - borderSize )
-                ]
-            ++ (List.filter (\d -> d /= oppositeDir && d /= to) [ Left, Right, Top, Bottom ]
-                    |> List.map
-                        (\d ->
-                            case d of
-                                Left ->
-                                    vertical ( 0, borderSize )
-
-                                Right ->
-                                    vertical ( size - borderSize, borderSize )
-
-                                Top ->
-                                    horizontal ( borderSize, 0 )
-
-                                Bottom ->
-                                    horizontal ( borderSize, size - borderSize )
-                        )
-               )
+                    Bottom ->
+                        wall number ( size, borderSize ) ( 0, size - borderSize )
+                )
+                    |> (::)
+        )
+        [ screen number from to ( 0, 0 )
+        , wall number ( 7, 2 ) ( 0, 11 )
+        , wall number ( 16, 2 ) ( 24, 11 )
+        , wall number ( 11, 2 ) ( 6, 27 )
+        , wall number ( 13, 2 ) ( 51, 27 )
+        , wall number ( 11, 2 ) ( 0, 43 )
+        , wall number ( 33, 2 ) ( 31, 43 )
+        , wall number ( 19, 2 ) ( 17, 58 )
+        ]
+        [ Left, Right, Top, Bottom ]
 
 
 isMogee : Object -> Bool
@@ -200,13 +185,13 @@ moveY dt dy walls object =
             (\({ position, size } as wall) object ->
                 if collide object wall then
                     if deltaY < 0 then
-                        {- Hit the top wall -}
+                        -- Hit the top wall
                         { object
                             | velocity = ( vx, 0 )
                             , position = ( x, Tuple.second position + Tuple.second size )
                         }
                     else
-                        {- Hit the bottom wall -}
+                        -- Hit the bottom wall
                         { object
                             | velocity =
                                 ( vx
@@ -233,9 +218,6 @@ moveX dt dx walls object =
         ( vx, vy ) =
             object.velocity
 
-        ( x, y ) =
-            object.position
-
         newVelocity =
             if dx == 0 then
                 if vx /= 0 then
@@ -251,6 +233,13 @@ moveX dt dx walls object =
 
         deltaX =
             dt * (vx + newVelocity) * 0.5
+
+        ( x, y ) =
+            if dx == 0 && deltaX == 0 then
+                -- Nudge the character on the pixel grid
+                ( toFloat (round (Tuple.first object.position)), Tuple.second object.position )
+            else
+                object.position
     in
         List.foldl
             (\({ position, size } as wall) object ->
@@ -258,17 +247,13 @@ moveX dt dx walls object =
                     if deltaX < 0 then
                         {- Hit the left wall -}
                         { object
-                            | velocity =
-                                ( -0.000001, vy )
-                                -- keep the sign of the direction
+                            | velocity = ( 0, vy )
                             , position = ( Tuple.first position + Tuple.first size, y )
                         }
                     else
                         {- Hit the right wall -}
                         { object
-                            | velocity =
-                                ( 0.000001, vy )
-                                -- keep the sign of the direction
+                            | velocity = ( 0, vy )
                             , position = ( Tuple.first position - Tuple.first object.size, y )
                         }
                 else
@@ -389,14 +374,14 @@ update elapsed { x, y } screens walls object =
                     |> shrink elapsed newScreen
 
         WallCategory ->
-            if List.any (collide object) screens then
+            if List.any (collide object) (List.filter (\{ size } -> Tuple.first size /= 0 && Tuple.second size /= 0) screens) then
                 (::) object
             else
                 identity
 
         MogeeCategory mogee ->
             if List.any (collide object) screens then
-                { object | category = MogeeCategory (Mogee.update elapsed object.velocity mogee) }
+                { object | category = MogeeCategory (Mogee.update elapsed x mogee) }
                     |> moveY elapsed y walls
                     |> moveX elapsed x walls
                     |> (::)
@@ -404,25 +389,20 @@ update elapsed { x, y } screens walls object =
                 (::) { object | category = MogeeCategory (Mogee.die mogee) }
 
 
-toIntTuple : ( Float, Float ) -> ( Int, Int )
-toIntTuple ( x, y ) =
-    ( round x, round y )
-
-
 collide : Object -> Object -> Bool
 collide o1 o2 =
     let
         ( x1, y1 ) =
-            toIntTuple o1.position
+            o1.position
 
         ( w1, h1 ) =
-            toIntTuple o1.size
+            o1.size
 
         ( x2, y2 ) =
-            toIntTuple o2.position
+            o2.position
 
         ( w2, h2 ) =
-            toIntTuple o2.size
+            o2.size
     in
         x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2
 

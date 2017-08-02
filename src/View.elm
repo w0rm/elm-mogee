@@ -3,6 +3,7 @@ module View exposing (view)
 import Html exposing (Html, div)
 import Html.Attributes exposing (autoplay, height, loop, src, style, width)
 import Messages exposing (Msg)
+import Model.Keys as Keys
 import Model exposing (GameState(Playing), Model)
 import Model.Object exposing (invertScreen, isScreen)
 import View.Common as Common
@@ -76,8 +77,11 @@ render model texture font =
         ( x, y ) =
             Model.mogee model |> .position
 
-        offset =
-            ( x - 32 + 4, y - 32 + 5 )
+        offsetX =
+            toFloat (round x - 32 + 4)
+
+        offsetY =
+            toFloat (round (y - 32 + 5))
 
         ( cx, cy ) =
             toMinimap ( x, y )
@@ -104,11 +108,11 @@ render model texture font =
                 )
 
         monster { position, size } =
-            Common.rectangle size ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset, 2 ) Color.darkBlue
+            Common.rectangle size ( Tuple.first position - offsetX, Tuple.second position - offsetY, 2 ) Color.darkBlue
 
         offsetObject ({ position } as object) =
             { object
-                | position = ( Tuple.first position - Tuple.first offset, Tuple.second position - Tuple.second offset )
+                | position = ( Tuple.first position - offsetX, Tuple.second position - offsetY )
             }
     in
         if model.state == Model.Stopped then
@@ -129,4 +133,4 @@ render model texture font =
                 ++ Lives.renderLives texture ( 1, 1, 0 ) model.lives
                 ++ Lives.renderScore texture ( 32, 1, 0 ) (model.currentScore + model.score)
                 ++ List.map dot allScr
-                ++ List.foldl (Object.render texture) [] (List.map offsetObject model.objects)
+                ++ List.foldl (Object.render texture (Keys.directions model.keys).x) [] (List.map offsetObject model.objects)
