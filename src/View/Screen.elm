@@ -100,18 +100,18 @@ screenOffset : ( Float, Float ) -> ( Float, Float ) -> Direction -> Vec3
 screenOffset ( x, y ) ( w, h ) direction =
     case direction of
         Right ->
-            Vec3.fromTuple ( x - w, y, 2 )
+            Vec3.fromTuple ( toFloat (round (x - w)), toFloat (round y), 2 )
 
         Bottom ->
-            Vec3.fromTuple ( x, y - h, 2 )
+            Vec3.fromTuple ( toFloat (round x), toFloat (round (y - h)), 2 )
 
         _ ->
-            Vec3.fromTuple ( x, y, 2 )
+            Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
 
 
 fadeOffset : ( Float, Float ) -> Vec3
 fadeOffset ( x, y ) =
-    Vec3.fromTuple ( x, y, 2 )
+    Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
 
 
 type alias UniformTextured =
@@ -194,8 +194,7 @@ texturedVertexShader =
         varying vec2 texturePos;
 
         void main () {
-          vec2 roundOffset = vec2(floor(offset.x + 0.5), floor(offset.y + 0.5));
-          vec2 clipSpace = vec2(transform * vec4(position * frameSize, 0, 1)) + roundOffset - 32.0;
+          vec2 clipSpace = vec2(transform * vec4(position * frameSize, 0, 1)) + offset.xy - 32.0;
           gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
           texturePos = position * frameSize;
         }
