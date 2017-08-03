@@ -11,6 +11,7 @@ import View.Color as Color
 import View.Lives as Lives
 import View.Object as Object
 import WebGL exposing (Entity, Texture)
+import View.Font as Font exposing (Text)
 
 
 withSound : GameState -> List (Html Msg) -> List (Html Msg)
@@ -122,11 +123,11 @@ render model texture font =
                 []
             )
                 ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , Lives.renderPlay font ( 11, 40, 0 )
+                   , renderPlay font
                    ]
         else
             (if model.state == Model.Paused then
-                [ Lives.renderPlay font ( 11, 40, 0 ) ]
+                [ renderPlay font ]
              else
                 []
             )
@@ -134,3 +135,13 @@ render model texture font =
                 ++ Lives.renderScore texture ( 32, 1, 0 ) (model.currentScore + model.score)
                 ++ List.map dot allScr
                 ++ List.foldl (Object.render texture (Keys.directions model.keys).x) [] (List.map offsetObject model.objects)
+
+
+playText : Text
+playText =
+    Font.text "press enter\n   to play"
+
+
+renderPlay : Texture -> Entity
+renderPlay texture =
+    Font.render ( 1, 1, 1 ) playText texture ( 11, 40, 0 )

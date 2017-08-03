@@ -3,7 +3,6 @@ module View.Lives
         ( renderLives
         , renderScore
         , renderTitle
-        , renderPlay
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -11,7 +10,6 @@ import Math.Vector3 as Vec3 exposing (Vec3)
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
-import View.Font as Font exposing (Text)
 
 
 type alias UniformTextured =
@@ -99,16 +97,6 @@ renderTitle texture ( x, y ) =
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
         , frameSize = vec2 58 24
         }
-
-
-playText : Text
-playText =
-    Font.text "press enter\n   to play"
-
-
-renderPlay : Texture -> ( Float, Float, Float ) -> Entity
-renderPlay =
-    Font.render ( 1, 1, 1 ) playText
 
 
 
