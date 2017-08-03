@@ -72,7 +72,7 @@ def main():
     font_src = "\"data:image/png;base64,%s\"" % base64.b64encode(buff.getvalue()).decode("utf-8")
     with open("src/view/FontData.elm", "w") as f:
         f.write(TEMPLATE % dict(char_info=char_info, font_src=font_src))
-    result_img.save(DEST_PATH, "png")
+    # result_img.save(DEST_PATH, "png")
 
 
 if __name__ == '__main__':
