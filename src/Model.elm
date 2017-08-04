@@ -3,17 +3,15 @@ module Model
         ( Model
         , model
         , update
-        , mogee
         , GameState(..)
         )
 
-import Model.Object as Object exposing (Object)
-import Model.Direction as Direction exposing (Direction(..))
-import Model.Keys as Keys exposing (Keys)
+import Components.Keys as Keys exposing (Keys)
 import Time exposing (Time)
-import Random
 import WebGL.Texture exposing (Texture, Error)
 import Messages exposing (Msg(..))
+import Systems.Systems as Systems exposing (Systems)
+import Components.Components as Components exposing (Components)
 
 
 type GameState
@@ -23,14 +21,11 @@ type GameState
 
 
 type alias Model =
-    { objects : List Object
-    , direction : Direction
-    , seed : Random.Seed
+    { systems : Systems
+    , components : Components
     , state : GameState
     , lives : Int
     , score : Int
-    , currentScore : Int
-    , screens : Int
     , size : Int
     , texture : Maybe Texture
     , font : Maybe Texture
@@ -40,13 +35,10 @@ type alias Model =
 
 model : Model
 model =
-    { objects = Object.mogee ( 28, 27 ) :: Object.walls Left Right 0
-    , direction = Right
-    , seed = Random.initialSeed 1
+    { components = Components.components
+    , systems = Systems.systems
     , lives = 3
-    , screens = 0
     , score = 0
-    , currentScore = 0
     , state = Stopped
     , size = 0
     , texture = Nothing
@@ -82,7 +74,6 @@ animate elapsed m =
                 { model
                     | state = Playing
                     , lives = m.lives
-                    , seed = m.seed
                     , texture = m.texture
                     , font = m.font
                     , size = m.size
@@ -101,88 +92,34 @@ animate elapsed m =
                 m
 
         Playing ->
-            m
-                |> updateObjects elapsed (Keys.directions m.keys)
-                |> addScreen
-                |> checkLives
-
-
-mogee : Model -> Object
-mogee { objects } =
-    objects
-        |> List.filter Object.isMogee
-        |> List.head
-        |> Maybe.withDefault (Object.mogee ( 28, 27 ))
-
-
-updateObjects : Time -> { x : Float, y : Float } -> Model -> Model
-updateObjects elapsed keys model =
-    let
-        screens =
-            List.filter Object.isScreen model.objects
-
-        walls =
-            List.filter Object.isWall model.objects
-
-        number =
-            screens
-                |> List.filter (Object.collide (mogee model))
-                |> List.map .number
-                |> List.maximum
-                |> Maybe.withDefault 0
-
-        updateObject =
-            Object.update elapsed keys screens walls
-    in
-        { model
-            | objects = List.foldr updateObject [] model.objects
-            , currentScore = max number model.currentScore
-        }
-
-
-addScreen : Model -> Model
-addScreen model =
-    let
-        ( x, y ) =
-            model |> mogee |> .position
-
-        ( screenX, screenY ) =
-            ( x - 32 + 4, y - 32 + 5 )
-
-        ( direction, seed ) =
-            Random.step (Direction.next model.direction) model.seed
-    in
-        if abs screenX < 64 && abs screenY < 64 then
-            { model
-                | seed = seed
-                , direction = direction
-                , screens = model.screens + 1
-                , objects =
-                    Object.walls model.direction direction (model.screens + 1)
-                        ++ List.map (Object.offset (Direction.opposite model.direction)) model.objects
-            }
-        else
-            model
+            let
+                ( newComponents, newSystems ) =
+                    Systems.run elapsed (Keys.directions m.keys) m.components m.systems
+            in
+                checkLives
+                    { m
+                        | components = newComponents
+                        , systems = newSystems
+                    }
 
 
 checkLives : Model -> Model
 checkLives m =
-    if Object.isDead m.objects then
+    if Components.isDead m.components then
         if m.lives == 1 then
             { model
-                | seed = m.seed
-                , score = m.score + m.currentScore
+                | score = m.score + m.systems.currentScore
                 , texture = m.texture
                 , font = m.font
                 , size = m.size
-                , currentScore = 0
+                , systems = Systems.systems
             }
         else
             { m
                 | lives = m.lives - 1
                 , state = Paused
-                , score = m.score + m.currentScore
-                , currentScore = 0
+                , score = m.score + m.systems.currentScore
+                , systems = Systems.systems
             }
     else
         m

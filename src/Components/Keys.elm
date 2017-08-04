@@ -1,4 +1,4 @@
-module Model.Keys
+module Components.Keys
     exposing
         ( Keys
         , keyChange

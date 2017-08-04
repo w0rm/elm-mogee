@@ -1,4 +1,4 @@
-module Model.Mogee
+module Components.Mogee
     exposing
         ( Mogee
         , AnimationState(..)
@@ -6,7 +6,11 @@ module Model.Mogee
         , update
         , die
         , size
+        , isDead
         )
+
+{-| The Mogee component determines the state of the main character
+-}
 
 import Time exposing (Time)
 
@@ -22,6 +26,11 @@ type alias Mogee =
     , frames : List Float
     , state : AnimationState
     }
+
+
+isDead : Mogee -> Bool
+isDead { state } =
+    state == Dead
 
 
 size : ( Float, Float )

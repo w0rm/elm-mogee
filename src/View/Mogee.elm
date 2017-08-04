@@ -2,7 +2,7 @@ module View.Mogee exposing (render)
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
-import Model.Mogee exposing (Mogee, size, AnimationState(..))
+import Components.Mogee exposing (Mogee, size, AnimationState(..))
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
