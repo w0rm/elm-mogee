@@ -1,4 +1,4 @@
-module Model.Direction
+module Components.Direction
     exposing
         ( Direction(..)
         , opposite

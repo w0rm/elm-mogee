@@ -3,11 +3,11 @@ module View.Screen exposing (render)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import Math.Matrix4 as Mat4 exposing (Mat4)
-import Model.Screen exposing (Screen, AnimationState(..))
+import Components.Screen exposing (Screen, AnimationState(..))
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
-import Model.Direction exposing (Direction(..))
+import Components.Direction exposing (Direction(..))
 
 
 move : List Int

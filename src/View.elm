@@ -3,13 +3,13 @@ module View exposing (view)
 import Html exposing (Html, div)
 import Html.Attributes exposing (autoplay, height, loop, src, style, width)
 import Messages exposing (Msg)
-import Model.Keys as Keys
+import Components.Keys as Keys
 import Model exposing (GameState(Playing), Model)
-import Model.Object exposing (invertScreen, isScreen)
 import View.Common as Common
 import View.Color as Color
 import View.Lives as Lives
-import View.Object as Object
+import View.Components
+import Components.Components as Components
 import WebGL exposing (Entity, Texture)
 import View.Font as Font exposing (Text)
 
@@ -76,21 +76,20 @@ render : Model -> Texture -> Texture -> List Entity
 render model texture font =
     let
         ( x, y ) =
-            Model.mogee model |> .position
+            Components.mogeeOffset model.components
 
-        offsetX =
-            toFloat (round x - 32 + 4)
-
-        offsetY =
-            toFloat (round (y - 32 + 5))
+        offset =
+            ( toFloat (round x - 32 + 4), toFloat (round y - 32 + 5) )
 
         ( cx, cy ) =
             toMinimap ( x, y )
 
         allScr =
-            model.objects
-                |> List.filter isScreen
-                |> List.map (.position >> toMinimap)
+            Components.foldl2
+                (\_ _ { position } positions -> toMinimap position :: positions)
+                []
+                model.components.screens
+                model.components.transforms
 
         maxX =
             List.maximum (List.map Tuple.first allScr) |> Maybe.withDefault 0
@@ -107,14 +106,6 @@ render model texture font =
                  else
                     Color.gray
                 )
-
-        monster { position, size } =
-            Common.rectangle size ( Tuple.first position - offsetX, Tuple.second position - offsetY, 2 ) Color.darkBlue
-
-        offsetObject ({ position } as object) =
-            { object
-                | position = ( Tuple.first position - offsetX, Tuple.second position - offsetY )
-            }
     in
         if model.state == Model.Stopped then
             (if model.score > 0 then
@@ -132,9 +123,9 @@ render model texture font =
                 []
             )
                 ++ Lives.renderLives texture ( 1, 1, 0 ) model.lives
-                ++ Lives.renderScore texture ( 32, 1, 0 ) (model.currentScore + model.score)
+                ++ Lives.renderScore texture ( 32, 1, 0 ) (model.systems.currentScore + model.score)
                 ++ List.map dot allScr
-                ++ List.foldl (Object.render texture (Keys.directions model.keys).x) [] (List.map offsetObject model.objects)
+                ++ View.Components.render texture (Keys.directions model.keys).x offset model.components []
 
 
 playText : Text

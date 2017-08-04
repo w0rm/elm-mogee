@@ -1,14 +1,29 @@
-module Model.Screen
+module Components.Screen
     exposing
         ( AnimationState(..)
         , Screen
         , screen
         , activate
         , update
+        , size
         )
 
-import Model.Direction as Direction exposing (Direction)
+{-| The Screen component determines collapsing screens,
+that the map is made of.
+-}
+
+import Components.Direction as Direction exposing (Direction)
 import Time exposing (Time)
+
+
+size : Float
+size =
+    64
+
+
+velocity : Float
+velocity =
+    0.01
 
 
 type AnimationState
@@ -20,22 +35,31 @@ type AnimationState
 type alias Screen =
     { from : Direction
     , to : Direction
+    , number : Int
     , frame : Time
     , state : AnimationState
+    , velocity : Float
     }
 
 
-screen : Direction -> Direction -> Screen
-screen from to =
-    { from = from
+screen : Direction -> Direction -> Int -> Screen
+screen from to number =
+    { from =
+        -- the first screen should not have left border
+        if number == 0 then
+            to
+        else
+            from
     , to = to
+    , number = number
     , frame = 0
     , state = Initial
+    , velocity = velocity + 0.001 * toFloat number
     }
 
 
-update : Time -> ( Float, Float ) -> Screen -> Screen
-update dt ( vx, vy ) screen =
+update : Time -> Screen -> Screen
+update dt screen =
     case screen.state of
         Initial ->
             screen
@@ -43,7 +67,7 @@ update dt ( vx, vy ) screen =
         _ ->
             let
                 frame =
-                    screen.frame + vx * dt / 2
+                    screen.frame + screen.velocity * dt / 2
             in
                 if frame >= 8 then
                     { screen | frame = 8 - frame, state = Moving }
