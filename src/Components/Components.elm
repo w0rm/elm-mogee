@@ -6,6 +6,7 @@ module Components.Components
         , delete
         , mogeeOffset
         , addScreen
+        , foldl
         , foldl2
         , foldl3
         )
@@ -47,6 +48,11 @@ mogeeOffset components =
         |> Maybe.map .position
         -- this should never happen
         |> Maybe.withDefault ( 32, 32 )
+
+
+foldl : (EntityId -> a -> b -> b) -> b -> Dict EntityId a -> b
+foldl =
+    Dict.foldl
 
 
 foldl2 : (EntityId -> a -> b -> c -> c) -> c -> Dict EntityId a -> Dict EntityId b -> c

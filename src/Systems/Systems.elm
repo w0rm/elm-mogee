@@ -27,16 +27,13 @@ run elapsed keys components { screens, currentScore } =
         ( components1, newScreens ) =
             Screens.run elapsed components screens
 
-        ( components2, newCurrentScore ) =
-            CurrentScore.run components1 currentScore
-
-        components3 =
-            components2
+        components2 =
+            components1
                 |> Mogee.run elapsed keys
                 |> Walls.run
     in
-        ( components3
+        ( components2
         , { screens = newScreens
-          , currentScore = newCurrentScore
+          , currentScore = CurrentScore.run components2 currentScore
           }
         )

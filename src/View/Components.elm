@@ -28,15 +28,12 @@ renderWalls texture offset { walls, transforms } entities =
         transforms
 
 
-renderMogee : Texture -> ( Float, Float ) -> Float -> Components -> List Entity -> List Entity
-renderMogee texture offset directionX { mogees, transforms } entities =
-    Components.foldl2
-        (\_ mogee { position } ->
-            (::) (Mogee.render texture (offsetBy offset position) directionX mogee)
-        )
+renderMogee : Texture -> Float -> Components -> List Entity -> List Entity
+renderMogee texture directionX { mogees } entities =
+    Components.foldl
+        (\_ mogee -> (::) (Mogee.render texture ( 28, 27 ) directionX mogee))
         entities
         mogees
-        transforms
 
 
 renderScreens : Texture -> ( Float, Float ) -> Components -> List Entity -> List Entity
@@ -65,5 +62,5 @@ renderScreens texture offset { screens, transforms } entities =
 render : Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
 render texture directionX offset components =
     renderWalls texture offset components
-        >> renderMogee texture offset directionX components
+        >> renderMogee texture directionX components
         >> renderScreens texture offset components

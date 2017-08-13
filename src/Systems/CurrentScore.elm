@@ -13,7 +13,7 @@ currentScore =
     0
 
 
-run : Components -> CurrentScore -> ( Components, CurrentScore )
+run : Components -> CurrentScore -> CurrentScore
 run components currentScore =
     let
         -- we assume there is only one Mogee
@@ -34,4 +34,3 @@ run components currentScore =
             currentScore
             components.screens
             components.transforms
-            |> (,) components

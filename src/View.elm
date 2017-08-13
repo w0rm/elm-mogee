@@ -79,7 +79,7 @@ render model texture font =
             Components.mogeeOffset model.components
 
         offset =
-            ( toFloat (round x - 32 + 4), toFloat (round y - 32 + 5) )
+            ( toFloat (round x - 28), toFloat (round y - 27) )
 
         ( cx, cy ) =
             toMinimap ( x, y )
