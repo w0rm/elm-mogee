@@ -135,4 +135,4 @@ playText =
 
 renderPlay : Texture -> Entity
 renderPlay texture =
-    Font.render ( 1, 1, 1 ) playText texture ( 11, 40, 0 )
+    Font.render Color.white playText texture ( 12, 40, 0 )

@@ -35,10 +35,163 @@ type Text
     = Text (Mesh Vertex)
 
 
-kerning : Dict ( Char, Char ) Float
-kerning =
+invertDict : List ( Int, List String ) -> Dict String Int
+invertDict =
+    List.foldl
+        (\( n, chars ) dict -> List.foldl (\char -> Dict.insert char n) dict chars)
+        Dict.empty
+
+
+{-| Defines the left kerning classes
+-}
+leftKerningClass : Dict String Int
+leftKerningClass =
+    invertDict
+        [ ( 1, [ "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "M", "N", "O", "Q", "R", "S", "U", "V", "W", "X", "Z" ] )
+        , ( 2, [ "F", "P" ] )
+        , ( 3, [ "L" ] )
+        , ( 4, [ "T" ] )
+        , ( 5, [ "b", "k", "p", "s", "t", "u", "v", "w", "x", "y", "z" ] )
+        , ( 6, [ "f", "ff" ] )
+        , ( 7, [ "g", "q" ] )
+        , ( 8, [ "i", "fi", "ffi" ] )
+        , ( 9, [ "j", "fj", "jj" ] ) --?
+        , ( 10, [ ".", "," ] )
+        , ( 11, [ "'", "\"" ] )
+        , ( 12, [ "!", "?" ] )
+        , ( 13, [ "/" ] )
+        , ( 14, [ "Y", "7" ] )
+        , ( 15, [ "(", "[" ] )
+        , ( 16, [ "a", "c", "h", "m", "n", "o", "r" ] ) --5
+        ]
+
+
+{-| Defines the right kerning classes
+-}
+rightKerningClass : Dict String Int
+rightKerningClass =
+    invertDict
+        [ ( 1, [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "U", "V", "W", "X", "Z" ] )
+        , ( 2, [ "J" ] )
+        , ( 3, [ "T", "Y" ] )
+        , ( 4, [ "a", "c", "m", "n", "o", "q", "r", "t", "u", "v", "w", "x", "y", "z" ] )
+        , ( 5, [ "b", "h", "i", "k", "l" ] )
+        , ( 6, [ "e", "d", "g", "p", "s", "ss" ] )
+        , ( 7, [ "f", "ff", "fi", "ffi", "fj" ] )
+        , ( 8, [ "j", "jj" ] )
+        , ( 9, [ "7" ] )
+        , ( 10, [ ".", "," ] )
+        , ( 11, [ "'", "\"" ] )
+        , ( 12, [ "!", "?" ] )
+        , ( 13, [ "/" ] )
+        , ( 14, [ ":", ";" ] )
+        , ( 15, [ "$" ] )
+        ]
+
+
+{-| Defines the kerning between the left and right kerning classes
+-}
+kerningDict : Dict ( Int, Int ) Float
+kerningDict =
     Dict.fromList
-        []
+        [ ( ( 2, 2 ), -1 )
+        , ( ( 2, 6 ), 0 )
+        , ( ( 14, 2 ), -1 )
+        , ( ( 14, 6 ), -1 )
+        , ( ( 2, 10 ), -1 )
+        , ( ( 2, 13 ), -1 )
+        , ( ( 3, 3 ), -1 )
+        , ( ( 3, 7 ), -1 )
+        , ( ( 4, 2 ), -2 )
+        , ( ( 4, 4 ), -1 )
+        , ( ( 4, 6 ), -1 )
+        , ( ( 4, 7 ), -1 )
+        , ( ( 4, 10 ), -1 )
+        , ( ( 4, 13 ), -2 )
+        , ( ( 5, 3 ), -1 )
+        , ( ( 16, 3 ), -1 )
+        , ( ( 16, 7 ), -1 )
+        , ( ( 16, 9 ), -1 )
+        , ( ( 6, 2 ), -2 )
+        , ( ( 6, 3 ), -1 )
+        , ( ( 6, 4 ), -1 )
+        , ( ( 6, 5 ), -1 )
+        , ( ( 6, 6 ), -1 )
+        , ( ( 6, 7 ), -2 )
+        , ( ( 6, 10 ), -1 )
+        , ( ( 6, 13 ), -2 )
+        , ( ( 7, 3 ), -1 )
+        , ( ( 7, 7 ), 0 )
+        , ( ( 8, 7 ), 0 )
+        , ( ( 13, 2 ), -1 )
+        , ( ( 14, 10 ), -1 )
+        , ( ( 15, 2 ), -1 )
+        , ( ( 15, 13 ), -1 )
+        ]
+
+
+{-| Defines the custom kerning overrides
+-}
+kerningOverrides : Dict ( String, String ) Float
+kerningOverrides =
+    Dict.fromList
+        [ ( ( "/", "/" ), -1 ) -- example
+        , ( ( "C", "f" ), -1 )
+        , ( ( "I", "f" ), -1 )
+        , ( ( "f", "T" ), -2 )
+        , ( ( "q", "f" ), -1 )
+        , ( ( "q", "fi" ), -1 )
+        , ( ( "q", "ffi" ), -1 )
+        , ( ( "q", "ff" ), -1 )
+        ]
+
+
+{-| Side bearings, left and right
+-}
+bearingsDict : Dict String ( Float, Float )
+bearingsDict =
+    Dict.fromList
+        [ ( "j", ( -2, 1 ) )
+        , ( "jj", ( -2, 1 ) )
+        , ( ",", ( 0, 1 ) )
+        , ( ";", ( 0, 1 ) )
+        , ( " ", ( 0, 0 ) )
+
+        -- , ( "^", ( 0, 0 ) )
+        ]
+
+
+defaultBearings : ( Float, Float )
+defaultBearings =
+    ( 0, 1 )
+
+
+rightBearing : String -> Float
+rightBearing char =
+    Dict.get char bearingsDict
+        |> Maybe.withDefault defaultBearings
+        |> Tuple.second
+
+
+leftBearing : String -> Float
+leftBearing char =
+    Dict.get char bearingsDict
+        |> Maybe.withDefault defaultBearings
+        |> Tuple.first
+
+
+kerning : String -> String -> Float
+kerning prevChar nextChar =
+    List.filterMap identity
+        [ Dict.get ( prevChar, nextChar ) kerningOverrides
+        , Maybe.map2
+            (curry ((flip Dict.get) kerningDict))
+            (Dict.get prevChar leftKerningClass)
+            (Dict.get nextChar rightKerningClass)
+            |> Maybe.andThen identity
+        ]
+        |> List.head
+        |> Maybe.withDefault 0
 
 
 type alias Vertex =
@@ -59,7 +212,7 @@ load msg =
         |> Task.attempt msg
 
 
-render : ( Float, Float, Float ) -> Text -> Texture -> ( Float, Float, Float ) -> Entity
+render : Vec3 -> Text -> Texture -> ( Float, Float, Float ) -> Entity
 render color (Text mesh) texture offset =
     WebGL.entity
         texturedVertexShader
@@ -67,26 +220,54 @@ render color (Text mesh) texture offset =
         mesh
         { offset = Vec3.fromTuple offset
         , texture = texture
-        , color = Vec3.fromTuple color
+        , color = color
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
         }
 
 
 text : String -> Text
 text text =
-    Text (WebGL.triangles (textMeshHelper Nothing text 0 0 []))
+    let
+        chars =
+            List.reverse (replaceLigatures text [])
+    in
+        Text (WebGL.triangles (textMeshHelper Nothing chars 0 0 []))
 
 
-textMeshHelper : Maybe Char -> String -> Float -> Float -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )
+replaceLigatures : String -> List String -> List String
+replaceLigatures st result =
+    [ takeLigature 3 st
+    , takeLigature 2 st
+    , Maybe.map (\( c, rest ) -> ( String.fromChar c, rest )) (String.uncons st)
+    ]
+        |> List.filterMap identity
+        |> List.head
+        |> Maybe.map (\( ch, rest ) -> replaceLigatures rest (ch :: result))
+        |> Maybe.withDefault result
+
+
+takeLigature : Int -> String -> Maybe ( String, String )
+takeLigature n st =
+    let
+        ligature =
+            String.left n st
+    in
+        if String.length ligature == n && Dict.member ligature font then
+            Just ( ligature, String.dropLeft n st )
+        else
+            Nothing
+
+
+textMeshHelper : Maybe String -> List String -> Float -> Float -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )
 textMeshHelper prevChar text currentX currentY list =
-    case String.uncons text of
-        Just ( ' ', rest ) ->
-            textMeshHelper (Just ' ') rest (currentX + spaceWidth) currentY list
+    case text of
+        " " :: rest ->
+            textMeshHelper (Just " ") rest (currentX + spaceWidth) currentY list
 
-        Just ( '\n', rest ) ->
-            textMeshHelper (Just '\n') rest 0 (currentY + emHeight) list
+        "\n" :: rest ->
+            textMeshHelper (Just "\n") rest 0 (currentY + emHeight) list
 
-        Just ( char, rest ) ->
+        char :: rest ->
             case Dict.get char font of
                 Just charInfo ->
                     addLetter charInfo ( currentX + (letterSpacing prevChar char), currentY ) <|
@@ -95,25 +276,35 @@ textMeshHelper prevChar text currentX currentY list =
                 Nothing ->
                     textMeshHelper prevChar rest currentX currentY list
 
-        Nothing ->
+        [] ->
             list
 
 
-letterSpacing : Maybe Char -> Char -> Float
+{-| Returns a spacing between two letters as a sum of:
+
+  - right bearing of the previous letter
+  - custom kerning for the pair of letters
+  - left bearing of the next letter
+
+-}
+letterSpacing : Maybe String -> String -> Float
 letterSpacing prevChar nextChar =
     case prevChar of
         Nothing ->
-            0
+            leftBearing nextChar
 
-        Just ' ' ->
-            0
+        Just " " ->
+            leftBearing nextChar
 
-        Just '\n' ->
-            0
+        Just "\n" ->
+            leftBearing nextChar
 
         Just char ->
-            Dict.get ( char, nextChar ) kerning
-                |> Maybe.withDefault tracking
+            List.sum
+                [ rightBearing char
+                , kerning char nextChar
+                , leftBearing nextChar
+                ]
 
 
 addLetter : CharInfo -> ( Float, Float ) -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )

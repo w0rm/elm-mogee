@@ -9,7 +9,8 @@ from io import BytesIO
 import base64
 from PIL import Image
 
-SIZE = 64
+WIDTH = 128
+HEIGHT = 64
 DEST_PATH = os.path.realpath('./font.png')
 LINE_HEIGHT = 11
 
@@ -26,7 +27,7 @@ type alias CharInfo =
     }
 
 
-font : Dict Char CharInfo
+font : Dict String CharInfo
 font =
     Dict.fromList
 %(char_info)s
@@ -41,7 +42,7 @@ def main():
     "The Main Function"
     x_dest = 0
     y_dest = 0
-    result_img = Image.new('RGB', (SIZE, SIZE), (255, 255, 255))
+    result_img = Image.new('RGB', (WIDTH, HEIGHT), (255, 255, 255))
     chars = []
     for root, _, filenames in os.walk('./font'):
         for filename in filenames:
@@ -50,14 +51,13 @@ def main():
                 img = Image.open(image_path)
                 width, _ = img.size
                 name, _ = os.path.splitext(os.path.basename(filename))
-                name = chr(int(name, 16))
-                if name == '\'':
-                    name = '\\\''
-                if x_dest + width > SIZE:
+                name = "".join([chr(int(n, 16)) for n in name.split("_")])
+                name = name.replace('\\', '\\\\').replace('\"', '\\\"')
+                if x_dest + width > WIDTH:
                     x_dest = 0
                     y_dest += LINE_HEIGHT
                 result_img.paste(img, (x_dest, y_dest))
-                chars.append("('%s', CharInfo %d %d %d)" % (name, x_dest, y_dest, width))
+                chars.append('( "%s", CharInfo %d %d %d )' % (name, x_dest, y_dest, width))
                 x_dest += width
     buff = BytesIO()
     result_img = result_img.convert('1')
