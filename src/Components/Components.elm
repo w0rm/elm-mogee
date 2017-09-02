@@ -2,7 +2,7 @@ module Components.Components
     exposing
         ( Components
         , isDead
-        , components
+        , initial
         , delete
         , mogeeOffset
         , addScreen
@@ -40,11 +40,10 @@ isDead =
 
 
 mogeeOffset : Components -> ( Float, Float )
-mogeeOffset components =
-    components.mogees
-        |> Dict.keys
+mogeeOffset { mogees, transforms } =
+    Dict.keys mogees
         |> List.head
-        |> Maybe.andThen (\uid -> Dict.get uid components.transforms)
+        |> Maybe.andThen (\uid -> Dict.get uid transforms)
         |> Maybe.map .position
         -- this should never happen
         |> Maybe.withDefault ( 32, 32 )
@@ -58,13 +57,10 @@ foldl =
 foldl2 : (EntityId -> a -> b -> c -> c) -> c -> Dict EntityId a -> Dict EntityId b -> c
 foldl2 fn initial component1 component2 =
     Dict.foldl
-        (\uid a acc ->
-            case Dict.get uid component2 of
-                Just b ->
-                    fn uid a b acc
-
-                Nothing ->
-                    acc
+        (\uid a ->
+            Maybe.map (fn uid a)
+                (Dict.get uid component2)
+                |> Maybe.withDefault identity
         )
         initial
         component1
@@ -73,20 +69,18 @@ foldl2 fn initial component1 component2 =
 foldl3 : (EntityId -> a -> b -> c -> d -> d) -> d -> Dict EntityId a -> Dict EntityId b -> Dict EntityId c -> d
 foldl3 fn initial component1 component2 component3 =
     Dict.foldl
-        (\uid a acc ->
-            case ( Dict.get uid component2, Dict.get uid component3 ) of
-                ( Just b, Just c ) ->
-                    fn uid a b c acc
-
-                _ ->
-                    acc
+        (\uid a ->
+            Maybe.map2 (fn uid a)
+                (Dict.get uid component2)
+                (Dict.get uid component3)
+                |> Maybe.withDefault identity
         )
         initial
         component1
 
 
-components : Components
-components =
+initial : Components
+initial =
     { uid = 0
     , mogees = Dict.empty
     , screens = Dict.empty

@@ -11,7 +11,6 @@ from PIL import Image
 
 WIDTH = 128
 HEIGHT = 64
-DEST_PATH = os.path.realpath('./font.png')
 LINE_HEIGHT = 11
 
 
@@ -38,6 +37,7 @@ fontSrc =
     %(font_src)s
 """
 
+
 def main():
     "The Main Function"
     x_dest = 0
@@ -57,7 +57,8 @@ def main():
                     x_dest = 0
                     y_dest += LINE_HEIGHT
                 result_img.paste(img, (x_dest, y_dest))
-                chars.append('( "%s", CharInfo %d %d %d )' % (name, x_dest, y_dest, width))
+                chars.append('( "%s", CharInfo %d %d %d )' %
+                             (name, x_dest, y_dest, width))
                 x_dest += width
     buff = BytesIO()
     result_img = result_img.convert('1')
@@ -69,10 +70,10 @@ def main():
         else:
             char_info += "        , %s\n" % val
     char_info += "        ]"
-    font_src = "\"data:image/png;base64,%s\"" % base64.b64encode(buff.getvalue()).decode("utf-8")
+    font_src = "\"data:image/png;base64,%s\"" % base64.b64encode(
+        buff.getvalue()).decode("utf-8")
     with open("src/view/FontData.elm", "w") as f:
         f.write(TEMPLATE % dict(char_info=char_info, font_src=font_src))
-    # result_img.save(DEST_PATH, "png")
 
 
 if __name__ == '__main__':

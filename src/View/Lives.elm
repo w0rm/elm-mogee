@@ -2,7 +2,6 @@ module View.Lives
     exposing
         ( renderLives
         , renderScore
-        , renderTitle
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -10,6 +9,7 @@ import Math.Vector3 as Vec3 exposing (Vec3)
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
+import View.Sprite as Sprite exposing (Sprite)
 
 
 type alias UniformTextured =
@@ -25,9 +25,14 @@ type alias Varying =
     { texturePos : Vec2 }
 
 
+liveSprite : Sprite
+liveSprite =
+    Sprite.sprite "life"
+
+
 renderLives : Texture -> ( Float, Float, Float ) -> Int -> List Entity
-renderLives texture ( x, y, z ) lives =
-    List.map (\i -> renderLive texture ( x + toFloat i * 6, y, z )) (List.range 0 (lives - 1))
+renderLives sprite ( x, y, z ) lives =
+    List.map (\i -> Sprite.render liveSprite sprite ( x + toFloat i * 6, y, z )) (List.range 0 (lives - 1))
 
 
 digitsList : Int -> List Int
@@ -54,7 +59,10 @@ renderScore texture ( x, y, z ) value =
         position =
             ( x - toFloat (List.length digits) * 2, y, z )
     in
-        List.indexedMap (renderDigit texture position) digits
+        if value == 0 then
+            []
+        else
+            List.indexedMap (renderDigit texture position) digits
 
 
 renderDigit : Texture -> ( Float, Float, Float ) -> Int -> Int -> Entity
@@ -65,37 +73,9 @@ renderDigit texture ( x, y, z ) index number =
         box
         { offset = Vec3.fromTuple ( x + toFloat index * 4, y, z )
         , texture = texture
-        , textureOffset = vec2 (toFloat number * 3) 50
+        , textureOffset = vec2 (toFloat number * 3) 15
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
         , frameSize = vec2 3 4
-        }
-
-
-renderLive : Texture -> ( Float, Float, Float ) -> Entity
-renderLive texture offset =
-    WebGL.entity
-        texturedVertexShader
-        texturedFragmentShader
-        box
-        { offset = Vec3.fromTuple offset
-        , texture = texture
-        , textureOffset = vec2 56 0
-        , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , frameSize = vec2 5 6
-        }
-
-
-renderTitle : Texture -> ( Float, Float ) -> Entity
-renderTitle texture ( x, y ) =
-    WebGL.entity
-        texturedVertexShader
-        texturedFragmentShader
-        box
-        { offset = Vec3.fromTuple ( x, y, 0 )
-        , texture = texture
-        , textureOffset = vec2 0 15
-        , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , frameSize = vec2 58 24
         }
 
 
