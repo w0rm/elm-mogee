@@ -24,6 +24,7 @@ run components currentScore =
                 components.mogees
                 components.transforms
     in
+        -- find the max screen number that collides with Mogee
         Components.foldl2
             (\_ { number } transform score ->
                 if collidesWithMogee transform then

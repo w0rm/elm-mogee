@@ -1,23 +1,27 @@
 module Model
     exposing
         ( Model
-        , model
+        , initial
         , update
         , GameState(..)
         )
 
-import Components.Keys as Keys exposing (Keys)
+import Components.Keys as Keys exposing (Keys, codes)
 import Time exposing (Time)
 import WebGL.Texture exposing (Texture, Error)
 import Messages exposing (Msg(..))
 import Systems.Systems as Systems exposing (Systems)
 import Components.Components as Components exposing (Components)
+import Components.Menu as Menu exposing (Menu)
+import PageVisibility exposing (Visibility(..))
+import Dict
 
 
 type GameState
     = Paused
     | Playing
-    | Stopped
+    | Dead
+    | Initial Menu
 
 
 type alias Model =
@@ -27,23 +31,27 @@ type alias Model =
     , lives : Int
     , score : Int
     , size : Int
+    , sound : Bool
     , texture : Maybe Texture
+    , sprite : Maybe Texture
     , font : Maybe Texture
     , keys : Keys
     }
 
 
-model : Model
-model =
-    { components = Components.components
-    , systems = Systems.systems
-    , lives = 3
+initial : Model
+initial =
+    { components = Components.initial
+    , systems = Systems.initial
+    , lives = 0
     , score = 0
-    , state = Stopped
+    , state = Initial Menu.initial
     , size = 0
+    , sound = True
     , texture = Nothing
     , font = Nothing
-    , keys = Keys False False False False False False
+    , sprite = Nothing
+    , keys = Keys.initial
     }
 
 
@@ -54,7 +62,7 @@ update action model =
             { model | size = min width height // 64 * 64 } ! []
 
         Animate elapsed ->
-            animate (min elapsed 60 * 1.5) model ! []
+            animateKeys elapsed (animate (min elapsed 60 * 1.5) model) ! []
 
         KeyChange pressed keyCode ->
             { model | keys = Keys.keyChange pressed keyCode model.keys } ! []
@@ -62,64 +70,110 @@ update action model =
         TextureLoaded texture ->
             { model | texture = Result.toMaybe texture } ! []
 
+        SpriteLoaded sprite ->
+            { model | sprite = Result.toMaybe sprite } ! []
+
         FontLoaded font ->
             { model | font = Result.toMaybe font } ! []
 
+        VisibilityChange Visible ->
+            model ! []
+
+        VisibilityChange Hidden ->
+            { model
+                | state =
+                    if model.state == Playing then
+                        Paused
+                    else
+                        model.state
+            }
+                ! []
+
 
 animate : Time -> Model -> Model
-animate elapsed m =
-    case m.state of
+animate elapsed model =
+    case model.state of
         Paused ->
-            if m.keys.enter then
-                { model
-                    | state = Playing
-                    , lives = m.lives
-                    , texture = m.texture
-                    , font = m.font
-                    , size = m.size
-                    , score = m.score
-                }
+            if Keys.pressed codes.enter model.keys then
+                { model | state = Playing }
             else
-                m
+                model
 
-        Stopped ->
-            if m.keys.enter then
-                { m
-                    | state = Playing
-                    , score = 0
-                }
+        Dead ->
+            if Keys.pressed codes.enter model.keys then
+                if model.lives == 0 then
+                    { model | state = Initial Menu.initial }
+                else
+                    continue model
             else
-                m
+                model
+
+        Initial menu ->
+            let
+                ( newMenu, cmd ) =
+                    Menu.update model.sound model.keys menu
+            in
+                case cmd of
+                    Menu.Start ->
+                        start { model | state = Initial newMenu }
+
+                    Menu.ToggleSound sound ->
+                        { model | sound = sound, state = Initial newMenu }
+
+                    Menu.Noop ->
+                        { model | state = Initial newMenu }
 
         Playing ->
             let
                 ( newComponents, newSystems ) =
-                    Systems.run elapsed (Keys.directions m.keys) m.components m.systems
+                    Systems.run elapsed (Keys.directions model.keys) model.components model.systems
+
+                state =
+                    if Keys.pressed codes.escape model.keys then
+                        Paused
+                    else
+                        model.state
             in
                 checkLives
-                    { m
+                    { model
                         | components = newComponents
                         , systems = newSystems
+                        , state = state
                     }
 
 
+animateKeys : Time -> Model -> Model
+animateKeys elapsed model =
+    { model | keys = Keys.animate elapsed model.keys }
+
+
 checkLives : Model -> Model
-checkLives m =
-    if Components.isDead m.components then
-        if m.lives == 1 then
-            { model
-                | score = m.score + m.systems.currentScore
-                , texture = m.texture
-                , font = m.font
-                , size = m.size
-                , systems = Systems.systems
-            }
-        else
-            { m
-                | lives = m.lives - 1
-                , state = Paused
-                , score = m.score + m.systems.currentScore
-                , systems = Systems.systems
-            }
+checkLives model =
+    if Components.isDead model.components then
+        { model
+            | lives = model.lives - 1
+            , state = Dead
+        }
     else
-        m
+        model
+
+
+continue : Model -> Model
+continue model =
+    { model
+        | state = Playing
+        , components = Components.initial
+        , systems = Systems.initial
+        , score = model.score + model.systems.currentScore
+    }
+
+
+start : Model -> Model
+start model =
+    { model
+        | state = Playing
+        , components = Components.initial
+        , systems = Systems.initial
+        , lives = 3
+        , score = 0
+    }

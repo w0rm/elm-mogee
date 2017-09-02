@@ -3,48 +3,78 @@ module Components.Keys
         ( Keys
         , keyChange
         , directions
+        , initial
+        , codes
+        , pressed
+        , down
+        , anykey
+        , animate
         )
 
 import Keyboard exposing (KeyCode)
+import Dict exposing (Dict)
+import Time exposing (Time)
 
 
 type alias Keys =
-    { left : Bool
-    , right : Bool
-    , up : Bool
-    , down : Bool
-    , space : Bool
-    , enter : Bool
+    Dict KeyCode Time
+
+
+initial : Keys
+initial =
+    Dict.empty
+
+
+codes :
+    { down : KeyCode
+    , enter : KeyCode
+    , left : KeyCode
+    , right : KeyCode
+    , space : KeyCode
+    , up : KeyCode
+    , escape : KeyCode
+    }
+codes =
+    { enter = 13
+    , space = 32
+    , escape = 27
+    , left = 37
+    , right = 39
+    , up = 38
+    , down = 40
     }
 
 
-keyChange : Bool -> KeyCode -> (Keys -> Keys)
-keyChange on keyCode =
-    case keyCode of
-        13 ->
-            \k -> { k | enter = on }
+keyChange : Bool -> KeyCode -> Keys -> Keys
+keyChange on code =
+    if on then
+        Dict.insert code 0
+    else
+        Dict.remove code
 
-        32 ->
-            \k -> { k | space = on }
 
-        37 ->
-            \k -> { k | left = on }
+animate : Time -> Keys -> Keys
+animate elapsed =
+    Dict.map (\_ -> (+) elapsed)
 
-        39 ->
-            \k -> { k | right = on }
 
-        38 ->
-            \k -> { k | up = on }
+pressed : KeyCode -> Keys -> Bool
+pressed code keys =
+    Dict.get code keys == Just 0
 
-        40 ->
-            \k -> { k | down = on }
 
-        _ ->
-            identity
+down : KeyCode -> Keys -> Bool
+down =
+    Dict.member
+
+
+anykey : Keys -> Bool
+anykey =
+    Dict.values >> List.member 0
 
 
 directions : Keys -> { x : Float, y : Float }
-directions { left, right, up, down } =
+directions keys =
     let
         direction a b =
             case ( a, b ) of
@@ -57,6 +87,6 @@ directions { left, right, up, down } =
                 _ ->
                     0
     in
-        { x = direction left right
-        , y = direction down up
+        { x = direction (down codes.left keys) (down codes.right keys)
+        , y = direction (down codes.down keys) (down codes.up keys)
         }

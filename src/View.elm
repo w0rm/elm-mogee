@@ -4,7 +4,7 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (autoplay, height, loop, src, style, width)
 import Messages exposing (Msg)
 import Components.Keys as Keys
-import Model exposing (GameState(Playing), Model)
+import Model exposing (GameState(..), Model)
 import View.Common as Common
 import View.Color as Color
 import View.Lives as Lives
@@ -12,16 +12,15 @@ import View.Components
 import Components.Components as Components
 import WebGL exposing (Entity, Texture)
 import View.Font as Font exposing (Text)
+import View.Menu as Menu
 
 
-withSound : GameState -> List (Html Msg) -> List (Html Msg)
-withSound state =
-    case state of
-        Playing ->
-            (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
-
-        _ ->
-            identity
+withSound : Bool -> List (Html Msg) -> List (Html Msg)
+withSound on =
+    if on then
+        (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
+    else
+        identity
 
 
 view : Model -> Html Msg
@@ -36,7 +35,7 @@ view model =
             , ( "background", "#000" )
             ]
         ]
-        (withSound model.state
+        (withSound ((model.state == Playing || model.state == Paused) && model.sound)
             [ WebGL.toHtmlWith
                 [ WebGL.depth 1
                 , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
@@ -58,7 +57,10 @@ view model =
                     , ( "-ms-interpolation-mode", "nearest-neighbor" )
                     ]
                 ]
-                (Maybe.map2 (render model) model.texture model.font
+                (Maybe.map3 (render model)
+                    model.texture
+                    model.font
+                    model.sprite
                     |> Maybe.withDefault []
                 )
             ]
@@ -72,8 +74,26 @@ toMinimap ( x, y ) =
     )
 
 
-render : Model -> Texture -> Texture -> List Entity
-render model texture font =
+render : Model -> Texture -> Texture -> Texture -> List Entity
+render model texture font sprite =
+    case model.state of
+        Initial menu ->
+            Menu.render model.sound font sprite menu
+
+        Paused ->
+            Font.render Color.white playText font ( 12, 40, 0 )
+                :: renderGame model texture font sprite
+
+        Dead ->
+            Font.render Color.white continueText font ( 12, 40, 0 )
+                :: renderGame model texture font sprite
+
+        Playing ->
+            renderGame model texture font sprite
+
+
+renderGame : Model -> Texture -> Texture -> Texture -> List Entity
+renderGame model texture font sprite =
     let
         ( x, y ) =
             Components.mogeeOffset model.components
@@ -107,25 +127,10 @@ render model texture font =
                     Color.gray
                 )
     in
-        if model.state == Model.Stopped then
-            (if model.score > 0 then
-                (Lives.renderScore texture ( 32, 1, 0 ) model.score)
-             else
-                []
-            )
-                ++ [ Lives.renderTitle texture ( 3, 14 )
-                   , renderPlay font
-                   ]
-        else
-            (if model.state == Model.Paused then
-                [ renderPlay font ]
-             else
-                []
-            )
-                ++ Lives.renderLives texture ( 1, 1, 0 ) model.lives
-                ++ Lives.renderScore texture ( 32, 1, 0 ) (model.systems.currentScore + model.score)
-                ++ List.map dot allScr
-                ++ View.Components.render texture (Keys.directions model.keys).x offset model.components []
+        Lives.renderLives sprite ( 1, 1, 0 ) model.lives
+            ++ Lives.renderScore texture ( 32, 1, 0 ) (model.systems.currentScore + model.score)
+            ++ List.map dot allScr
+            ++ View.Components.render texture (Keys.directions model.keys).x offset model.components []
 
 
 playText : Text
@@ -133,6 +138,6 @@ playText =
     Font.text "press enter\n   to play"
 
 
-renderPlay : Texture -> Entity
-renderPlay texture =
-    Font.render Color.white playText texture ( 12, 40, 0 )
+continueText : Text
+continueText =
+    Font.text "press enter\nto continue"

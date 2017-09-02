@@ -1,6 +1,5 @@
 module Mogee exposing (main)
 
-import WebGL.Texture as Texture exposing (defaultOptions)
 import Keyboard
 import Model exposing (Model)
 import Task exposing (Task)
@@ -8,6 +7,7 @@ import Messages exposing (Msg(..))
 import View
 import Window
 import AnimationFrame
+import PageVisibility
 import Html
 import View.Font as Font
 import View.Sprite as Sprite
@@ -20,14 +20,16 @@ subscriptions _ =
         , Keyboard.downs (KeyChange True)
         , Keyboard.ups (KeyChange False)
         , Window.resizes Resize
+        , PageVisibility.visibilityChanges VisibilityChange
         ]
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Model.model
+    ( Model.initial
     , Cmd.batch
         [ Sprite.loadTexture TextureLoaded
+        , Sprite.loadSprite SpriteLoaded
         , Font.load FontLoaded
         , Task.perform Resize Window.size
         ]

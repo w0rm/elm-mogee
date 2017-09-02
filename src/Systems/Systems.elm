@@ -1,4 +1,4 @@
-module Systems.Systems exposing (Systems, systems, run)
+module Systems.Systems exposing (Systems, initial, run)
 
 import Systems.Screens as Screens exposing (Screens)
 import Systems.CurrentScore as CurrentScore exposing (CurrentScore)
@@ -14,8 +14,8 @@ type alias Systems =
     }
 
 
-systems : Systems
-systems =
+initial : Systems
+initial =
     { screens = Screens.screens
     , currentScore = CurrentScore.currentScore
     }
