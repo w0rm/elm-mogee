@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 rm -rf dest || exit 0;
 
