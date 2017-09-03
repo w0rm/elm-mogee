@@ -32,6 +32,7 @@ type alias Model =
     , score : Int
     , size : Int
     , sound : Bool
+    , time : Float
     , texture : Maybe Texture
     , sprite : Maybe Texture
     , font : Maybe Texture
@@ -48,6 +49,7 @@ initial =
     , state = Initial Menu.initial
     , size = 0
     , sound = True
+    , time = 0
     , texture = Nothing
     , font = Nothing
     , sprite = Nothing
@@ -59,35 +61,50 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         Resize { width, height } ->
-            { model | size = min width height // 64 * 64 } ! []
+            ( { model | size = min width height // 64 * 64 }
+            , Cmd.none
+            )
 
         Animate elapsed ->
-            animateKeys elapsed (animate (min elapsed 60 * 1.5) model) ! []
+            ( model
+                |> animate elapsed
+                |> animateKeys elapsed
+            , Cmd.none
+            )
 
         KeyChange pressed keyCode ->
-            { model | keys = Keys.keyChange pressed keyCode model.keys } ! []
+            ( { model | keys = Keys.keyChange pressed keyCode model.keys }
+            , Cmd.none
+            )
 
         TextureLoaded texture ->
-            { model | texture = Result.toMaybe texture } ! []
+            ( { model | texture = Result.toMaybe texture }
+            , Cmd.none
+            )
 
         SpriteLoaded sprite ->
-            { model | sprite = Result.toMaybe sprite } ! []
+            ( { model | sprite = Result.toMaybe sprite }
+            , Cmd.none
+            )
 
         FontLoaded font ->
-            { model | font = Result.toMaybe font } ! []
+            ( { model | font = Result.toMaybe font }
+            , Cmd.none
+            )
 
         VisibilityChange Visible ->
-            model ! []
+            ( model, Cmd.none )
 
         VisibilityChange Hidden ->
-            { model
+            ( { model
                 | state =
                     if model.state == Playing then
                         Paused
                     else
                         model.state
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
 
 animate : Time -> Model -> Model
@@ -111,7 +128,7 @@ animate elapsed model =
         Initial menu ->
             let
                 ( newMenu, cmd ) =
-                    Menu.update model.sound model.keys menu
+                    Menu.update elapsed model.sound model.keys menu
             in
                 case cmd of
                     Menu.Start ->
@@ -125,8 +142,11 @@ animate elapsed model =
 
         Playing ->
             let
+                limitElapsed =
+                    min elapsed 60
+
                 ( newComponents, newSystems ) =
-                    Systems.run elapsed (Keys.directions model.keys) model.components model.systems
+                    Systems.run limitElapsed (Keys.directions model.keys) model.components model.systems
 
                 state =
                     if Keys.pressed codes.escape model.keys then
