@@ -2,17 +2,32 @@ module View.Menu exposing (render)
 
 import View.Font as Font exposing (Text)
 import View.Sprite as Sprite exposing (Sprite)
-import Components.Menu as Menu exposing (Menu(..), HomeItem(..), MenuItem(..))
+import Components.Menu as Menu exposing (Menu, MenuSection(..), HomeItem(..), MenuItem(..), PauseItem(..))
 import WebGL exposing (Texture, Entity)
 import View.Color as Color
+import Animation exposing (Animation)
+import Time
+import Ease
+
+
+titleAnimation : Animation
+titleAnimation =
+    Animation.animation 0
+        |> Animation.from -24
+        |> Animation.to 14
+        |> Animation.ease Ease.outBounce
+        |> Animation.duration (1 * Time.second)
+        |> Animation.delay (0.5 * Time.second)
 
 
 cursorPosition : Menu -> Float -> ( Float, Float, Float )
-cursorPosition menu yOffset =
-    if menu == Home StartTheGame || menu == Menu SoundOnOff then
-        ( 7, 4 + yOffset, 0 )
+cursorPosition { section } yOffset =
+    if section == HomeSection StartTheGame || section == MenuSection SoundOnOff || section == PauseSection ResumeGame then
+        ( 9, 3 + yOffset, 0 )
+    else if section == HomeSection GoToMenu || section == MenuSection GoToCredits || section == PauseSection EndGame then
+        ( 9, 14 + yOffset, 0 )
     else
-        ( 7, 15 + yOffset, 0 )
+        ( 9, 25 + yOffset, 0 )
 
 
 homeTop : Float
@@ -25,30 +40,40 @@ menuTop =
     20
 
 
+roundFloat : Float -> Float
+roundFloat =
+    round >> toFloat
+
+
 render : Bool -> Texture -> Texture -> Menu -> List Entity
 render sound font sprite menu =
-    case menu of
-        Home _ ->
+    case menu.section of
+        HomeSection _ ->
             [ Font.render Color.white newGameText font ( 15, homeTop, 0 )
             , Font.render Color.white menuText font ( 15, homeTop + 11, 0 )
             , Sprite.render selectionSprite sprite (cursorPosition menu homeTop)
-            , Sprite.render mogeeSprite sprite ( 3, 14, 0 )
+            , Sprite.render logoSprite sprite ( 3, Animation.animate menu.time titleAnimation |> roundFloat, 0 )
             ]
 
-        Menu _ ->
+        PauseSection _ ->
+            [ Font.render Color.white resumeText font ( 15, homeTop, 0 )
+            , Font.render Color.white endText font ( 15, homeTop + 11, 0 )
+            , Sprite.render selectionSprite sprite (cursorPosition menu homeTop)
+            ]
+
+        MenuSection _ ->
             [ Font.render Color.white (soundText sound) font ( 15, menuTop, 0 )
             , Font.render Color.white creditsText font ( 15, menuTop + 11, 0 )
+            , Font.render Color.white slidesText font ( 15, menuTop + 22, 0 )
             , Sprite.render selectionSprite sprite (cursorPosition menu menuTop)
             ]
 
-        Credits ->
+        CreditsSection ->
             [ Font.render Color.white creditsScreenText font ( 2, 10, 0 )
             ]
 
-
-selectText : Text
-selectText =
-    Font.text "*"
+        SlidesSection ->
+            []
 
 
 newGameText : Text
@@ -59,6 +84,16 @@ newGameText =
 menuText : Text
 menuText =
     Font.text "menu"
+
+
+resumeText : Text
+resumeText =
+    Font.text "resume"
+
+
+endText : Text
+endText =
+    Font.text "end game"
 
 
 soundText : Bool -> Text
@@ -84,9 +119,14 @@ creditsText =
     Font.text "credits"
 
 
-mogeeSprite : Sprite
-mogeeSprite =
-    Sprite.sprite "mogee"
+slidesText : Text
+slidesText =
+    Font.text "slides"
+
+
+logoSprite : Sprite
+logoSprite =
+    Sprite.sprite "logo"
 
 
 creditsScreenText : Text
@@ -96,4 +136,4 @@ creditsScreenText =
 
 selectionSprite : Sprite
 selectionSprite =
-    Sprite.sprite "life"
+    Sprite.sprite "arrow"

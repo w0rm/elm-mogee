@@ -10,22 +10,22 @@ import Dict
 
 gravity : Float
 gravity =
-    0.0001
+    0.000225
 
 
 friction : Float
 friction =
-    0.001
+    0.00225
 
 
 jumpVelocity : Float
 jumpVelocity =
-    0.06
+    0.09
 
 
 walkVelocity : Float
 walkVelocity =
-    0.03
+    0.045
 
 
 moveY : Time -> Float -> List Transform -> Transform -> Velocity -> ( Transform, Velocity )

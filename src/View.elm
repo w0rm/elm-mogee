@@ -13,14 +13,34 @@ import Components.Components as Components
 import WebGL exposing (Entity, Texture)
 import View.Font as Font exposing (Text)
 import View.Menu as Menu
+import Slides.View as Slides
+import Components.Menu as Menu
+
+
+music : Html Msg
+music =
+    Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] []
 
 
 withSound : Bool -> List (Html Msg) -> List (Html Msg)
 withSound on =
     if on then
-        (::) (Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] [])
+        (::) music
     else
         identity
+
+
+musicOn : GameState -> Bool
+musicOn state =
+    case state of
+        Playing ->
+            True
+
+        Paused _ ->
+            True
+
+        _ ->
+            False
 
 
 view : Model -> Html Msg
@@ -35,7 +55,7 @@ view model =
             , ( "background", "#000" )
             ]
         ]
-        (withSound ((model.state == Playing || model.state == Paused) && model.sound)
+        (withSound (musicOn model.state && model.sound)
             [ WebGL.toHtmlWith
                 [ WebGL.depth 1
                 , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
@@ -78,11 +98,14 @@ render : Model -> Texture -> Texture -> Texture -> List Entity
 render model texture font sprite =
     case model.state of
         Initial menu ->
-            Menu.render model.sound font sprite menu
+            if (menu.section == Menu.SlidesSection) then
+                Slides.render sprite font model.slides
+            else
+                Menu.render model.sound font sprite menu
 
-        Paused ->
-            Font.render Color.white playText font ( 12, 40, 0 )
-                :: renderGame model texture font sprite
+        Paused menu ->
+            Menu.render model.sound font sprite menu
+                ++ renderGame model texture font sprite
 
         Dead ->
             Font.render Color.white continueText font ( 12, 40, 0 )
@@ -131,11 +154,6 @@ renderGame model texture font sprite =
             ++ Lives.renderScore texture ( 32, 1, 0 ) (model.systems.currentScore + model.score)
             ++ List.map dot allScr
             ++ View.Components.render texture (Keys.directions model.keys).x offset model.components []
-
-
-playText : Text
-playText =
-    Font.text "press enter\n   to play"
 
 
 continueText : Text

@@ -15,10 +15,12 @@ import Components.Components as Components exposing (Components)
 import Components.Menu as Menu exposing (Menu)
 import PageVisibility exposing (Visibility(..))
 import Dict
+import Slides.Engine as Engine exposing (Engine)
+import Slides.Slides as Slides
 
 
 type GameState
-    = Paused
+    = Paused Menu
     | Playing
     | Dead
     | Initial Menu
@@ -36,6 +38,7 @@ type alias Model =
     , sprite : Maybe Texture
     , font : Maybe Texture
     , keys : Keys
+    , slides : Engine
     }
 
 
@@ -45,13 +48,14 @@ initial =
     , systems = Systems.initial
     , lives = 0
     , score = 0
-    , state = Initial Menu.initial
+    , state = Initial Menu.start
     , size = 0
     , sound = True
     , texture = Nothing
     , font = Nothing
     , sprite = Nothing
     , keys = Keys.initial
+    , slides = Slides.initial
     }
 
 
@@ -59,78 +63,72 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         Resize { width, height } ->
-            { model | size = min width height // 64 * 64 } ! []
+            ( { model | size = min width height // 64 * 64 }
+            , Cmd.none
+            )
 
         Animate elapsed ->
-            animateKeys elapsed (animate (min elapsed 60 * 1.5) model) ! []
+            ( model
+                |> animate elapsed
+                |> animateKeys elapsed
+            , Cmd.none
+            )
 
         KeyChange pressed keyCode ->
-            { model | keys = Keys.keyChange pressed keyCode model.keys } ! []
+            ( { model | keys = Keys.keyChange pressed keyCode model.keys }
+            , Cmd.none
+            )
 
         TextureLoaded texture ->
-            { model | texture = Result.toMaybe texture } ! []
+            ( { model | texture = Result.toMaybe texture }
+            , Cmd.none
+            )
 
         SpriteLoaded sprite ->
-            { model | sprite = Result.toMaybe sprite } ! []
+            ( { model | sprite = Result.toMaybe sprite }
+            , Cmd.none
+            )
 
         FontLoaded font ->
-            { model | font = Result.toMaybe font } ! []
+            ( { model | font = Result.toMaybe font }
+            , Cmd.none
+            )
 
         VisibilityChange Visible ->
-            model ! []
+            ( model, Cmd.none )
 
         VisibilityChange Hidden ->
-            { model
+            ( { model
                 | state =
                     if model.state == Playing then
-                        Paused
+                        Paused Menu.paused
                     else
                         model.state
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
 
 animate : Time -> Model -> Model
 animate elapsed model =
     case model.state of
-        Paused ->
-            if Keys.pressed codes.enter model.keys then
-                { model | state = Playing }
-            else
-                model
-
-        Dead ->
-            if Keys.pressed codes.enter model.keys then
-                if model.lives == 0 then
-                    { model | state = Initial Menu.initial }
-                else
-                    continue model
-            else
-                model
-
         Initial menu ->
-            let
-                ( newMenu, cmd ) =
-                    Menu.update model.sound model.keys menu
-            in
-                case cmd of
-                    Menu.Start ->
-                        start { model | state = Initial newMenu }
+            updateMenu elapsed Initial menu model
 
-                    Menu.ToggleSound sound ->
-                        { model | sound = sound, state = Initial newMenu }
-
-                    Menu.Noop ->
-                        { model | state = Initial newMenu }
+        Paused menu ->
+            updateMenu elapsed Paused menu model
 
         Playing ->
             let
+                limitElapsed =
+                    min elapsed 60
+
                 ( newComponents, newSystems ) =
-                    Systems.run elapsed (Keys.directions model.keys) model.components model.systems
+                    Systems.run limitElapsed (Keys.directions model.keys) model.components model.systems
 
                 state =
                     if Keys.pressed codes.escape model.keys then
-                        Paused
+                        Paused Menu.paused
                     else
                         model.state
             in
@@ -140,6 +138,15 @@ animate elapsed model =
                         , systems = newSystems
                         , state = state
                     }
+
+        Dead ->
+            if Keys.pressed codes.enter model.keys then
+                if model.lives == 0 then
+                    { model | state = Initial Menu.start }
+                else
+                    continue model
+            else
+                model
 
 
 animateKeys : Time -> Model -> Model
@@ -177,3 +184,32 @@ start model =
         , lives = 3
         , score = 0
     }
+
+
+updateMenu : Time -> (Menu -> GameState) -> Menu -> Model -> Model
+updateMenu elapsed menuState menu model =
+    let
+        ( newMenu, cmd ) =
+            Menu.update elapsed model.sound model.keys menu
+
+        newModel =
+            if menu.section == Menu.SlidesSection then
+                { model | slides = Engine.update elapsed model.keys model.slides }
+            else
+                model
+    in
+        case cmd of
+            Menu.Start ->
+                start { newModel | state = Initial newMenu }
+
+            Menu.ToggleSound sound ->
+                { newModel | sound = sound, state = Initial newMenu }
+
+            Menu.Resume ->
+                { newModel | state = Playing }
+
+            Menu.End ->
+                { newModel | state = Initial Menu.start }
+
+            Menu.Noop ->
+                { newModel | state = menuState newMenu }

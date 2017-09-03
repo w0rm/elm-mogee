@@ -23,7 +23,12 @@ size =
 
 velocity : Float
 velocity =
-    0.01
+    0.015
+
+
+velocityIncrement : Float
+velocityIncrement =
+    0.0015
 
 
 type AnimationState
@@ -44,17 +49,12 @@ type alias Screen =
 
 screen : Direction -> Direction -> Int -> Screen
 screen from to number =
-    { from =
-        -- the first screen should not have left border
-        if number == 0 then
-            to
-        else
-            from
+    { from = from
     , to = to
     , number = number
     , frame = 0
     , state = Initial
-    , velocity = velocity + 0.001 * toFloat number
+    , velocity = velocity + velocityIncrement * toFloat number
     }
 
 

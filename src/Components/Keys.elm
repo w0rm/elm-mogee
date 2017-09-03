@@ -46,11 +46,14 @@ codes =
 
 
 keyChange : Bool -> KeyCode -> Keys -> Keys
-keyChange on code =
+keyChange on code keys =
     if on then
-        Dict.insert code 0
+        if Dict.member code keys then
+            keys
+        else
+            Dict.insert code 0 keys
     else
-        Dict.remove code
+        Dict.remove code keys
 
 
 animate : Time -> Keys -> Keys

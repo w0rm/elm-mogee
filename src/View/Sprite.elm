@@ -3,6 +3,7 @@ module View.Sprite
         ( loadTexture
         , loadSprite
         , sprite
+        , name
         , Sprite
         , render
         )
@@ -17,7 +18,7 @@ import WebGL exposing (Texture, Shader, Mesh, Entity)
 
 
 type Sprite
-    = Sprite (Mesh Vertex)
+    = Sprite String (Mesh Vertex)
 
 
 {-| TODO: use union type for sprites
@@ -28,7 +29,12 @@ sprite name =
         |> Maybe.map (mesh)
         |> Maybe.withDefault []
         |> WebGL.triangles
-        |> Sprite
+        |> Sprite name
+
+
+name : Sprite -> String
+name (Sprite name _) =
+    name
 
 
 type alias Vertex =
@@ -51,7 +57,7 @@ mesh { x, y, w, h } =
 
 
 render : Sprite -> Texture -> ( Float, Float, Float ) -> Entity
-render (Sprite mesh) texture offset =
+render (Sprite _ mesh) texture offset =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
