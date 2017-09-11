@@ -1,4 +1,4 @@
-module Model
+port module Model
     exposing
         ( Model
         , initial
@@ -14,7 +14,6 @@ import Systems.Systems as Systems exposing (Systems)
 import Components.Components as Components exposing (Components)
 import Components.Menu as Menu exposing (Menu)
 import PageVisibility exposing (Visibility(..))
-import Dict
 import Slides.Engine as Engine exposing (Engine)
 import Slides.Slides as Slides
 
@@ -59,6 +58,21 @@ initial =
     }
 
 
+{-| port for turning audio on/off
+-}
+port sound : Bool -> Cmd msg
+
+
+{-| port for sending audio to play
+-}
+port play : String -> Cmd msg
+
+
+{-| port for sending audio to stop
+-}
+port stop : String -> Cmd msg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
@@ -68,11 +82,9 @@ update action model =
             )
 
         Animate elapsed ->
-            ( model
+            model
                 |> animate elapsed
                 |> animateKeys elapsed
-            , Cmd.none
-            )
 
         KeyChange pressed keyCode ->
             ( { model | keys = Keys.keyChange pressed keyCode model.keys }
@@ -109,7 +121,7 @@ update action model =
             )
 
 
-animate : Time -> Model -> Model
+animate : Time -> Model -> ( Model, Cmd Msg )
 animate elapsed model =
     case model.state of
         Initial menu ->
@@ -123,70 +135,92 @@ animate elapsed model =
                 limitElapsed =
                     min elapsed 60
 
-                ( newComponents, newSystems ) =
-                    Systems.run limitElapsed (Keys.directions model.keys) model.components model.systems
+                ( newComponents, newSystems, sound ) =
+                    Systems.run
+                        limitElapsed
+                        (Keys.directions model.keys)
+                        model.components
+                        model.systems
 
                 state =
                     if Keys.pressed codes.escape model.keys then
                         Paused Menu.paused
                     else
                         model.state
+
+                ( newState, cmd ) =
+                    checkLives
+                        { model
+                            | components = newComponents
+                            , systems = newSystems
+                            , state = state
+                        }
             in
-                checkLives
-                    { model
-                        | components = newComponents
-                        , systems = newSystems
-                        , state = state
-                    }
+                ( newState
+                , case sound of
+                    Just snd ->
+                        Cmd.batch [ cmd, play snd ]
+
+                    Nothing ->
+                        cmd
+                )
 
         Dead ->
             if Keys.pressed codes.enter model.keys then
                 if model.lives == 0 then
-                    { model | state = Initial Menu.start }
+                    ( { model | state = Initial Menu.start }, Cmd.none )
                 else
                     continue model
             else
-                model
+                ( model, Cmd.none )
 
 
-animateKeys : Time -> Model -> Model
-animateKeys elapsed model =
-    { model | keys = Keys.animate elapsed model.keys }
+animateKeys : Time -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+animateKeys elapsed ( model, cmd ) =
+    ( { model | keys = Keys.animate elapsed model.keys }
+    , cmd
+    )
 
 
-checkLives : Model -> Model
+checkLives : Model -> ( Model, Cmd Msg )
 checkLives model =
     if Components.isDead model.components then
-        { model
+        ( { model
             | lives = model.lives - 1
             , state = Dead
-        }
+          }
+        , Cmd.batch [ play "death", stop "theme" ]
+        )
     else
-        model
+        ( model, Cmd.none )
 
 
-continue : Model -> Model
+continue : Model -> ( Model, Cmd Msg )
 continue model =
-    { model
+    ( { model
         | state = Playing
         , components = Components.initial
         , systems = Systems.initial
         , score = model.score + model.systems.currentScore
-    }
+      }
+    , Cmd.batch [ play "action", play "theme" ]
+    )
 
 
-start : Model -> Model
+start : Model -> ( Model, Cmd Msg )
 start model =
-    { model
+    ( { model
         | state = Playing
         , components = Components.initial
         , systems = Systems.initial
         , lives = 3
         , score = 0
-    }
+      }
+    , Cmd.batch [ play "action", play "theme" ]
+    )
 
 
-updateMenu : Time -> (Menu -> GameState) -> Menu -> Model -> Model
+updateMenu : Time -> (Menu -> GameState) -> Menu -> Model -> ( Model, Cmd Msg )
 updateMenu elapsed menuState menu model =
     let
         ( newMenu, cmd ) =
@@ -202,14 +236,30 @@ updateMenu elapsed menuState menu model =
             Menu.Start ->
                 start { newModel | state = Initial newMenu }
 
-            Menu.ToggleSound sound ->
-                { newModel | sound = sound, state = Initial newMenu }
+            Menu.ToggleSound on ->
+                ( { newModel | sound = on, state = Initial newMenu }
+                , if on then
+                    Cmd.batch [ sound on, play "action" ]
+                  else
+                    sound on
+                )
 
             Menu.Resume ->
-                { newModel | state = Playing }
+                ( { newModel | state = Playing }
+                , play "action"
+                )
 
             Menu.End ->
-                { newModel | state = Initial Menu.start }
+                ( { newModel | state = Initial Menu.start }
+                , Cmd.batch [ stop "theme", play "action" ]
+                )
+
+            Menu.Action ->
+                ( { newModel | state = menuState newMenu }
+                , play "action"
+                )
 
             Menu.Noop ->
-                { newModel | state = menuState newMenu }
+                ( { newModel | state = menuState newMenu }
+                , Cmd.none
+                )

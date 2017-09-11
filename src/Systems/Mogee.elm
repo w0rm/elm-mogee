@@ -28,7 +28,7 @@ walkVelocity =
     0.045
 
 
-moveY : Time -> Float -> List Transform -> Transform -> Velocity -> ( Transform, Velocity )
+moveY : Time -> Float -> List Transform -> Transform -> Velocity -> ( Transform, Velocity, Maybe String )
 moveY dt dy wallsTransforms transform velocity =
     let
         ( vx, vy ) =
@@ -44,12 +44,16 @@ moveY dt dy wallsTransforms transform velocity =
             dt * (vy + newVelocity) * 0.5
     in
         List.foldl
-            (\({ position, size } as wall) ( transform, velocity ) ->
+            (\({ position, size } as wall) ( transform, velocity, audio ) ->
                 if Transform.collide transform wall then
                     if deltaY < 0 then
                         -- Hit the top wall
                         ( { transform | position = ( x, Tuple.second position + Tuple.second size ) }
                         , { velocity | velocity = ( vx, 0 ) }
+                        , if newVelocity < -0.05 then
+                            Just "wall"
+                          else
+                            audio
                         )
                     else
                         -- Hit the bottom wall
@@ -60,15 +64,22 @@ moveY dt dy wallsTransforms transform velocity =
                                 , if dy == 1 then
                                     -jumpVelocity
                                   else
-                                    0
+                                    -newVelocity / 10
                                 )
                           }
+                        , if dy == 1 then
+                            Just "jump"
+                          else if newVelocity > 0.05 then
+                            Just "wall"
+                          else
+                            Nothing
                         )
                 else
-                    ( transform, velocity )
+                    ( transform, velocity, audio )
             )
             ( { transform | position = ( x, y + deltaY ) }
             , { velocity | velocity = ( vx, newVelocity ) }
+            , Nothing
             )
             wallsTransforms
 
@@ -122,7 +133,7 @@ moveX dt dx wallsTransforms transform velocity =
 
 {-| TODO: Split physics into its own system
 -}
-run : Time -> { x : Float, y : Float } -> Components -> Components
+run : Time -> { x : Float, y : Float } -> Components -> ( Components, Maybe String )
 run elapsed { x, y } components =
     let
         wallsTransforms =
@@ -132,11 +143,13 @@ run elapsed { x, y } components =
             Components.foldl2 (\_ _ -> (::)) [] components.screens components.transforms
     in
         Components.foldl3
-            (\uid mogee transform velocity components ->
+            (\uid mogee transform velocity ( components, sound ) ->
                 let
-                    ( newTransform, newVelocity ) =
+                    ( newYTransform, newYVelocity, newSound ) =
                         moveY elapsed y wallsTransforms transform velocity
-                            |> uncurry (moveX elapsed x wallsTransforms)
+
+                    ( newTransform, newVelocity ) =
+                        moveX elapsed x wallsTransforms newYTransform newYVelocity
 
                     newMogee =
                         if List.any (Transform.collide transform) screensTransforms then
@@ -144,13 +157,18 @@ run elapsed { x, y } components =
                         else
                             Mogee.die mogee
                 in
-                    { components
+                    ( { components
                         | transforms = Dict.insert uid newTransform components.transforms
                         , velocities = Dict.insert uid newVelocity components.velocities
                         , mogees = Dict.insert uid newMogee components.mogees
-                    }
+                      }
+                    , if newSound == Nothing then
+                        sound
+                      else
+                        newSound
+                    )
             )
-            components
+            ( components, Nothing )
             components.mogees
             components.transforms
             components.velocities

@@ -1,7 +1,7 @@
 module View exposing (view)
 
 import Html exposing (Html, div)
-import Html.Attributes exposing (autoplay, height, loop, src, style, width)
+import Html.Attributes exposing (height, style, width)
 import Messages exposing (Msg)
 import Components.Keys as Keys
 import Model exposing (GameState(..), Model)
@@ -17,73 +17,34 @@ import Slides.View as Slides
 import Components.Menu as Menu
 
 
-music : Html Msg
-music =
-    Html.audio [ src "../snd/theme.ogg", autoplay True, loop True ] []
-
-
-withSound : Bool -> List (Html Msg) -> List (Html Msg)
-withSound on =
-    if on then
-        (::) music
-    else
-        identity
-
-
-musicOn : GameState -> Bool
-musicOn state =
-    case state of
-        Playing ->
-            True
-
-        Paused _ ->
-            True
-
-        _ ->
-            False
-
-
 view : Model -> Html Msg
 view model =
-    div
-        [ style
-            [ ( "position", "absolute" )
-            , ( "left", "0" )
-            , ( "top", "0" )
-            , ( "width", "100%" )
-            , ( "height", "100%" )
-            , ( "background", "#000" )
+    WebGL.toHtmlWith
+        [ WebGL.depth 1
+        , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+        ]
+        [ width model.size
+        , height model.size
+        , style
+            [ ( "display", "block" )
+            , ( "position", "absolute" )
+            , ( "top", "50%" )
+            , ( "left", "50%" )
+            , ( "margin-top", toString (-model.size // 2) ++ "px" )
+            , ( "margin-left", toString (-model.size // 2) ++ "px" )
+            , ( "image-rendering", "optimizeSpeed" )
+            , ( "image-rendering", "-moz-crisp-edges" )
+            , ( "image-rendering", "-webkit-optimize-contrast" )
+            , ( "image-rendering", "crisp-edges" )
+            , ( "image-rendering", "pixelated" )
+            , ( "-ms-interpolation-mode", "nearest-neighbor" )
             ]
         ]
-        (withSound (musicOn model.state && model.sound)
-            [ WebGL.toHtmlWith
-                [ WebGL.depth 1
-                , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
-                ]
-                [ width model.size
-                , height model.size
-                , style
-                    [ ( "display", "block" )
-                    , ( "position", "absolute" )
-                    , ( "top", "50%" )
-                    , ( "left", "50%" )
-                    , ( "margin-top", toString (-model.size // 2) ++ "px" )
-                    , ( "margin-left", toString (-model.size // 2) ++ "px" )
-                    , ( "image-rendering", "optimizeSpeed" )
-                    , ( "image-rendering", "-moz-crisp-edges" )
-                    , ( "image-rendering", "-webkit-optimize-contrast" )
-                    , ( "image-rendering", "crisp-edges" )
-                    , ( "image-rendering", "pixelated" )
-                    , ( "-ms-interpolation-mode", "nearest-neighbor" )
-                    ]
-                ]
-                (Maybe.map3 (render model)
-                    model.texture
-                    model.font
-                    model.sprite
-                    |> Maybe.withDefault []
-                )
-            ]
+        (Maybe.map3 (render model)
+            model.texture
+            model.font
+            model.sprite
+            |> Maybe.withDefault []
         )
 
 

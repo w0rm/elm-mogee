@@ -19,6 +19,7 @@ type Event
     = Noop
     | ToggleSound Bool
     | Start
+    | Action
     | Resume
     | End
 
@@ -95,7 +96,7 @@ update elapsed sound keys menu =
 
         HomeSection GoToMenu ->
             if Keys.pressed codes.enter keys then
-                ( goTo (MenuSection SoundOnOff) menu, Noop )
+                ( goTo (MenuSection SoundOnOff) menu, Action )
             else if Keys.pressed codes.up keys then
                 ( choose (HomeSection StartTheGame) menu, Noop )
             else
@@ -107,41 +108,41 @@ update elapsed sound keys menu =
             else if Keys.pressed codes.down keys then
                 ( choose (MenuSection GoToCredits) menu, Noop )
             else if Keys.pressed codes.escape keys then
-                ( goTo (HomeSection StartTheGame) menu, Noop )
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         MenuSection GoToCredits ->
             if Keys.pressed codes.enter keys then
-                ( goTo CreditsSection menu, Noop )
+                ( goTo CreditsSection menu, Action )
             else if Keys.pressed codes.up keys then
                 ( choose (MenuSection SoundOnOff) menu, Noop )
             else if Keys.pressed codes.down keys then
                 ( choose (MenuSection GoToSlides) menu, Noop )
             else if Keys.pressed codes.escape keys then
-                ( goTo (HomeSection StartTheGame) menu, Noop )
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         MenuSection GoToSlides ->
             if Keys.pressed codes.enter keys then
-                ( goTo SlidesSection menu, Noop )
+                ( goTo SlidesSection menu, Action )
             else if Keys.pressed codes.up keys then
                 ( choose (MenuSection GoToCredits) menu, Noop )
             else if Keys.pressed codes.escape keys then
-                ( goTo (HomeSection StartTheGame) menu, Noop )
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         CreditsSection ->
             if Keys.pressed codes.escape keys then
-                ( goTo (MenuSection GoToCredits) menu, Noop )
+                ( goTo (MenuSection GoToCredits) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         SlidesSection ->
             if Keys.pressed codes.escape keys then
-                ( goTo (MenuSection GoToSlides) menu, Noop )
+                ( goTo (MenuSection GoToSlides) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
