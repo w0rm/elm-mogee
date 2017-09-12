@@ -2,7 +2,7 @@ module View.Mogee exposing (render)
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
-import Components.Mogee exposing (Mogee, size, AnimationState(..))
+import Components.Mogee as Mogee exposing (Mogee, AnimationState(..))
 import View.Common exposing (box, texturedFragmentShader)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
@@ -50,8 +50,8 @@ render texture ( x, y ) directionX mogee =
             , texture = texture
             , mirror = mirror
             , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-            , frameSize = Vec2.fromTuple size
-            , textureOffset = vec2 (Tuple.first size * getFrame mogee.frames) 0
+            , frameSize = vec2 Mogee.width Mogee.height
+            , textureOffset = vec2 (Mogee.width * getFrame mogee.frames) 0
             }
 
 

@@ -107,7 +107,7 @@ update elapsed sound keys menu =
                 ( menu, ToggleSound (not sound) )
             else if Keys.pressed codes.down keys then
                 ( choose (MenuSection GoToCredits) menu, Noop )
-            else if Keys.pressed codes.escape keys then
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
@@ -119,7 +119,7 @@ update elapsed sound keys menu =
                 ( choose (MenuSection SoundOnOff) menu, Noop )
             else if Keys.pressed codes.down keys then
                 ( choose (MenuSection GoToSlides) menu, Noop )
-            else if Keys.pressed codes.escape keys then
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
@@ -129,19 +129,19 @@ update elapsed sound keys menu =
                 ( goTo SlidesSection menu, Action )
             else if Keys.pressed codes.up keys then
                 ( choose (MenuSection GoToCredits) menu, Noop )
-            else if Keys.pressed codes.escape keys then
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( goTo (HomeSection StartTheGame) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         CreditsSection ->
-            if Keys.pressed codes.escape keys then
+            if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( goTo (MenuSection GoToCredits) menu, Action )
             else
                 ( tick elapsed menu, Noop )
 
         SlidesSection ->
-            if Keys.pressed codes.escape keys then
+            if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( goTo (MenuSection GoToSlides) menu, Action )
             else
                 ( tick elapsed menu, Noop )
@@ -151,7 +151,7 @@ update elapsed sound keys menu =
                 ( menu, Resume )
             else if Keys.pressed codes.down keys then
                 ( choose (PauseSection EndGame) menu, Noop )
-            else if Keys.pressed codes.escape keys then
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( menu, Resume )
             else
                 ( tick elapsed menu, Noop )
@@ -161,7 +161,7 @@ update elapsed sound keys menu =
                 ( menu, End )
             else if Keys.pressed codes.up keys then
                 ( choose (PauseSection ResumeGame) menu, Noop )
-            else if Keys.pressed codes.escape keys then
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
                 ( menu, Resume )
             else
                 ( tick elapsed menu, Noop )

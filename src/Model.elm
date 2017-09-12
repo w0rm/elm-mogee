@@ -143,7 +143,7 @@ animate elapsed model =
                         model.systems
 
                 state =
-                    if Keys.pressed codes.escape model.keys then
+                    if Keys.pressed codes.escape model.keys || Keys.pressed codes.q model.keys then
                         Paused Menu.paused
                     else
                         model.state

@@ -9,6 +9,7 @@ module View.Common
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Shader, Mesh, Entity, Texture)
+import Components.Transform exposing (Transform)
 
 
 type alias Vertex =
@@ -30,15 +31,15 @@ box =
         ]
 
 
-rectangle : ( Float, Float ) -> ( Float, Float, Float ) -> Vec3 -> Entity
-rectangle ( w, h ) ( x, y, l ) color =
+rectangle : Transform -> Float -> Vec3 -> Entity
+rectangle { x, y, width, height } l color =
     WebGL.entity
         coloredVertexShader
         coloredFragmentShader
         box
         { offset = vec3 (toFloat (round x)) (toFloat (round y)) l
         , color = color
-        , size = vec2 (toFloat (round w)) (toFloat (round h))
+        , size = vec2 (toFloat (round width)) (toFloat (round height))
         }
 
 

@@ -10,18 +10,11 @@ import Components.Transform as Transform
 import WebGL exposing (Texture, Entity)
 
 
-offsetBy : ( Float, Float ) -> ( Float, Float ) -> ( Float, Float )
-offsetBy ( x1, y1 ) ( x2, y2 ) =
-    ( x2 - x1
-    , y2 - y1
-    )
-
-
 renderWalls : Texture -> ( Float, Float ) -> Components -> List Entity -> List Entity
 renderWalls texture offset { walls, transforms } entities =
     Components.foldl2
-        (\_ _ { position, size } ->
-            (::) (Wall.render texture (offsetBy offset position) size)
+        (\_ _ transform ->
+            (::) (Wall.render texture (Transform.offsetBy offset transform))
         )
         entities
         walls
@@ -41,18 +34,17 @@ renderScreens texture offset { screens, transforms } entities =
     Components.foldl2
         (\_ screen transform ->
             let
-                position =
-                    offsetBy offset transform.position
+                screenTransform =
+                    Transform.offsetBy offset transform
 
                 monster =
-                    Transform.invertScreen screen.to transform
-
-                monsterPosition =
-                    offsetBy offset monster.position
+                    transform
+                        |> Transform.invertScreen screen.to
+                        |> Transform.offsetBy offset
             in
-                (::) (rectangle transform.size ( Tuple.first position, Tuple.second position, 5 ) Color.darkGreen)
-                    >> (::) (rectangle monster.size ( Tuple.first monsterPosition, Tuple.second monsterPosition, 2 ) Color.darkBlue)
-                    >> Screen.render texture monsterPosition transform.size screen
+                (::) (rectangle screenTransform 5 Color.darkGreen)
+                    >> (::) (rectangle monster 2 Color.darkBlue)
+                    >> Screen.render texture ( monster.x, monster.y ) ( transform.width, transform.height ) screen
         )
         entities
         screens

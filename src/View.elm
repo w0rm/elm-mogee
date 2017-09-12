@@ -10,6 +10,7 @@ import View.Color as Color
 import View.Lives as Lives
 import View.Components
 import Components.Components as Components
+import Components.Transform as Transform exposing (Transform)
 import WebGL exposing (Entity, Texture)
 import View.Font as Font exposing (Text)
 import View.Menu as Menu
@@ -48,11 +49,13 @@ view model =
         )
 
 
-toMinimap : ( Float, Float ) -> ( Float, Float )
-toMinimap ( x, y ) =
-    ( floor (x / 64) |> toFloat
-    , floor (y / 64) |> toFloat
-    )
+toMinimap : Transform -> Transform
+toMinimap { x, y } =
+    { x = floor (x / 64) |> toFloat
+    , y = floor (y / 64) |> toFloat
+    , width = 1
+    , height = 1
+    }
 
 
 render : Model -> Texture -> Texture -> Texture -> List Entity
@@ -79,33 +82,33 @@ render model texture font sprite =
 renderGame : Model -> Texture -> Texture -> Texture -> List Entity
 renderGame model texture font sprite =
     let
-        ( x, y ) =
+        mogeeTransform =
             Components.mogeeOffset model.components
 
         offset =
-            ( toFloat (round x - 28), toFloat (round y - 27) )
+            ( toFloat (round mogeeTransform.x - 28), toFloat (round mogeeTransform.y - 27) )
 
-        ( cx, cy ) =
-            toMinimap ( x, y )
+        mogeeMinimap =
+            toMinimap mogeeTransform
 
         allScr =
             Components.foldl2
-                (\_ _ { position } positions -> toMinimap position :: positions)
+                (\_ _ position positions -> toMinimap position :: positions)
                 []
                 model.components.screens
                 model.components.transforms
 
         maxX =
-            List.maximum (List.map Tuple.first allScr) |> Maybe.withDefault 0
+            List.maximum (List.map .x allScr) |> Maybe.withDefault 0
 
         minY =
-            List.minimum (List.map Tuple.second allScr) |> Maybe.withDefault 0
+            List.minimum (List.map .y allScr) |> Maybe.withDefault 0
 
-        dot ( x1, y1 ) =
+        dot transform =
             Common.rectangle
-                ( 1, 1 )
-                ( 63 - maxX - 1 + x1, y1 - minY + 1, 0 )
-                (if x1 == cx && y1 == cy then
+                (Transform.offsetBy ( maxX - 62, minY - 1 ) transform)
+                0
+                (if transform == mogeeMinimap then
                     Color.yellow
                  else
                     Color.gray

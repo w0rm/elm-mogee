@@ -41,13 +41,14 @@ run elapsed components screens =
         newComponents =
             update elapsed components
 
-        ( x, y ) =
+        { x, y } =
             Components.mogeeOffset newComponents
 
-        ( screenX, screenY ) =
-            ( x - 32 + Tuple.first Mogee.size / 2
-            , y - 32 + Tuple.second Mogee.size / 2
-            )
+        screenX =
+            x - 32 + Mogee.width / 2
+
+        screenY =
+            y - 32 + Mogee.height / 2
 
         ( direction, seed ) =
             Random.step (Direction.next screens.direction) screens.seed
@@ -71,42 +72,35 @@ run elapsed components screens =
 shrink : Time -> Screen -> Transform -> Transform
 shrink dt { to, state, velocity } transform =
     let
-        ( x, y ) =
-            transform.position
-
-        ( w, h ) =
-            transform.size
+        { x, y, width, height } =
+            transform
 
         newW =
-            max 0 (w - dt * velocity)
+            max 0 (width - dt * velocity)
 
         newH =
-            max 0 (h - dt * velocity)
+            max 0 (height - dt * velocity)
     in
-        if state /= Moving || w == 0 || h == 0 then
+        if state /= Moving || width == 0 || height == 0 then
             transform
         else
             case to of
                 Left ->
-                    { transform
-                        | size = ( newW, 64 )
-                    }
+                    { transform | width = newW }
 
                 Right ->
                     { transform
-                        | size = ( newW, 64 )
-                        , position = ( x - newW + w, y )
+                        | width = newW
+                        , x = x - newW + width
                     }
 
                 Top ->
-                    { transform
-                        | size = ( 64, newH )
-                    }
+                    { transform | height = newH }
 
                 Bottom ->
                     { transform
-                        | size = ( 64, newH )
-                        , position = ( x, y - newH + h )
+                        | height = newH
+                        , y = y - newH + height
                     }
 
 
@@ -122,28 +116,23 @@ update : Time -> Components -> Components
 update elapsed components =
     Components.foldl2
         (\uid screen transform components ->
-            case transform.size of
+            if transform.width == 0 || transform.height == 0 then
                 -- Delete the screen
-                ( 0, _ ) ->
-                    Components.delete uid components
+                Components.delete uid components
+            else
+                let
+                    newScreen =
+                        screen
+                            |> Screen.update elapsed
+                            |> activate (Dict.values components.screens)
 
-                ( _, 0 ) ->
-                    Components.delete uid components
-
-                _ ->
-                    let
-                        newScreen =
-                            screen
-                                |> Screen.update elapsed
-                                |> activate (Dict.values components.screens)
-
-                        newTransform =
-                            shrink elapsed newScreen transform
-                    in
-                        { components
-                            | screens = Dict.insert uid newScreen components.screens
-                            , transforms = Dict.insert uid newTransform components.transforms
-                        }
+                    newTransform =
+                        shrink elapsed newScreen transform
+                in
+                    { components
+                        | screens = Dict.insert uid newScreen components.screens
+                        , transforms = Dict.insert uid newTransform components.transforms
+                    }
         )
         components
         components.screens

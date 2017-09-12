@@ -39,14 +39,18 @@ isDead =
     .mogees >> Dict.values >> List.any Mogee.isDead
 
 
-mogeeOffset : Components -> ( Float, Float )
+mogeeOffset : Components -> Transform
 mogeeOffset { mogees, transforms } =
     Dict.keys mogees
         |> List.head
         |> Maybe.andThen (\uid -> Dict.get uid transforms)
-        |> Maybe.map .position
         -- this should never happen
-        |> Maybe.withDefault ( 32, 32 )
+        |> Maybe.withDefault
+            { x = 32
+            , y = 32
+            , width = Mogee.width
+            , height = Mogee.height
+            }
 
 
 foldl : (EntityId -> a -> b -> b) -> b -> Dict EntityId a -> b
@@ -88,7 +92,7 @@ initial =
     , velocities = Dict.empty
     , walls = Dict.empty
     }
-        |> addMogee ( 28, 27 )
+        |> addMogee 28 27
         |> addScreen Left Right 0
 
 
@@ -108,15 +112,15 @@ addScreen from to number components =
     { components
         | uid = components.uid + 1
         , screens = Dict.insert components.uid (Screen.screen from to number) components.screens
-        , transforms = Dict.insert components.uid { position = ( 0, 0 ), size = ( Screen.size, Screen.size ) } components.transforms
+        , transforms = Dict.insert components.uid { x = 0, y = 0, width = Screen.size, height = Screen.size } components.transforms
     }
-        |> addWall ( 7, 2 ) ( 0, 11 )
-        |> addWall ( 16, 2 ) ( 24, 11 )
-        |> addWall ( 11, 2 ) ( 6, 27 )
-        |> addWall ( 13, 2 ) ( 51, 27 )
-        |> addWall ( 11, 2 ) ( 0, 43 )
-        |> addWall ( 33, 2 ) ( 31, 43 )
-        |> addWall ( 19, 2 ) ( 17, 58 )
+        |> addWall { width = 7, height = 2, x = 0, y = 11 }
+        |> addWall { width = 16, height = 2, x = 24, y = 11 }
+        |> addWall { width = 11, height = 2, x = 6, y = 27 }
+        |> addWall { width = 13, height = 2, x = 51, y = 27 }
+        |> addWall { width = 11, height = 2, x = 0, y = 43 }
+        |> addWall { width = 33, height = 2, x = 31, y = 43 }
+        |> addWall { width = 19, height = 2, x = 17, y = 58 }
         |> addWalls from to
 
 
@@ -129,35 +133,35 @@ addWalls from to components =
             else
                 case d of
                     Left ->
-                        addWall ( 1, Screen.size ) ( 0, 0 )
+                        addWall { width = 1, height = Screen.size, x = 0, y = 0 }
 
                     Right ->
-                        addWall ( 1, Screen.size ) ( Screen.size - 1, 0 )
+                        addWall { width = 1, height = Screen.size, x = Screen.size - 1, y = 0 }
 
                     Top ->
-                        addWall ( Screen.size, 1 ) ( 0, 0 )
+                        addWall { width = Screen.size, height = 1, x = 0, y = 0 }
 
                     Bottom ->
-                        addWall ( Screen.size, 1 ) ( 0, Screen.size - 1 )
+                        addWall { width = Screen.size, height = 1, x = 0, y = Screen.size - 1 }
         )
         components
         [ Left, Right, Top, Bottom ]
 
 
-addMogee : ( Float, Float ) -> Components -> Components
-addMogee position components =
+addMogee : Float -> Float -> Components -> Components
+addMogee x y components =
     { components
         | uid = components.uid + 1
         , mogees = Dict.insert components.uid Mogee.mogee components.mogees
-        , transforms = Dict.insert components.uid { position = position, size = Mogee.size } components.transforms
-        , velocities = Dict.insert components.uid { velocity = ( 0, 0 ) } components.velocities
+        , transforms = Dict.insert components.uid { x = x, y = y, width = Mogee.width, height = Mogee.height } components.transforms
+        , velocities = Dict.insert components.uid { vx = 0, vy = 0 } components.velocities
     }
 
 
-addWall : ( Float, Float ) -> ( Float, Float ) -> Components -> Components
-addWall size position components =
+addWall : Transform -> Components -> Components
+addWall transform components =
     { components
         | uid = components.uid + 1
         , walls = Dict.insert components.uid Wall.wall components.walls
-        , transforms = Dict.insert components.uid { position = position, size = size } components.transforms
+        , transforms = Dict.insert components.uid transform components.transforms
     }

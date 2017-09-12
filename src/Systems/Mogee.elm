@@ -29,66 +29,51 @@ walkVelocity =
 
 
 moveY : Time -> Float -> List Transform -> Transform -> Velocity -> ( Transform, Velocity, Maybe String )
-moveY dt dy wallsTransforms transform velocity =
-    let
-        ( vx, vy ) =
-            velocity.velocity
-
-        ( x, y ) =
-            transform.position
-
-        newVelocity =
-            vy + gravity * dt
-
-        deltaY =
-            dt * (vy + newVelocity) * 0.5
-    in
-        List.foldl
-            (\({ position, size } as wall) ( transform, velocity, audio ) ->
-                if Transform.collide transform wall then
-                    if deltaY < 0 then
-                        -- Hit the top wall
-                        ( { transform | position = ( x, Tuple.second position + Tuple.second size ) }
-                        , { velocity | velocity = ( vx, 0 ) }
-                        , if newVelocity < -0.05 then
-                            Just "wall"
-                          else
-                            audio
-                        )
-                    else
-                        -- Hit the bottom wall
-                        ( { transform | position = ( x, Tuple.second position - Tuple.second transform.size ) }
-                        , { velocity
-                            | velocity =
-                                ( vx
-                                , if dy == 1 then
-                                    -jumpVelocity
-                                  else
-                                    -newVelocity / 10
-                                )
-                          }
-                        , if dy == 1 then
-                            Just "jump"
-                          else if newVelocity > 0.05 then
-                            Just "wall"
-                          else
-                            Nothing
-                        )
+moveY dt dy wallsTransforms originalTransform originalVelocity =
+    List.foldl
+        (\wall ( transform, velocity, audio ) ->
+            if Transform.collide transform wall then
+                if transform.y - originalTransform.y < 0 then
+                    -- Hit the top wall
+                    ( { transform | y = wall.y + wall.height }
+                    , { velocity | vy = 0 }
+                    , if velocity.vy < -0.05 then
+                        Just "wall"
+                      else
+                        audio
+                    )
                 else
-                    ( transform, velocity, audio )
-            )
-            ( { transform | position = ( x, y + deltaY ) }
-            , { velocity | velocity = ( vx, newVelocity ) }
-            , Nothing
-            )
-            wallsTransforms
+                    -- Hit the bottom wall
+                    ( { transform | y = wall.y - transform.height }
+                    , { velocity
+                        | vy =
+                            if dy == 1 then
+                                -jumpVelocity
+                            else
+                                0
+                      }
+                    , if dy == 1 then
+                        Just "jump"
+                      else if velocity.vy > 0.05 then
+                        Just "wall"
+                      else
+                        Nothing
+                    )
+            else
+                ( transform, velocity, audio )
+        )
+        ( { originalTransform | y = originalTransform.y + originalVelocity.vy * dt + gravity * dt * dt * 0.5 }
+        , { originalVelocity | vy = originalVelocity.vy + gravity * dt }
+        , Nothing
+        )
+        wallsTransforms
 
 
 moveX : Time -> Float -> List Transform -> Transform -> Velocity -> ( Transform, Velocity )
-moveX dt dx wallsTransforms transform velocity =
+moveX dt dx wallsTransforms originalTransform originalVelocity =
     let
-        ( vx, vy ) =
-            velocity.velocity
+        { vx } =
+            originalVelocity
 
         newVelocity =
             if dx == 0 then
@@ -102,31 +87,31 @@ moveX dt dx wallsTransforms transform velocity =
         deltaX =
             dt * (vx + newVelocity) * 0.5
 
-        ( x, y ) =
+        x =
             if dx == 0 && deltaX == 0 then
                 -- Nudge the character on the pixel grid
-                ( toFloat (round (Tuple.first transform.position)), Tuple.second transform.position )
+                toFloat (round originalTransform.x)
             else
-                transform.position
+                originalTransform.x
     in
         List.foldl
-            (\({ position, size } as wall) ( transform, velocity ) ->
+            (\wall ( transform, velocity ) ->
                 if Transform.collide transform wall then
-                    if deltaX < 0 then
+                    if transform.x - originalTransform.x < 0 then
                         {- Hit the left wall -}
-                        ( { transform | position = ( Tuple.first position + Tuple.first size, y ) }
-                        , { velocity | velocity = ( 0, vy ) }
+                        ( { transform | x = wall.x + wall.width }
+                        , { velocity | vx = 0 }
                         )
                     else
                         {- Hit the right wall -}
-                        ( { transform | position = ( Tuple.first position - Tuple.first transform.size, y ) }
-                        , { velocity | velocity = ( 0, vy ) }
+                        ( { transform | x = wall.x - transform.width }
+                        , { velocity | vx = 0 }
                         )
                 else
                     ( transform, velocity )
             )
-            ( { transform | position = ( x + deltaX, y ) }
-            , { velocity | velocity = ( newVelocity, vy ) }
+            ( { originalTransform | x = x + deltaX }
+            , { originalVelocity | vx = newVelocity }
             )
             wallsTransforms
 

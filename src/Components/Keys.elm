@@ -32,12 +32,14 @@ codes :
     , right : KeyCode
     , space : KeyCode
     , up : KeyCode
+    , q : KeyCode
     , escape : KeyCode
     }
 codes =
     { enter = 13
     , space = 32
     , escape = 27
+    , q = 81
     , left = 37
     , right = 39
     , up = 38
