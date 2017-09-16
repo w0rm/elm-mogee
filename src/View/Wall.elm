@@ -2,10 +2,11 @@ module View.Wall exposing (render)
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
-import View.Common exposing (box, texturedFragmentShader)
+import View.Common exposing (box, texturedFragmentShader, cropMask)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
 import Components.Transform as Transform exposing (Transform)
+import WebGL.Settings.DepthTest as DepthTest
 
 
 type alias UniformTextured =
@@ -24,7 +25,8 @@ type alias Varying =
 
 render : Texture -> Transform -> Entity
 render texture { x, y, width, height } =
-    WebGL.entity
+    WebGL.entityWith
+        [ cropMask, DepthTest.default ]
         texturedVertexShader
         texturedFragmentShader
         box

@@ -36,15 +36,9 @@ renderScreens texture offset { screens, transforms } entities =
             let
                 screenTransform =
                     Transform.offsetBy offset transform
-
-                monster =
-                    transform
-                        |> Transform.invertScreen screen.to
-                        |> Transform.offsetBy offset
             in
-                (::) (rectangle screenTransform 5 Color.darkGreen)
-                    >> (::) (rectangle monster 2 Color.darkBlue)
-                    >> Screen.render texture ( monster.x, monster.y ) ( transform.width, transform.height ) screen
+                (::) (rectangle True screenTransform 5 Color.darkGreen)
+                    >> Screen.render texture screenTransform screen
         )
         entities
         screens
@@ -53,6 +47,7 @@ renderScreens texture offset { screens, transforms } entities =
 
 render : Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
 render texture directionX offset components =
+    -- the order here matters, screens must be drawn first
     renderWalls texture offset components
         >> renderMogee texture directionX components
         >> renderScreens texture offset components

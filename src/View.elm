@@ -22,6 +22,7 @@ view : Model -> Html Msg
 view model =
     WebGL.toHtmlWith
         [ WebGL.depth 1
+        , WebGL.stencil 0
         , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
         ]
         [ width model.size
@@ -62,7 +63,7 @@ render : Model -> Texture -> Texture -> Texture -> List Entity
 render model texture font sprite =
     case model.state of
         Initial menu ->
-            if (menu.section == Menu.SlidesSection) then
+            if menu.section == Menu.SlidesSection then
                 Slides.render sprite font model.slides
             else
                 Menu.render model.sound font sprite menu
@@ -80,10 +81,10 @@ render model texture font sprite =
 
 
 renderGame : Model -> Texture -> Texture -> Texture -> List Entity
-renderGame model texture font sprite =
+renderGame { components, systems, score, keys, lives } texture font sprite =
     let
         mogeeTransform =
-            Components.mogeeOffset model.components
+            Components.mogeeOffset components
 
         offset =
             ( toFloat (round mogeeTransform.x - 28), toFloat (round mogeeTransform.y - 27) )
@@ -95,8 +96,8 @@ renderGame model texture font sprite =
             Components.foldl2
                 (\_ _ position positions -> toMinimap position :: positions)
                 []
-                model.components.screens
-                model.components.transforms
+                components.screens
+                components.transforms
 
         maxX =
             List.maximum (List.map .x allScr) |> Maybe.withDefault 0
@@ -106,6 +107,7 @@ renderGame model texture font sprite =
 
         dot transform =
             Common.rectangle
+                False
                 (Transform.offsetBy ( maxX - 62, minY - 1 ) transform)
                 0
                 (if transform == mogeeMinimap then
@@ -114,10 +116,10 @@ renderGame model texture font sprite =
                     Color.gray
                 )
     in
-        Lives.renderLives sprite ( 1, 1, 0 ) model.lives
-            ++ Lives.renderScore texture ( 32, 1, 0 ) (model.systems.currentScore + model.score)
+        Lives.renderLives sprite ( 1, 1, 0 ) lives
+            ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
             ++ List.map dot allScr
-            ++ View.Components.render texture (Keys.directions model.keys).x offset model.components []
+            ++ View.Components.render texture (Keys.directions keys).x offset components []
 
 
 continueText : Text

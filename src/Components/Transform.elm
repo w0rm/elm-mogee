@@ -1,4 +1,4 @@
-module Components.Transform exposing (Transform, offsetBy, offset, collide, invertScreen)
+module Components.Transform exposing (Transform, offsetBy, offset, collide, opposite)
 
 {-| The Transform component determines the position and
 size of each entity in the scene.
@@ -40,34 +40,20 @@ offset ( dx, dy ) direction transform =
             { transform | y = transform.y + dy }
 
 
-{-| TODO: remove this, because it depends on the screen size (=64)
--}
-invertScreen : Direction -> Transform -> Transform
-invertScreen direction transform =
+opposite : Direction -> Transform -> Transform
+opposite direction transform =
     case direction of
         Left ->
-            { transform
-                | width = Screen.size - transform.width
-                , x = transform.x + transform.width
-            }
+            { transform | x = transform.x + transform.width }
 
         Right ->
-            { transform
-                | width = Screen.size - transform.width
-                , x = transform.x - (Screen.size - transform.width)
-            }
+            { transform | x = transform.x - (Screen.size - transform.width) }
 
         Top ->
-            { transform
-                | height = Screen.size - transform.height
-                , y = transform.y + transform.height
-            }
+            { transform | y = transform.y + transform.height }
 
         Bottom ->
-            { transform
-                | height = Screen.size - transform.height
-                , y = transform.y - (Screen.size - transform.height)
-            }
+            { transform | y = transform.y - (Screen.size - transform.height) }
 
 
 collide : Transform -> Transform -> Bool

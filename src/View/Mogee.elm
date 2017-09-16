@@ -3,9 +3,10 @@ module View.Mogee exposing (render)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3)
 import Components.Mogee as Mogee exposing (Mogee, AnimationState(..))
-import View.Common exposing (box, texturedFragmentShader)
+import View.Common exposing (box, texturedFragmentShader, cropMask)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
+import WebGL.Settings.DepthTest as DepthTest
 
 
 type alias UniformTextured =
@@ -42,7 +43,11 @@ render texture ( x, y ) directionX mogee =
             else
                 1
     in
-        WebGL.entity
+        (if mogee.state == Dead then
+            WebGL.entity
+         else
+            WebGL.entityWith [ DepthTest.default, cropMask ]
+        )
             texturedVertexShader
             texturedFragmentShader
             box
