@@ -24,7 +24,7 @@ renderWalls texture offset { walls, transforms } entities =
 renderMogee : Texture -> Float -> Components -> List Entity -> List Entity
 renderMogee texture directionX { mogees } entities =
     Components.foldl
-        (\_ mogee -> (::) (Mogee.render texture ( 28, 27 ) directionX mogee))
+        (\_ -> Mogee.render texture ( 28, 27 ) directionX)
         entities
         mogees
 

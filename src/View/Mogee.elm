@@ -28,36 +28,39 @@ getFrame frames =
     List.head frames |> Maybe.withDefault 0
 
 
-render : Texture -> ( Float, Float ) -> Float -> Mogee -> Entity
+render : Texture -> ( Float, Float ) -> Float -> Mogee -> List Entity -> List Entity
 render texture ( x, y ) directionX mogee =
     let
-        layer =
-            if mogee.state == Dead then
-                1
-            else
-                4
-
         mirror =
             if directionX < 0 then
                 -1
             else
                 1
     in
-        (if mogee.state == Dead then
-            WebGL.entity
-         else
-            WebGL.entityWith [ DepthTest.default, cropMask ]
-        )
-            texturedVertexShader
-            texturedFragmentShader
-            box
-            { offset = Vec3.fromTuple ( toFloat (round x), toFloat (round y), layer )
-            , texture = texture
-            , mirror = mirror
-            , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-            , frameSize = vec2 Mogee.width Mogee.height
-            , textureOffset = vec2 (Mogee.width * getFrame mogee.frames) 0
-            }
+        (++)
+            [ WebGL.entityWith [ DepthTest.default, cropMask 1 ]
+                texturedVertexShader
+                texturedFragmentShader
+                box
+                { offset = Vec3.fromTuple ( toFloat (round x), toFloat (round y), 4 )
+                , texture = texture
+                , mirror = mirror
+                , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
+                , frameSize = vec2 Mogee.width Mogee.height
+                , textureOffset = vec2 (Mogee.width * getFrame mogee.frames) 0
+                }
+            , WebGL.entityWith [ DepthTest.default, cropMask 0 ]
+                texturedVertexShader
+                texturedFragmentShader
+                box
+                { offset = Vec3.fromTuple ( toFloat (round x), toFloat (round y), 1 )
+                , texture = texture
+                , mirror = mirror
+                , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
+                , frameSize = vec2 Mogee.width Mogee.height
+                , textureOffset = vec2 (Mogee.width * 7) 0
+                }
+            ]
 
 
 

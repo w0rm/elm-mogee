@@ -26,7 +26,7 @@ type alias Varying =
 render : Texture -> Transform -> Entity
 render texture { x, y, width, height } =
     WebGL.entityWith
-        [ cropMask, DepthTest.default ]
+        [ cropMask 1, DepthTest.default ]
         texturedVertexShader
         texturedFragmentShader
         box

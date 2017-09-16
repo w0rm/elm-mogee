@@ -3,6 +3,7 @@ module View.Common
         ( Vertex
         , box
         , rectangle
+        , writeMask
         , cropMask
         , texturedFragmentShader
         )
@@ -27,10 +28,10 @@ type alias UniformColored =
     }
 
 
-writeMask : Setting
-writeMask =
+writeMask : Int -> Setting
+writeMask ref =
     StencilTest.test
-        { ref = 1
+        { ref = ref
         , mask = 0xFF
         , test = StencilTest.always -- pass for each pixel
         , fail = StencilTest.keep -- noop
@@ -40,10 +41,10 @@ writeMask =
         }
 
 
-cropMask : Setting
-cropMask =
+cropMask : Int -> Setting
+cropMask ref =
     StencilTest.test
-        { ref = 1
+        { ref = ref
         , mask = 0xFF
         , test = StencilTest.equal -- pass when the stencil value is equal to ref = 1
         , fail = StencilTest.keep -- noop
@@ -64,7 +65,7 @@ box =
 rectangle : Bool -> Transform -> Float -> Vec3 -> Entity
 rectangle mask { x, y, width, height } l color =
     (if mask then
-        WebGL.entityWith [ writeMask, DepthTest.default ]
+        WebGL.entityWith [ writeMask 1, DepthTest.default ]
      else
         WebGL.entity
     )

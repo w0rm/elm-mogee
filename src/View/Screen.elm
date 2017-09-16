@@ -4,11 +4,12 @@ import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Components.Screen exposing (Screen, AnimationState(..))
-import View.Common exposing (box, texturedFragmentShader)
+import View.Common exposing (box, texturedFragmentShader, writeMask)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
 import Components.Transform exposing (Transform)
 import Components.Direction exposing (Direction(..))
+import WebGL.Settings.DepthTest as DepthTest
 
 
 move : List Int
@@ -112,7 +113,8 @@ render texture transform { state, from, to, frame } =
 
         Rotating ->
             (::)
-                (WebGL.entity
+                (WebGL.entityWith
+                    [ DepthTest.default, writeMask 0 ]
                     texturedVertexShader
                     texturedFragmentShader
                     box
@@ -125,7 +127,8 @@ render texture transform { state, from, to, frame } =
                     }
                 )
                 >> (::)
-                    (WebGL.entity
+                    (WebGL.entityWith
+                        [ DepthTest.default, writeMask 0 ]
                         texturedVertexShader
                         texturedFragmentShader
                         box
@@ -140,7 +143,8 @@ render texture transform { state, from, to, frame } =
 
         Moving ->
             (::)
-                (WebGL.entity
+                (WebGL.entityWith
+                    [ DepthTest.default, writeMask 0 ]
                     texturedVertexShader
                     texturedFragmentShader
                     box
