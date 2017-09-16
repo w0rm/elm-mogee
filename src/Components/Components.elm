@@ -93,7 +93,7 @@ initial =
     , walls = Dict.empty
     }
         |> addMogee 28 27
-        |> addScreen Left Right 0
+        |> addScreen { x = 0, y = 0, width = 64, height = 64 } Left Right 0
 
 
 delete : EntityId -> Components -> Components
@@ -107,25 +107,25 @@ delete uid components =
     }
 
 
-addScreen : Direction -> Direction -> Int -> Components -> Components
-addScreen from to number components =
+addScreen : Transform -> Direction -> Direction -> Int -> Components -> Components
+addScreen ({ x, y } as transform) from to number components =
     { components
         | uid = components.uid + 1
         , screens = Dict.insert components.uid (Screen.screen from to number) components.screens
-        , transforms = Dict.insert components.uid { x = 0, y = 0, width = Screen.size, height = Screen.size } components.transforms
+        , transforms = Dict.insert components.uid transform components.transforms
     }
-        |> addWall { width = 7, height = 2, x = 0, y = 11 }
-        |> addWall { width = 16, height = 2, x = 24, y = 11 }
-        |> addWall { width = 11, height = 2, x = 6, y = 27 }
-        |> addWall { width = 13, height = 2, x = 51, y = 27 }
-        |> addWall { width = 11, height = 2, x = 0, y = 43 }
-        |> addWall { width = 33, height = 2, x = 31, y = 43 }
-        |> addWall { width = 19, height = 2, x = 17, y = 58 }
-        |> addWalls from to
+        |> addWall { width = 7, height = 2, x = x, y = y + 11 }
+        |> addWall { width = 16, height = 2, x = x + 24, y = y + 11 }
+        |> addWall { width = 11, height = 2, x = x + 6, y = y + 27 }
+        |> addWall { width = 13, height = 2, x = x + 51, y = y + 27 }
+        |> addWall { width = 11, height = 2, x = x + 0, y = y + 43 }
+        |> addWall { width = 33, height = 2, x = x + 31, y = y + 43 }
+        |> addWall { width = 19, height = 2, x = x + 17, y = y + 58 }
+        |> addWalls x y from to
 
 
-addWalls : Direction -> Direction -> Components -> Components
-addWalls from to components =
+addWalls : Float -> Float -> Direction -> Direction -> Components -> Components
+addWalls x y from to components =
     List.foldl
         (\d ->
             if d == Direction.opposite from || d == to then
@@ -133,16 +133,16 @@ addWalls from to components =
             else
                 case d of
                     Left ->
-                        addWall { width = 1, height = Screen.size, x = 0, y = 0 }
+                        addWall { width = 1, height = Screen.size, x = x, y = y }
 
                     Right ->
-                        addWall { width = 1, height = Screen.size, x = Screen.size - 1, y = 0 }
+                        addWall { width = 1, height = Screen.size, x = x + Screen.size - 1, y = y }
 
                     Top ->
-                        addWall { width = Screen.size, height = 1, x = 0, y = 0 }
+                        addWall { width = Screen.size, height = 1, x = x, y = y }
 
                     Bottom ->
-                        addWall { width = Screen.size, height = 1, x = 0, y = Screen.size - 1 }
+                        addWall { width = Screen.size, height = 1, x = x, y = y + Screen.size - 1 }
         )
         components
         [ Left, Right, Top, Bottom ]

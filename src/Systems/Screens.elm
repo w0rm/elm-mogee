@@ -11,8 +11,9 @@ import Time exposing (Time)
 
 
 type alias Screens =
-    { number : Int
-    , direction : Direction
+    { number : Int -- a number of the last screen
+    , transform : Transform -- a position of the last screen
+    , direction : Direction -- a direction of the last screen
     , seed : Random.Seed
     }
 
@@ -20,18 +21,9 @@ type alias Screens =
 screens : Screens
 screens =
     { number = 0
+    , transform = { x = 0, y = 0, width = Screen.size, height = Screen.size }
     , direction = Right
     , seed = Random.initialSeed 0
-    }
-
-
-offsetScreens : Direction -> Components -> Components
-offsetScreens direction components =
-    { components
-        | transforms =
-            Dict.map
-                (always (Transform.offset ( Screen.size, Screen.size ) direction))
-                components.transforms
     }
 
 
@@ -45,24 +37,34 @@ run elapsed components screens =
             Components.mogeeOffset newComponents
 
         screenX =
-            x - 32 + Mogee.width / 2
+            x + Mogee.width / 2 - Screen.size / 2 - screens.transform.x
 
         screenY =
-            y - 32 + Mogee.height / 2
+            y + Mogee.height / 2 - Screen.size / 2 - screens.transform.y
 
-        ( direction, seed ) =
-            Random.step (Direction.next screens.direction) screens.seed
-    in
-        if abs screenX < 64 && abs screenY < 64 then
-            ( Components.addScreen
+        newTransform =
+            Transform.offset ( Screen.size, Screen.size )
                 screens.direction
-                direction
-                (screens.number + 1)
-                (offsetScreens (Direction.opposite screens.direction) newComponents)
+                screens.transform
+
+        ( newDirection, newSeed ) =
+            Random.step (Direction.next screens.direction) screens.seed
+
+        newNumber =
+            screens.number + 1
+    in
+        if abs screenX < Screen.size && abs screenY < Screen.size then
+            ( Components.addScreen
+                newTransform
+                screens.direction
+                newDirection
+                newNumber
+                newComponents
             , { screens
-                | direction = direction
-                , seed = seed
-                , number = screens.number + 1
+                | direction = newDirection
+                , seed = newSeed
+                , number = newNumber
+                , transform = newTransform
               }
             )
         else
