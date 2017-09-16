@@ -20,7 +20,7 @@ before_install:
       rm -rf libsysconfcpus;
     fi
 install:
-- npm install -g elm@0.18.0
+- npm install -g elm@0.18.0 uglify-js@2.4.11
 - mv $(npm config get prefix)/bin/elm-make $(npm config get prefix)/bin/elm-make-old
 - printf '%s\n\n' '#!/bin/bash' 'echo "Running elm-make with sysconfcpus -n 2"' '$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old "$@"' > $(npm config get prefix)/bin/elm-make
 - chmod +x $(npm config get prefix)/bin/elm-make

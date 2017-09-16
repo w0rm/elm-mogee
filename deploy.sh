@@ -5,13 +5,16 @@ rm -rf dest || exit 0;
 
 mkdir -p dest
 
-cp -r snd dest/
+# copy assets
+cp -r assets dest/
 
-# compile JS using Elm
-elm make src/Main.elm --yes --output dest/index.html
+# compile JS using Elm and minify with uglify
+elm make src/Main.elm --yes --output dest/assets/elm.js
+uglifyjs dest/assets/elm.js -c warnings=false -m --screw-ie8 -o dest/assets/elm.min.js
+rm dest/assets/elm.js
 
-# replace ../snd/theme.ogg with snd/theme.ogg
-sed 's/\.\.\/snd\/theme.ogg/snd\/theme.ogg/g' dest/index.html > dest/index.html.tmp && mv dest/index.html.tmp dest/index.html
+# replace elm.js from debug to prod
+sed 's/\/_compile\/src\/Main\.elm/assets\/elm\.min\.js/g' index.html > dest/index.html
 
 # steal focus
 cat >> dest/index.html <<EOT
