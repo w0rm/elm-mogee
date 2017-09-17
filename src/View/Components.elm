@@ -21,10 +21,10 @@ renderWalls texture offset { walls, transforms } entities =
         transforms
 
 
-renderMogee : Texture -> Float -> Components -> List Entity -> List Entity
-renderMogee texture directionX { mogees } entities =
+renderMogee : Texture -> Texture -> ( Float, Float ) -> Float -> Components -> List Entity -> List Entity
+renderMogee texture sprite offset directionX { mogees } entities =
     Components.foldl
-        (\_ -> Mogee.render texture ( 28, 27 ) directionX)
+        (\_ -> Mogee.render texture sprite ( 28, 27 ) offset directionX)
         entities
         mogees
 
@@ -37,7 +37,7 @@ renderScreens texture offset { screens, transforms } entities =
                 screenTransform =
                     Transform.offsetBy offset transform
             in
-                (::) (rectangle True screenTransform 5 Color.darkGreen)
+                (::) (rectangle True screenTransform 6 Color.darkGreen)
                     >> Screen.render texture screenTransform screen
         )
         entities
@@ -45,9 +45,9 @@ renderScreens texture offset { screens, transforms } entities =
         transforms
 
 
-render : Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
-render texture directionX offset components =
+render : Texture -> Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
+render texture sprite directionX offset components =
     -- the order here matters, screens must be drawn first
     renderWalls texture offset components
-        >> renderMogee texture directionX components
+        >> renderMogee texture sprite offset directionX components
         >> renderScreens texture offset components

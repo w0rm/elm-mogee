@@ -119,7 +119,7 @@ renderGame { components, systems, score, keys, lives } texture font sprite =
         Lives.renderLives sprite ( 1, 1, 0 ) lives
             ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
             ++ List.map dot allScr
-            ++ View.Components.render texture (Keys.directions keys).x offset components []
+            ++ View.Components.render texture sprite (Keys.directions keys).x offset components []
 
 
 continueText : Text

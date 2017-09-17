@@ -6,19 +6,22 @@ module View.Sprite
         , name
         , Sprite
         , render
+        , fill
         )
 
 import View.SpriteData as SpriteData exposing (textureSrc, spriteSrc, SpriteInfo)
 import WebGL.Texture as Texture exposing (Error, defaultOptions)
 import Task
 import Dict
+import View.Common exposing (box, Vertex, texturedFragmentShader, cropMask)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
+import WebGL.Settings.DepthTest as DepthTest
 
 
 type Sprite
-    = Sprite String (Mesh Vertex)
+    = Sprite String SpriteInfo
 
 
 {-| TODO: use union type for sprites
@@ -26,9 +29,7 @@ type Sprite
 sprite : String -> Sprite
 sprite name =
     Dict.get name SpriteData.sprite
-        |> Maybe.map (mesh)
-        |> Maybe.withDefault []
-        |> WebGL.triangles
+        |> Maybe.withDefault { x = 0, y = 0, w = 0, h = 0 }
         |> Sprite name
 
 
@@ -37,33 +38,36 @@ name (Sprite name _) =
     name
 
 
-type alias Vertex =
-    { position : Vec2
-    , texPosition : Vec2
-    }
-
-
-mesh : SpriteInfo -> List ( Vertex, Vertex, Vertex )
-mesh { x, y, w, h } =
-    [ ( Vertex (vec2 0 0) (vec2 x y)
-      , Vertex (vec2 w h) (vec2 (x + w) (y + h))
-      , Vertex (vec2 w 0) (vec2 (x + w) y)
-      )
-    , ( Vertex (vec2 0 0) (vec2 x y)
-      , Vertex (vec2 0 h) (vec2 x (y + h))
-      , Vertex (vec2 w h) (vec2 (x + w) (y + h))
-      )
-    ]
-
-
 render : Sprite -> Texture -> ( Float, Float, Float ) -> Entity
-render (Sprite _ mesh) texture offset =
+render (Sprite _ { x, y, w, h }) texture offset =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
-        mesh
+        box
         { offset = Vec3.fromTuple offset
         , texture = texture
+        , size = vec2 w h
+        , frameSize = vec2 w h
+        , textureOffset = vec2 x y
+        , textureSize =
+            vec2
+                (toFloat (Tuple.first (Texture.size texture)))
+                (toFloat (Tuple.second (Texture.size texture)))
+        }
+
+
+fill : Sprite -> Texture -> ( Float, Float ) -> ( Float, Float, Float ) -> Entity
+fill (Sprite _ { x, y, w, h }) texture size offset =
+    WebGL.entityWith
+        [ cropMask 1, DepthTest.default ]
+        texturedVertexShader
+        texturedFragmentShader
+        box
+        { offset = Vec3.fromTuple offset
+        , texture = texture
+        , size = Vec2.fromTuple size
+        , frameSize = vec2 w h
+        , textureOffset = vec2 x y
         , textureSize =
             vec2
                 (toFloat (Tuple.first (Texture.size texture)))
@@ -103,6 +107,9 @@ type alias Uniform =
     { offset : Vec3
     , texture : Texture
     , textureSize : Vec2
+    , size : Vec2
+    , frameSize : Vec2
+    , textureOffset : Vec2
     }
 
 
@@ -116,31 +123,14 @@ texturedVertexShader =
 
         precision mediump float;
         attribute vec2 position;
-        attribute vec2 texPosition;
-        uniform vec2 textureSize;
+        uniform vec2 size;
         uniform vec3 offset;
         varying vec2 texturePos;
 
         void main () {
-            vec2 clipSpace = position + offset.xy - 32.0;
+            vec2 clipSpace = position * size + offset.xy - 32.0;
             gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
-            texturePos = texPosition / textureSize;
-        }
-
-    |]
-
-
-texturedFragmentShader : Shader {} Uniform Varying
-texturedFragmentShader =
-    [glsl|
-
-        precision mediump float;
-        uniform sampler2D texture;
-        varying vec2 texturePos;
-
-        void main () {
-            gl_FragColor = texture2D(texture, texturePos);
-            if (gl_FragColor.a == 0.0) discard;
+            texturePos = position * size;
         }
 
     |]
