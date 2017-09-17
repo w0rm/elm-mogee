@@ -131,7 +131,7 @@ logoSprite =
 
 creditsScreenText : Text
 creditsScreenText =
-    Font.text "Art, code, sound:\n@gmnabl,\n@unsoundscapes,\n@carlospazuzu."
+    Font.text "Art, code, sound:\n@nadya_nabl,\n@unsoundscapes,\n@carlospazuzu."
 
 
 selectionSprite : Sprite
