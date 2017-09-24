@@ -23,7 +23,7 @@ titleSlide =
 carmackSlide : List Event
 carmackSlide =
     [ AddSprite "carmackCarmack" "carmack" { x = 21, y = 10 }
-    , AddText "carmack1" "John D. Carmack" { x = 3, y = 42 }
+    , AddText "carmack1" "John Carmack" { x = 7, y = 42 }
     , KeyPress
     , Del "carmackCarmack"
     , Del "carmack1"

@@ -20,34 +20,38 @@ import Components.Menu as Menu
 
 view : Model -> Html Msg
 view model =
-    WebGL.toHtmlWith
-        [ WebGL.depth 1
-        , WebGL.stencil 0
-        , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
-        ]
-        [ width model.size
-        , height model.size
-        , style
-            [ ( "display", "block" )
-            , ( "position", "absolute" )
-            , ( "top", "50%" )
-            , ( "left", "50%" )
-            , ( "margin-top", toString (-model.size // 2) ++ "px" )
-            , ( "margin-left", toString (-model.size // 2) ++ "px" )
-            , ( "image-rendering", "optimizeSpeed" )
-            , ( "image-rendering", "-moz-crisp-edges" )
-            , ( "image-rendering", "-webkit-optimize-contrast" )
-            , ( "image-rendering", "crisp-edges" )
-            , ( "image-rendering", "pixelated" )
-            , ( "-ms-interpolation-mode", "nearest-neighbor" )
+    let
+        size =
+            (max 1 ((min model.size.width model.size.height) // 64 - model.padding)) * 64
+    in
+        WebGL.toHtmlWith
+            [ WebGL.depth 1
+            , WebGL.stencil 0
+            , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
             ]
-        ]
-        (Maybe.map3 (render model)
-            model.texture
-            model.font
-            model.sprite
-            |> Maybe.withDefault []
-        )
+            [ width size
+            , height size
+            , style
+                [ ( "display", "block" )
+                , ( "position", "absolute" )
+                , ( "top", "50%" )
+                , ( "left", "50%" )
+                , ( "margin-top", toString (-size // 2) ++ "px" )
+                , ( "margin-left", toString (-size // 2) ++ "px" )
+                , ( "image-rendering", "optimizeSpeed" )
+                , ( "image-rendering", "-moz-crisp-edges" )
+                , ( "image-rendering", "-webkit-optimize-contrast" )
+                , ( "image-rendering", "crisp-edges" )
+                , ( "image-rendering", "pixelated" )
+                , ( "-ms-interpolation-mode", "nearest-neighbor" )
+                ]
+            ]
+            (Maybe.map3 (render model)
+                model.texture
+                model.font
+                model.sprite
+                |> Maybe.withDefault []
+            )
 
 
 toMinimap : Transform -> Transform

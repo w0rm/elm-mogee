@@ -16,6 +16,7 @@ import Components.Menu as Menu exposing (Menu)
 import PageVisibility exposing (Visibility(..))
 import Slides.Engine as Engine exposing (Engine)
 import Slides.Slides as Slides
+import Window exposing (Size)
 
 
 type GameState
@@ -31,7 +32,8 @@ type alias Model =
     , state : GameState
     , lives : Int
     , score : Int
-    , size : Int
+    , size : Size
+    , padding : Int
     , sound : Bool
     , texture : Maybe Texture
     , sprite : Maybe Texture
@@ -48,7 +50,8 @@ initial =
     , lives = 0
     , score = 0
     , state = Initial Menu.start
-    , size = 0
+    , size = Size 0 0
+    , padding = 0
     , sound = True
     , texture = Nothing
     , font = Nothing
@@ -76,8 +79,8 @@ port stop : String -> Cmd msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
-        Resize { width, height } ->
-            ( { model | size = min width height // 64 * 64 }
+        Resize size ->
+            ( { model | size = size }
             , Cmd.none
             )
 
@@ -87,7 +90,20 @@ update action model =
                 |> animateKeys elapsed
 
         KeyChange pressed keyCode ->
-            ( { model | keys = Keys.keyChange pressed keyCode model.keys }
+            ( { model
+                | keys = Keys.keyChange pressed keyCode model.keys
+                , padding =
+                    -- resize the vieport with `-` and `=`
+                    case ( pressed, keyCode ) of
+                        ( True, 189 ) ->
+                            model.padding + 1
+
+                        ( True, 187 ) ->
+                            max 0 (model.padding - 1)
+
+                        _ ->
+                            model.padding
+              }
             , Cmd.none
             )
 
