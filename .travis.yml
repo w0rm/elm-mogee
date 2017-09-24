@@ -20,7 +20,7 @@ before_install:
       rm -rf libsysconfcpus;
     fi
 install:
-- npm install -g elm@0.18.0
+- npm install -g elm@0.18.0 uglify-js@2.4.11
 - mv $(npm config get prefix)/bin/elm-make $(npm config get prefix)/bin/elm-make-old
 - printf '%s\n\n' '#!/bin/bash' 'echo "Running elm-make with sysconfcpus -n 2"' '$TRAVIS_BUILD_DIR/sysconfcpus/bin/sysconfcpus -n 2 elm-make-old "$@"' > $(npm config get prefix)/bin/elm-make
 - chmod +x $(npm config get prefix)/bin/elm-make
@@ -30,7 +30,7 @@ env:
   global:
     secure: DUc57wNklg6qBpy39WsAvlg0Hhhs9/WeSlXrEr41b79GabwrzJb/8ni1yc3CX1D1Pbw09S6Cqr47+qRvhUpYbzm2uAafKigHKyAQvhsnin9oIKQIM7XfFVvqe13sj4zjcV2ejaAbH7HHm74M2syWxkSSMkltzmbzT5EH89cXi5aYdpxKRd2DAyQQGF7bBa3DyQMPNtjzDVcg1IDVTARl4/ccgwAWcLDlhvKE8Mrgp0XTbgaU/lCH1nU53UJEmOV47+6YlGyKxZ0O3rVT6OtSINnXw71cKOfZXSzWq2aBzHXNzQUZSkiOZEM2B+t0/Tzascr35ko3uUz31fDTFhNtZLSnYdDqb4p11H9K1q6BZHD+SE885FGg9NPBdXikxl6vV/bFYsB8yRCdYtnAoiPOZnelbHVzzarknJq9S+jXHBXpNh0wkbCiQ28X+Dqnx7B1t0K8+R7mS6uuVP+oBlhNJN74hMI8xlxBgiRficc9mf/cQ3NrLgPRbB3QnmyLfJO2SIN6rFz/VL1Xpnyn5GfCAAP4+IbkEqBs4dFxFLUK7xGhn0x9LGQlwGHlsJfrgmtfFogZ/5Us0AKM5cYry58q5nd5fnJq3hHKifBlgAs8v+OGYu2bpPi5fyIyYXoDS15MW9thu/KU18rdpdLN6eemzIZ7FinP9uffhi7gXRJNCqw=
 script:
-- ./deploy.sh
+- ./scripts/deploy.sh
 notifications:
   email:
     recipients:

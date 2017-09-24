@@ -6,6 +6,8 @@ module Components.Components
         , delete
         , mogeeOffset
         , addScreen
+        , map
+        , filter
         , foldl
         , foldl2
         , foldl3
@@ -39,14 +41,28 @@ isDead =
     .mogees >> Dict.values >> List.any Mogee.isDead
 
 
-mogeeOffset : Components -> ( Float, Float )
+mogeeOffset : Components -> Transform
 mogeeOffset { mogees, transforms } =
     Dict.keys mogees
         |> List.head
         |> Maybe.andThen (\uid -> Dict.get uid transforms)
-        |> Maybe.map .position
         -- this should never happen
-        |> Maybe.withDefault ( 32, 32 )
+        |> Maybe.withDefault
+            { x = 32
+            , y = 32
+            , width = Mogee.width
+            , height = Mogee.height
+            }
+
+
+map : (EntityId -> a -> b) -> Dict EntityId a -> Dict EntityId b
+map =
+    Dict.map
+
+
+filter : (EntityId -> a -> Bool) -> Dict EntityId a -> Dict EntityId a
+filter =
+    Dict.filter
 
 
 foldl : (EntityId -> a -> b -> b) -> b -> Dict EntityId a -> b
@@ -54,6 +70,11 @@ foldl =
     Dict.foldl
 
 
+{-| Perform inner join on two component dicts
+and aggregate the result. The order matters:
+we get elements from the 1st component dict and
+then inner join with the second component dict
+-}
 foldl2 : (EntityId -> a -> b -> c -> c) -> c -> Dict EntityId a -> Dict EntityId b -> c
 foldl2 fn initial component1 component2 =
     Dict.foldl
@@ -88,8 +109,8 @@ initial =
     , velocities = Dict.empty
     , walls = Dict.empty
     }
-        |> addMogee ( 28, 27 )
-        |> addScreen Left Right 0
+        |> addMogee 28 27
+        |> addScreen { x = 0, y = 0, width = 64, height = 64 } Left Right 0
 
 
 delete : EntityId -> Components -> Components
@@ -103,25 +124,25 @@ delete uid components =
     }
 
 
-addScreen : Direction -> Direction -> Int -> Components -> Components
-addScreen from to number components =
+addScreen : Transform -> Direction -> Direction -> Int -> Components -> Components
+addScreen ({ x, y } as transform) from to number components =
     { components
         | uid = components.uid + 1
         , screens = Dict.insert components.uid (Screen.screen from to number) components.screens
-        , transforms = Dict.insert components.uid { position = ( 0, 0 ), size = ( Screen.size, Screen.size ) } components.transforms
+        , transforms = Dict.insert components.uid transform components.transforms
     }
-        |> addWall ( 7, 2 ) ( 0, 11 )
-        |> addWall ( 16, 2 ) ( 24, 11 )
-        |> addWall ( 11, 2 ) ( 6, 27 )
-        |> addWall ( 13, 2 ) ( 51, 27 )
-        |> addWall ( 11, 2 ) ( 0, 43 )
-        |> addWall ( 33, 2 ) ( 31, 43 )
-        |> addWall ( 19, 2 ) ( 17, 58 )
-        |> addWalls from to
+        |> addWall { width = 7, height = 2, x = x, y = y + 11 }
+        |> addWall { width = 16, height = 2, x = x + 24, y = y + 11 }
+        |> addWall { width = 11, height = 2, x = x + 6, y = y + 27 }
+        |> addWall { width = 13, height = 2, x = x + 51, y = y + 27 }
+        |> addWall { width = 11, height = 2, x = x + 0, y = y + 43 }
+        |> addWall { width = 33, height = 2, x = x + 31, y = y + 43 }
+        |> addWall { width = 19, height = 2, x = x + 17, y = y + 58 }
+        |> addWalls x y from to
 
 
-addWalls : Direction -> Direction -> Components -> Components
-addWalls from to components =
+addWalls : Float -> Float -> Direction -> Direction -> Components -> Components
+addWalls x y from to components =
     List.foldl
         (\d ->
             if d == Direction.opposite from || d == to then
@@ -129,35 +150,35 @@ addWalls from to components =
             else
                 case d of
                     Left ->
-                        addWall ( 1, Screen.size ) ( 0, 0 )
+                        addWall { width = 1, height = Screen.size, x = x, y = y }
 
                     Right ->
-                        addWall ( 1, Screen.size ) ( Screen.size - 1, 0 )
+                        addWall { width = 1, height = Screen.size, x = x + Screen.size - 1, y = y }
 
                     Top ->
-                        addWall ( Screen.size, 1 ) ( 0, 0 )
+                        addWall { width = Screen.size, height = 1, x = x, y = y }
 
                     Bottom ->
-                        addWall ( Screen.size, 1 ) ( 0, Screen.size - 1 )
+                        addWall { width = Screen.size, height = 1, x = x, y = y + Screen.size - 1 }
         )
         components
         [ Left, Right, Top, Bottom ]
 
 
-addMogee : ( Float, Float ) -> Components -> Components
-addMogee position components =
+addMogee : Float -> Float -> Components -> Components
+addMogee x y components =
     { components
         | uid = components.uid + 1
         , mogees = Dict.insert components.uid Mogee.mogee components.mogees
-        , transforms = Dict.insert components.uid { position = position, size = Mogee.size } components.transforms
-        , velocities = Dict.insert components.uid { velocity = ( 0, 0 ) } components.velocities
+        , transforms = Dict.insert components.uid { x = x, y = y, width = Mogee.width, height = Mogee.height } components.transforms
+        , velocities = Dict.insert components.uid { vx = 0, vy = 0 } components.velocities
     }
 
 
-addWall : ( Float, Float ) -> ( Float, Float ) -> Components -> Components
-addWall size position components =
+addWall : Transform -> Components -> Components
+addWall transform components =
     { components
         | uid = components.uid + 1
         , walls = Dict.insert components.uid Wall.wall components.walls
-        , transforms = Dict.insert components.uid { position = position, size = size } components.transforms
+        , transforms = Dict.insert components.uid transform components.transforms
     }

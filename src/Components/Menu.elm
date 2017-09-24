@@ -1,26 +1,41 @@
 module Components.Menu
     exposing
-        ( Menu(..)
+        ( MenuSection(..)
+        , Menu
         , HomeItem(..)
         , MenuItem(..)
-        , initial
+        , PauseItem(..)
+        , start
+        , paused
         , update
         , Event(..)
         )
 
 import Components.Keys as Keys exposing (Keys, codes)
+import Time exposing (Time)
 
 
 type Event
     = Noop
     | ToggleSound Bool
     | Start
+    | Action
+    | Resume
+    | End
 
 
-type Menu
-    = Home HomeItem
-    | Menu MenuItem
-    | Credits
+type alias Menu =
+    { time : Time
+    , section : MenuSection
+    }
+
+
+type MenuSection
+    = HomeSection HomeItem
+    | MenuSection MenuItem
+    | PauseSection PauseItem
+    | CreditsSection
+    | SlidesSection
 
 
 type HomeItem
@@ -31,54 +46,122 @@ type HomeItem
 type MenuItem
     = SoundOnOff
     | GoToCredits
+    | GoToSlides
 
 
-initial : Menu
-initial =
-    Home StartTheGame
+type PauseItem
+    = EndGame
+    | ResumeGame
 
 
-update : Bool -> Keys -> Menu -> ( Menu, Event )
-update sound keys menu =
-    case menu of
-        Home StartTheGame ->
+start : Menu
+start =
+    { time = 0
+    , section = HomeSection StartTheGame
+    }
+
+
+paused : Menu
+paused =
+    { time = 0
+    , section = PauseSection ResumeGame
+    }
+
+
+goTo : MenuSection -> Menu -> Menu
+goTo section menu =
+    { menu | time = 0, section = section }
+
+
+choose : MenuSection -> Menu -> Menu
+choose section menu =
+    { menu | section = section }
+
+
+tick : Time -> Menu -> Menu
+tick elapsed menu =
+    { menu | time = menu.time + elapsed }
+
+
+update : Time -> Bool -> Keys -> Menu -> ( Menu, Event )
+update elapsed sound keys menu =
+    case menu.section of
+        HomeSection StartTheGame ->
             if Keys.pressed codes.enter keys then
                 ( menu, Start )
             else if Keys.pressed codes.down keys then
-                ( Home GoToMenu, Noop )
+                ( choose (HomeSection GoToMenu) menu, Noop )
             else
-                ( menu, Noop )
+                ( tick elapsed menu, Noop )
 
-        Home GoToMenu ->
+        HomeSection GoToMenu ->
             if Keys.pressed codes.enter keys then
-                ( Menu SoundOnOff, Noop )
+                ( goTo (MenuSection SoundOnOff) menu, Action )
             else if Keys.pressed codes.up keys then
-                ( Home StartTheGame, Noop )
+                ( choose (HomeSection StartTheGame) menu, Noop )
             else
-                ( menu, Noop )
+                ( tick elapsed menu, Noop )
 
-        Menu SoundOnOff ->
+        MenuSection SoundOnOff ->
             if Keys.pressed codes.enter keys || Keys.pressed codes.left keys || Keys.pressed codes.right keys then
                 ( menu, ToggleSound (not sound) )
             else if Keys.pressed codes.down keys then
-                ( Menu GoToCredits, Noop )
-            else if Keys.pressed codes.escape keys then
-                ( Home StartTheGame, Noop )
+                ( choose (MenuSection GoToCredits) menu, Noop )
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
-                ( menu, Noop )
+                ( tick elapsed menu, Noop )
 
-        Menu GoToCredits ->
+        MenuSection GoToCredits ->
             if Keys.pressed codes.enter keys then
-                ( Credits, Noop )
+                ( goTo CreditsSection menu, Action )
             else if Keys.pressed codes.up keys then
-                ( Menu SoundOnOff, Noop )
-            else if Keys.pressed codes.escape keys then
-                ( Home StartTheGame, Noop )
+                ( choose (MenuSection SoundOnOff) menu, Noop )
+            else if Keys.pressed codes.down keys then
+                ( choose (MenuSection GoToSlides) menu, Noop )
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
-                ( menu, Noop )
+                ( tick elapsed menu, Noop )
 
-        Credits ->
-            if Keys.pressed codes.escape keys then
-                ( Menu SoundOnOff, Noop )
+        MenuSection GoToSlides ->
+            if Keys.pressed codes.enter keys then
+                ( goTo SlidesSection menu, Action )
+            else if Keys.pressed codes.up keys then
+                ( choose (MenuSection GoToCredits) menu, Noop )
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( goTo (HomeSection StartTheGame) menu, Action )
             else
-                ( menu, Noop )
+                ( tick elapsed menu, Noop )
+
+        CreditsSection ->
+            if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( goTo (MenuSection GoToCredits) menu, Action )
+            else
+                ( tick elapsed menu, Noop )
+
+        SlidesSection ->
+            if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( goTo (MenuSection GoToSlides) menu, Action )
+            else
+                ( tick elapsed menu, Noop )
+
+        PauseSection ResumeGame ->
+            if Keys.pressed codes.enter keys then
+                ( menu, Resume )
+            else if Keys.pressed codes.down keys then
+                ( choose (PauseSection EndGame) menu, Noop )
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( menu, Resume )
+            else
+                ( tick elapsed menu, Noop )
+
+        PauseSection EndGame ->
+            if Keys.pressed codes.enter keys then
+                ( menu, End )
+            else if Keys.pressed codes.up keys then
+                ( choose (PauseSection ResumeGame) menu, Noop )
+            else if Keys.pressed codes.escape keys || Keys.pressed codes.q keys then
+                ( menu, Resume )
+            else
+                ( tick elapsed menu, Noop )

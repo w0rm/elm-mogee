@@ -3,12 +3,18 @@ module View.Common
         ( Vertex
         , box
         , rectangle
+        , writeMask
+        , cropMask
         , texturedFragmentShader
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import WebGL exposing (Shader, Mesh, Entity, Texture)
+import WebGL.Settings exposing (Setting)
+import WebGL.Settings.StencilTest as StencilTest
+import WebGL.Settings.DepthTest as DepthTest
+import Components.Transform exposing (Transform)
 
 
 type alias Vertex =
@@ -22,6 +28,32 @@ type alias UniformColored =
     }
 
 
+writeMask : Int -> Setting
+writeMask ref =
+    StencilTest.test
+        { ref = ref
+        , mask = 0xFF
+        , test = StencilTest.always -- pass for each pixel
+        , fail = StencilTest.keep -- noop
+        , zfail = StencilTest.keep -- noop
+        , zpass = StencilTest.replace -- write ref to the stencil buffer
+        , writeMask = 0xFF -- enable all stencil bits for writing
+        }
+
+
+cropMask : Int -> Setting
+cropMask ref =
+    StencilTest.test
+        { ref = ref
+        , mask = 0xFF
+        , test = StencilTest.equal -- pass when the stencil value is equal to ref = 1
+        , fail = StencilTest.keep -- noop
+        , zfail = StencilTest.keep -- noop
+        , zpass = StencilTest.keep -- noop
+        , writeMask = 0 -- disable writing to the stencil buffer
+        }
+
+
 box : Mesh Vertex
 box =
     WebGL.triangles
@@ -30,15 +62,19 @@ box =
         ]
 
 
-rectangle : ( Float, Float ) -> ( Float, Float, Float ) -> Vec3 -> Entity
-rectangle ( w, h ) ( x, y, l ) color =
-    WebGL.entity
+rectangle : Bool -> Transform -> Float -> Vec3 -> Entity
+rectangle mask { x, y, width, height } l color =
+    (if mask then
+        WebGL.entityWith [ writeMask 1, DepthTest.default ]
+     else
+        WebGL.entity
+    )
         coloredVertexShader
         coloredFragmentShader
         box
-        { offset = vec3 (toFloat (round x)) (toFloat (round y)) l
+        { offset = vec3 x y l
         , color = color
-        , size = vec2 (toFloat (round w)) (toFloat (round h))
+        , size = vec2 width height
         }
 
 

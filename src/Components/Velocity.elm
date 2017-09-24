@@ -6,5 +6,6 @@ that is affected by gravity, inputs and collisions.
 
 
 type alias Velocity =
-    { velocity : ( Float, Float )
+    { vx : Float
+    , vy : Float
     }

@@ -6,61 +6,75 @@ import View.Wall as Wall
 import View.Screen as Screen
 import View.Color as Color
 import Components.Components as Components exposing (Components)
-import Components.Transform as Transform
+import Components.Transform as Transform exposing (Transform)
 import WebGL exposing (Texture, Entity)
 
 
-offsetBy : ( Float, Float ) -> ( Float, Float ) -> ( Float, Float )
-offsetBy ( x1, y1 ) ( x2, y2 ) =
-    ( x2 - x1
-    , y2 - y1
-    )
+viewport : Transform
+viewport =
+    { x = 0
+    , y = 0
+    , width = 64
+    , height = 64
+    }
 
 
-renderWalls : Texture -> ( Float, Float ) -> Components -> List Entity -> List Entity
-renderWalls texture offset { walls, transforms } entities =
+renderWalls : Texture -> Components -> List Entity -> List Entity
+renderWalls texture { walls, transforms } entities =
+    {- Query by transforms first and then inner join with walls,
+       because there are less transforms than walls
+    -}
     Components.foldl2
-        (\_ _ { position, size } ->
-            (::) (Wall.render texture (offsetBy offset position) size)
-        )
+        (\_ transform _ -> Wall.render texture transform |> (::))
         entities
-        walls
         transforms
+        walls
 
 
 renderMogee : Texture -> Float -> Components -> List Entity -> List Entity
-renderMogee texture directionX { mogees } entities =
-    Components.foldl
-        (\_ mogee -> (::) (Mogee.render texture ( 28, 27 ) directionX mogee))
+renderMogee texture directionX { mogees, transforms } entities =
+    Components.foldl2
+        (\_ -> Mogee.render texture directionX)
         entities
         mogees
+        transforms
 
 
-renderScreens : Texture -> ( Float, Float ) -> Components -> List Entity -> List Entity
-renderScreens texture offset { screens, transforms } entities =
+renderScreens : Texture -> Components -> List Entity -> List Entity
+renderScreens texture { screens, transforms } entities =
     Components.foldl2
         (\_ screen transform ->
-            let
-                position =
-                    offsetBy offset transform.position
-
-                monster =
-                    Transform.invertScreen screen.to transform
-
-                monsterPosition =
-                    offsetBy offset monster.position
-            in
-                (::) (rectangle transform.size ( Tuple.first position, Tuple.second position, 5 ) Color.darkGreen)
-                    >> (::) (rectangle monster.size ( Tuple.first monsterPosition, Tuple.second monsterPosition, 2 ) Color.darkBlue)
-                    >> Screen.render texture monsterPosition transform.size screen
+            (::) (rectangle True transform 6 Color.darkGreen)
+                >> Screen.render texture transform screen
         )
         entities
         screens
         transforms
 
 
-render : Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
-render texture directionX offset components =
-    renderWalls texture offset components
-        >> renderMogee texture directionX components
-        >> renderScreens texture offset components
+render : Texture -> Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
+render texture sprite directionX cameraOffset components =
+    let
+        newComponents =
+            visibleComponents cameraOffset components
+    in
+        {- the order matters, screens must be drawn first,
+           because they set the stencil buffer
+        -}
+        renderWalls texture newComponents
+            >> renderMogee texture directionX newComponents
+            >> Mogee.renderBg sprite cameraOffset
+            >> renderScreens texture newComponents
+
+
+{-| Offsets all transform components and filters the ones
+that collide with the viewport
+-}
+visibleComponents : ( Float, Float ) -> Components -> Components
+visibleComponents cameraOffset components =
+    { components
+        | transforms =
+            components.transforms
+                |> Components.map (\_ -> Transform.offsetBy cameraOffset >> Transform.roundCoordinates)
+                |> Components.filter (\_ -> Transform.collide viewport)
+    }

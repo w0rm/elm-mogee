@@ -21,19 +21,20 @@ initial =
     }
 
 
-run : Time -> { x : Float, y : Float } -> Components -> Systems -> ( Components, Systems )
+run : Time -> { x : Float, y : Float } -> Components -> Systems -> ( Components, Systems, Maybe String )
 run elapsed keys components { screens, currentScore } =
     let
         ( components1, newScreens ) =
             Screens.run elapsed components screens
 
-        components2 =
+        ( components2, sound ) =
             components1
-                |> Mogee.run elapsed keys
                 |> Walls.run
+                |> Mogee.run elapsed keys
     in
         ( components2
         , { screens = newScreens
           , currentScore = CurrentScore.run components2 currentScore
           }
+        , sound
         )

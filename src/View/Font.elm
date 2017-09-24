@@ -4,6 +4,7 @@ module View.Font
         , render
         , Text
         , load
+        , name
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
@@ -32,7 +33,12 @@ tracking =
 
 
 type Text
-    = Text (Mesh Vertex)
+    = Text String (Mesh Vertex)
+
+
+name : Text -> String
+name (Text name _) =
+    name
 
 
 invertDict : List ( Int, List String ) -> Dict String Int
@@ -47,11 +53,11 @@ invertDict =
 leftKerningClass : Dict String Int
 leftKerningClass =
     invertDict
-        [ ( 1, [ "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "M", "N", "O", "Q", "R", "S", "U", "V", "W", "X", "Z" ] )
+        [ ( 1, [ "A", "B", "C", "D", "E", "G", "H", "I", "J", "K", "M", "N", "O", "Q", "R", "S", "U", "V", "W", "X", "Z", "l" ] )
         , ( 2, [ "F", "P" ] )
         , ( 3, [ "L" ] )
         , ( 4, [ "T" ] )
-        , ( 5, [ "b", "k", "p", "s", "t", "u", "v", "w", "x", "z" ] )
+        , ( 5, [ "b", "k", "p", "s", "t", "u", "v", "w", "x", "z", "e" ] )
         , ( 6, [ "f", "ff" ] )
         , ( 7, [ "g", "q", "y" ] )
         , ( 8, [ "i", "fi", "ffi" ] )
@@ -83,9 +89,9 @@ rightKerningClass =
         , ( 9, [ "7" ] )
         , ( 10, [ "." ] )
         , ( 11, [ "'", "\"" ] )
-        , ( 12, [ "!", "?" ] )
+        , ( 12, [ "!", "?", ":" ] )
         , ( 13, [ "/" ] )
-        , ( 14, [ ",", ";", ":" ] )
+        , ( 14, [ ",", ";" ] )
         , ( 15, [ "$" ] )
         ]
 
@@ -125,7 +131,6 @@ kerningDict =
         , ( ( 6, 5 ), -1 )
         , ( ( 6, 6 ), -1 )
         , ( ( 6, 7 ), -2 )
-        , ( ( 6, 10 ), -1 )
         , ( ( 6, 13 ), -2 )
         , ( ( 6, 14 ), -2 )
         , ( ( 7, 3 ), -1 )
@@ -137,7 +142,6 @@ kerningDict =
         , ( ( 14, 14 ), -1 )
         , ( ( 15, 2 ), -1 )
         , ( ( 15, 13 ), -1 )
-        , ( ( 17, 10 ), -1 )
         , ( ( 17, 14 ), -1 )
         ]
 
@@ -226,7 +230,7 @@ load msg =
 
 
 render : Vec3 -> Text -> Texture -> ( Float, Float, Float ) -> Entity
-render color (Text mesh) texture offset =
+render color (Text _ mesh) texture offset =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
@@ -244,7 +248,7 @@ text text =
         chars =
             List.reverse (replaceLigatures text [])
     in
-        Text (WebGL.triangles (textMeshHelper Nothing chars 0 0 []))
+        Text text (WebGL.triangles (textMeshHelper Nothing chars 0 0 []))
 
 
 replaceLigatures : String -> List String -> List String

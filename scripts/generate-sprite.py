@@ -9,8 +9,8 @@ from io import BytesIO
 import base64
 from PIL import Image
 
-WIDTH = 128
-HEIGHT = 64
+WIDTH = 256
+HEIGHT = 512
 
 TEMPLATE = """module View.SpriteData exposing (sprite, spriteSrc, textureSrc, SpriteInfo)
 

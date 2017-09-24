@@ -5,7 +5,8 @@ module Components.Mogee
         , mogee
         , update
         , die
-        , size
+        , width
+        , height
         , isDead
         )
 
@@ -33,9 +34,14 @@ isDead { state } =
     state == Dead
 
 
-size : ( Float, Float )
-size =
-    ( 7, 10 )
+width : Float
+width =
+    7
+
+
+height : Float
+height =
+    10
 
 
 walking : List Float

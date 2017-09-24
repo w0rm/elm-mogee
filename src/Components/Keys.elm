@@ -32,12 +32,14 @@ codes :
     , right : KeyCode
     , space : KeyCode
     , up : KeyCode
+    , q : KeyCode
     , escape : KeyCode
     }
 codes =
     { enter = 13
     , space = 32
     , escape = 27
+    , q = 81
     , left = 37
     , right = 39
     , up = 38
@@ -46,11 +48,14 @@ codes =
 
 
 keyChange : Bool -> KeyCode -> Keys -> Keys
-keyChange on code =
+keyChange on code keys =
     if on then
-        Dict.insert code 0
+        if Dict.member code keys then
+            keys
+        else
+            Dict.insert code 0 keys
     else
-        Dict.remove code
+        Dict.remove code keys
 
 
 animate : Time -> Keys -> Keys

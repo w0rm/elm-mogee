@@ -4,10 +4,12 @@ import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import Math.Matrix4 as Mat4 exposing (Mat4)
 import Components.Screen exposing (Screen, AnimationState(..))
-import View.Common exposing (box, texturedFragmentShader)
+import View.Common exposing (box, texturedFragmentShader, writeMask)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
+import Components.Transform exposing (Transform)
 import Components.Direction exposing (Direction(..))
+import WebGL.Settings.DepthTest as DepthTest
 
 
 move : List Int
@@ -37,81 +39,56 @@ frameOffset list frame =
 movingTransform : Direction -> Mat4
 movingTransform direction =
     case direction of
-        Left ->
-            Mat4.identity
-
-        Right ->
-            Mat4.makeTranslate (vec3 64 0 0)
-
         Top ->
             Mat4.makeRotate (-pi / 2) (vec3 0 0 1)
 
         Bottom ->
-            Mat4.mul
-                (Mat4.makeTranslate (vec3 64 64 0))
-                (Mat4.makeRotate (pi / 2) (vec3 0 0 1))
+            Mat4.makeRotate (pi / 2) (vec3 0 0 1)
+                |> Mat4.mul (Mat4.makeTranslate (vec3 64 0 0))
+
+        _ ->
+            Mat4.identity
 
 
-fadeInTransform : Direction -> Direction -> Mat4
-fadeInTransform from to =
+fadeTransform : Direction -> Direction -> Mat4
+fadeTransform from to =
     case ( from, to ) of
-        ( Right, Bottom ) ->
-            (Mat4.makeRotate (pi / 2) (vec3 0 0 1))
-                |> Mat4.mul (Mat4.makeRotate pi (vec3 0 1 0))
-                |> Mat4.mul (Mat4.makeTranslate (vec3 0 0 0))
-
         ( Bottom, Right ) ->
             Mat4.identity
 
-        ( Right, Top ) ->
-            (Mat4.makeRotate (-pi / 2) (vec3 0 0 1))
-
-        ( Top, Right ) ->
-            (Mat4.makeRotate pi (vec3 1 0 0))
-                |> Mat4.mul (Mat4.makeTranslate (vec3 0 64 0))
-
-        _ ->
-            Mat4.makeTranslate (vec3 -64 -64 0)
-
-
-fadeOutTransform : Direction -> Direction -> Mat4
-fadeOutTransform from to =
-    case ( from, to ) of
         ( Right, Bottom ) ->
-            Mat4.makeTranslate (vec3 0 0 0)
-
-        ( Bottom, Right ) ->
-            (Mat4.makeRotate (pi / 2) (vec3 0 0 1))
+            Mat4.makeRotate (pi / 2) (vec3 0 0 1)
                 |> Mat4.mul (Mat4.makeRotate pi (vec3 0 1 0))
 
         ( Right, Top ) ->
-            (Mat4.makeRotate pi (vec3 1 0 0))
-                |> Mat4.mul (Mat4.makeTranslate (vec3 0 0 0))
-
-        ( Top, Right ) ->
             Mat4.makeRotate (-pi / 2) (vec3 0 0 1)
                 |> Mat4.mul (Mat4.makeTranslate (vec3 0 64 0))
 
+        ( Top, Right ) ->
+            Mat4.makeRotate pi (vec3 1 0 0)
+                |> Mat4.mul (Mat4.makeTranslate (vec3 0 64 0))
+
         _ ->
+            -- hide the monster
             Mat4.makeTranslate (vec3 -64 -64 0)
 
 
-screenOffset : ( Float, Float ) -> ( Float, Float ) -> Direction -> Vec3
-screenOffset ( x, y ) ( w, h ) direction =
+moveOffset : Transform -> Direction -> Vec3
+moveOffset { x, y, width, height } direction =
     case direction of
-        Right ->
-            Vec3.fromTuple ( toFloat (round (x - w)), toFloat (round y), 2 )
+        Left ->
+            vec3 (x + width) y 2
 
-        Bottom ->
-            Vec3.fromTuple ( toFloat (round x), toFloat (round (y - h)), 2 )
+        Top ->
+            vec3 x (y + height) 2
 
         _ ->
-            Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
+            vec3 x y 2
 
 
-fadeOffset : ( Float, Float ) -> Vec3
-fadeOffset ( x, y ) =
-    Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
+fadeOffset : Transform -> Vec3
+fadeOffset { x, y } =
+    vec3 x y 2
 
 
 type alias UniformTextured =
@@ -128,47 +105,50 @@ type alias Varying =
     { texturePos : Vec2 }
 
 
-render : Texture -> ( Float, Float ) -> ( Float, Float ) -> Screen -> List Entity -> List Entity
-render texture position size { state, from, to, frame } =
+render : Texture -> Transform -> Screen -> List Entity -> List Entity
+render texture transform { state, from, to, frame } =
     case state of
         Initial ->
             identity
 
         Rotating ->
             (::)
-                (WebGL.entity
+                (WebGL.entityWith
+                    [ DepthTest.default, writeMask 0 ]
                     texturedVertexShader
                     texturedFragmentShader
                     box
-                    { offset = fadeOffset position
+                    { offset = fadeOffset transform
                     , texture = texture
                     , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
                     , textureOffset = vec2 (64 + 10 * frameOffset fadeIn frame) 0
                     , frameSize = vec2 10 64
-                    , transform = fadeInTransform from to
+                    , transform = fadeTransform from to
                     }
                 )
                 >> (::)
-                    (WebGL.entity
+                    (WebGL.entityWith
+                        [ DepthTest.default, writeMask 0 ]
                         texturedVertexShader
                         texturedFragmentShader
                         box
-                        { offset = fadeOffset position
+                        { offset = fadeOffset transform
                         , texture = texture
                         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
                         , textureOffset = vec2 (64 + 10 * frameOffset fadeOut frame) 0
                         , frameSize = vec2 10 64
-                        , transform = fadeOutTransform from to
+                        , transform = fadeTransform to from
                         }
                     )
 
         Moving ->
             (::)
-                (WebGL.entity
+                (WebGL.entityWith
+                    [ DepthTest.default, writeMask 0 ]
                     texturedVertexShader
                     texturedFragmentShader
                     box
-                    { offset = screenOffset position size to
+                    { offset = moveOffset transform to
                     , texture = texture
                     , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
                     , textureOffset = vec2 (64 + 10 * frameOffset move frame) 0

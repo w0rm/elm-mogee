@@ -2,7 +2,6 @@ module Components.Direction
     exposing
         ( Direction(..)
         , opposite
-        , offset
         , next
         )
 
@@ -38,22 +37,6 @@ opposite dir =
 
         Bottom ->
             Top
-
-
-offset : ( Float, Float ) -> ( Float, Float ) -> Direction -> ( Float, Float )
-offset ( width, height ) ( x, y ) dir =
-    case dir of
-        Left ->
-            ( x - width, y )
-
-        Right ->
-            ( x + width, y )
-
-        Top ->
-            ( x, y - height )
-
-        Bottom ->
-            ( x, y + height )
 
 
 next : Direction -> Generator Direction
