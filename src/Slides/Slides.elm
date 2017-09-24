@@ -99,14 +99,17 @@ marioModelSlide =
 
 elmStreet404ModelSlide : List Event
 elmStreet404ModelSlide =
-    [ AddSprite "elmStreet404" "elm-street-404" { x = 43, y = 3 }
-    , AddText "elmStreet4041" "{ w: List\n     Warehouse,\n o: List Obstacle,\n h: List House }" { x = 2, y = 18 }
+    [ AddSprite "elmStreet404Map" "elm-street-404-map" { x = 4, y = 10 }
+    , KeyPress
+    , Del "elmStreet404Map"
+    , AddSprite "elmStreet404" "elm-street-404" { x = 43, y = 3 }
+    , AddText "elmStreet4041" "{ w: List\n     Warehouse,\n h: List House,\n t: List Tree }" { x = 2, y = 18 }
     , KeyPress
     , Del "elmStreet4041"
     , AddText "elmStreet4042" "type alias\nEntity =\n{ s: Size,\n  p: Position,\n  cat: Category }" { x = 2, y = 7 }
     , KeyPress
     , Del "elmStreet4042"
-    , AddText "elmStreet4043" "type \nCategory \n= House Int\n | Warehouse Int\n | Obstacle Data" { x = 2, y = 7 }
+    , AddText "elmStreet4043" "type \nCategory \n= Warehouse D1\n | House Data2\n | Tree" { x = 2, y = 7 }
     , KeyPress
     , Del "elmStreet4043"
     , Del "elmStreet404"
@@ -116,7 +119,7 @@ elmStreet404ModelSlide =
 mogeeModelSlide : List Event
 mogeeModelSlide =
     [ AddSprite "mogeeMogee" "mogee" { x = 45, y = 8 }
-    , AddText "mogee1" "type \nCategory \n= Wall\n | Mogee Data1\n | Screen Data2" { x = 2, y = 7 }
+    , AddText "mogee1" "type \nCategory \n= Mogee Data1\n | Screen Data2\n | Wall" { x = 2, y = 7 }
     , KeyPress
     , Del "mogeeMogee"
     , Del "mogee1"
@@ -128,7 +131,7 @@ ecsSlide =
     [ AddText "ecs1" "Entity-\nComponent-\nSystem" { x = 2, y = 7 }
     , KeyPress
     , Del "ecs1"
-    , AddText "ecs2" "type alias\nComponents =\n{ id: Int,\n  a: Dict Int A,\n  b: Dict Int B }" { x = 2, y = 2 }
+    , AddText "ecs2" "type alias\nComponents =\n{ uid: Int,\n  a: Dict Int A,\n  b: Dict Int B }" { x = 2, y = 2 }
     , KeyPress
     , Del "ecs2"
     , AddSprite "escMogee" "mogee" { x = 48, y = 46 }
