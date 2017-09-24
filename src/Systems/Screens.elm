@@ -43,7 +43,7 @@ run elapsed components screens =
             y + Mogee.height / 2 - Screen.size / 2 - screens.transform.y
 
         newTransform =
-            Transform.offset ( Screen.size, Screen.size )
+            Transform.offsetTo Screen.size
                 screens.direction
                 screens.transform
 

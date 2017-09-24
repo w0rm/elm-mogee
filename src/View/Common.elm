@@ -72,9 +72,9 @@ rectangle mask { x, y, width, height } l color =
         coloredVertexShader
         coloredFragmentShader
         box
-        { offset = vec3 (toFloat (round x)) (toFloat (round y)) l
+        { offset = vec3 x y l
         , color = color
-        , size = vec2 (toFloat (round width)) (toFloat (round height))
+        , size = vec2 width height
         }
 
 

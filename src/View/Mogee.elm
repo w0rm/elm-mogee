@@ -1,8 +1,9 @@
-module View.Mogee exposing (render)
+module View.Mogee exposing (render, renderBg)
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import Components.Mogee as Mogee exposing (Mogee, AnimationState(..))
+import Components.Transform as Transform exposing (Transform)
 import View.Common exposing (box, texturedFragmentShader, cropMask)
 import WebGL exposing (Texture, Shader, Mesh, Entity)
 import WebGL.Texture as Texture
@@ -34,13 +35,13 @@ bg =
     Sprite.sprite "background"
 
 
-roundFloat : Float -> Float
-roundFloat =
-    round >> toFloat
+renderBg : Texture -> ( Float, Float ) -> List Entity -> List Entity
+renderBg sprite cameraOffset =
+    (::) (Sprite.fill bg sprite ( 128 * 2, 256 ) (bgOffset cameraOffset))
 
 
-render : Texture -> Texture -> ( Float, Float ) -> ( Float, Float ) -> Float -> Mogee -> List Entity -> List Entity
-render texture sprite ( x, y ) bgOffset directionX mogee =
+render : Texture -> Float -> Mogee -> Transform -> List Entity -> List Entity
+render texture directionX mogee { x, y } =
     let
         mirror =
             if directionX < 0 then
@@ -53,7 +54,7 @@ render texture sprite ( x, y ) bgOffset directionX mogee =
                 texturedVertexShader
                 texturedFragmentShader
                 box
-                { offset = Vec3.fromTuple ( roundFloat x, roundFloat y, 4 )
+                { offset = vec3 x y 4
                 , texture = texture
                 , mirror = mirror
                 , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
@@ -64,27 +65,22 @@ render texture sprite ( x, y ) bgOffset directionX mogee =
                 texturedVertexShader
                 texturedFragmentShader
                 box
-                { offset = vec3 (roundFloat x) (roundFloat y) 1
+                { offset = vec3 x y 1
                 , texture = texture
                 , mirror = mirror
                 , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
                 , frameSize = vec2 Mogee.width Mogee.height
                 , textureOffset = vec2 (Mogee.width * 7) 0
                 }
-            , Sprite.fill bg sprite ( 128 * 2, 256 ) (loopBg bgOffset)
             ]
 
 
-loopBg : ( Float, Float ) -> ( Float, Float, Float )
-loopBg ( bgX, bgY ) =
-    let
-        x =
-            -(round (bgX / 2) % 128)
-
-        y =
-            -(round (bgY / 4 + 128) |> max 0 |> min 192)
-    in
-        ( toFloat x, toFloat y, 5 )
+bgOffset : ( Float, Float ) -> ( Float, Float, Float )
+bgOffset ( cameraX, cameraY ) =
+    ( toFloat -(round (cameraX / 2) % 128)
+    , toFloat -(round (cameraY / 4 + 128) |> max 0 |> min 192)
+    , 5
+    )
 
 
 

@@ -86,8 +86,9 @@ renderGame { components, systems, score, keys, lives } texture font sprite =
         mogeeTransform =
             Components.mogeeOffset components
 
-        offset =
-            ( toFloat (round mogeeTransform.x - 28), toFloat (round mogeeTransform.y - 27) )
+        {- camera offset must be an integer, because pixels -}
+        cameraOffset =
+            ( (toFloat (round mogeeTransform.x) - 28), (toFloat (round mogeeTransform.y) - 27) )
 
         mogeeMinimap =
             toMinimap mogeeTransform
@@ -119,7 +120,7 @@ renderGame { components, systems, score, keys, lives } texture font sprite =
         Lives.renderLives sprite ( 1, 1, 0 ) lives
             ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
             ++ List.map dot allScr
-            ++ View.Components.render texture sprite (Keys.directions keys).x offset components []
+            ++ View.Components.render texture sprite (Keys.directions keys).x cameraOffset components []
 
 
 continueText : Text

@@ -6,6 +6,8 @@ module Components.Components
         , delete
         , mogeeOffset
         , addScreen
+        , map
+        , filter
         , foldl
         , foldl2
         , foldl3
@@ -53,11 +55,26 @@ mogeeOffset { mogees, transforms } =
             }
 
 
+map : (EntityId -> a -> b) -> Dict EntityId a -> Dict EntityId b
+map =
+    Dict.map
+
+
+filter : (EntityId -> a -> Bool) -> Dict EntityId a -> Dict EntityId a
+filter =
+    Dict.filter
+
+
 foldl : (EntityId -> a -> b -> b) -> b -> Dict EntityId a -> b
 foldl =
     Dict.foldl
 
 
+{-| Perform inner join on two component dicts
+and aggregate the result. The order matters:
+we get elements from the 1st component dict and
+then inner join with the second component dict
+-}
 foldl2 : (EntityId -> a -> b -> c -> c) -> c -> Dict EntityId a -> Dict EntityId b -> c
 foldl2 fn initial component1 component2 =
     Dict.foldl

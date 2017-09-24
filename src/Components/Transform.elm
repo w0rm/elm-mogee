@@ -1,11 +1,17 @@
-module Components.Transform exposing (Transform, offsetBy, offset, collide, opposite)
+module Components.Transform
+    exposing
+        ( Transform
+        , offsetBy
+        , offsetTo
+        , roundCoordinates
+        , collide
+        )
 
 {-| The Transform component determines the position and
 size of each entity in the scene.
 -}
 
 import Components.Direction as Direction exposing (Direction(..))
-import Components.Screen as Screen
 
 
 type alias Transform =
@@ -24,36 +30,34 @@ offsetBy ( x, y ) transform =
     }
 
 
-offset : ( Float, Float ) -> Direction -> Transform -> Transform
-offset ( dx, dy ) direction transform =
+roundFloat : Float -> Float
+roundFloat =
+    round >> toFloat
+
+
+roundCoordinates : Transform -> Transform
+roundCoordinates { x, y, width, height } =
+    { x = roundFloat x
+    , y = roundFloat y
+    , width = roundFloat (width + x) - roundFloat x -- keep the right edge
+    , height = roundFloat (height + y) - roundFloat y -- keep the bottom edge
+    }
+
+
+offsetTo : Float -> Direction -> Transform -> Transform
+offsetTo delta direction transform =
     case direction of
         Left ->
-            { transform | x = transform.x - dx }
+            { transform | x = transform.x - delta }
 
         Right ->
-            { transform | x = transform.x + dx }
+            { transform | x = transform.x + delta }
 
         Top ->
-            { transform | y = transform.y - dy }
+            { transform | y = transform.y - delta }
 
         Bottom ->
-            { transform | y = transform.y + dy }
-
-
-opposite : Direction -> Transform -> Transform
-opposite direction transform =
-    case direction of
-        Left ->
-            { transform | x = transform.x + transform.width }
-
-        Right ->
-            { transform | x = transform.x - (Screen.size - transform.width) }
-
-        Top ->
-            { transform | y = transform.y + transform.height }
-
-        Bottom ->
-            { transform | y = transform.y - (Screen.size - transform.height) }
+            { transform | y = transform.y + delta }
 
 
 collide : Transform -> Transform -> Bool

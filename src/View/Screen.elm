@@ -77,18 +77,18 @@ moveOffset : Transform -> Direction -> Vec3
 moveOffset { x, y, width, height } direction =
     case direction of
         Left ->
-            Vec3.fromTuple ( toFloat (round (x + width)), toFloat (round y), 2 )
+            vec3 (x + width) y 2
 
         Top ->
-            Vec3.fromTuple ( toFloat (round x), toFloat (round (y + height)), 2 )
+            vec3 x (y + height) 2
 
         _ ->
-            Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
+            vec3 x y 2
 
 
 fadeOffset : Transform -> Vec3
 fadeOffset { x, y } =
-    Vec3.fromTuple ( toFloat (round x), toFloat (round y), 2 )
+    vec3 x y 2
 
 
 type alias UniformTextured =
