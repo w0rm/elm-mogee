@@ -19,7 +19,13 @@ sed 's/\/_compile\/src\/Main\.elm/assets\/elm\.min\.js/g' index.html > dest/inde
 # steal focus
 cat >> dest/index.html <<EOT
 <script>
-   window.focus();
+    // Prevent scrolling with arrow and space keys
+    window.addEventListener('keydown', function(e) {
+        if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+            e.preventDefault();
+        }
+    }, false);
+    window.focus();
 </script>
 EOT
 
