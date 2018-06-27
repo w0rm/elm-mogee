@@ -1,18 +1,18 @@
 module View.Font
     exposing
-        ( text
-        , render
-        , Text
+        ( Text
         , load
         , name
+        , render
+        , text
         )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
-import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture exposing (Error, defaultOptions)
-import Task
 import MogeeFont
+import Task
+import WebGL exposing (Entity, Mesh, Shader, Texture)
+import WebGL.Texture as Texture exposing (Error, defaultOptions)
 
 
 type Text
@@ -38,7 +38,7 @@ load msg =
             , minify = Texture.nearest
             , flipY = False
         }
-        MogeeFont.fontSrc
+        MogeeFont.spriteSrc
         |> Task.attempt msg
 
 
@@ -60,18 +60,17 @@ text string =
     Text string (WebGL.triangles (MogeeFont.text addLetter string))
 
 
-addLetter : MogeeFont.Letter -> List ( Vertex, Vertex, Vertex ) -> List ( Vertex, Vertex, Vertex )
+addLetter : MogeeFont.Letter -> List ( Vertex, Vertex, Vertex )
 addLetter { x, y, width, height, textureX, textureY } =
-    (::)
-        ( Vertex (vec2 x y) (vec2 textureX textureY)
-        , Vertex (vec2 (x + width) (y + height)) (vec2 (textureX + width) (textureY + height))
-        , Vertex (vec2 (x + width) y) (vec2 (textureX + width) textureY)
-        )
-        >> (::)
-            ( Vertex (vec2 x y) (vec2 textureX textureY)
-            , Vertex (vec2 x (y + height)) (vec2 textureX (textureY + height))
-            , Vertex (vec2 (x + width) (y + height)) (vec2 (textureX + width) (textureY + height))
-            )
+    [ ( Vertex (vec2 x y) (vec2 textureX textureY)
+      , Vertex (vec2 (x + width) (y + height)) (vec2 (textureX + width) (textureY + height))
+      , Vertex (vec2 (x + width) y) (vec2 (textureX + width) textureY)
+      )
+    , ( Vertex (vec2 x y) (vec2 textureX textureY)
+      , Vertex (vec2 x (y + height)) (vec2 textureX (textureY + height))
+      , Vertex (vec2 (x + width) (y + height)) (vec2 (textureX + width) (textureY + height))
+      )
+    ]
 
 
 
