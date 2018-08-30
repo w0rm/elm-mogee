@@ -1,11 +1,10 @@
-module Slides.Engine exposing (Engine, Event(..), Element(..), initial, update)
+module Slides.Engine exposing (Element(..), Engine, Event(..), initial, update)
 
-import Dict exposing (Dict)
-import Time exposing (Time)
-import View.Font as Font exposing (Text)
-import View.Sprite as Sprite exposing (Sprite)
 import Animation exposing (Animation)
 import Components.Keys as Keys exposing (Keys, codes)
+import Dict exposing (Dict)
+import View.Font as Font exposing (Text)
+import View.Sprite as Sprite exposing (Sprite)
 
 
 type Event
@@ -42,7 +41,7 @@ type alias Transition =
 
 
 type alias Engine =
-    { time : Time
+    { time : Float
     , elements : Dict ElementId ElementData
     , animations : Dict ElementId { x : Animation, y : Animation }
     , nextEvents : List Event
@@ -68,7 +67,7 @@ elementData element position =
     }
 
 
-animate : Time -> Engine -> Engine
+animate : Float -> Engine -> Engine
 animate elapsed engine =
     Dict.foldl
         animateElement
@@ -83,6 +82,7 @@ animateElement elementId data engine =
             if Animation.isDone engine.time x && Animation.isDone engine.time y then
                 -- remove completed animation
                 { engine | animations = Dict.remove elementId engine.animations }
+
             else
                 -- running animation, do nothing
                 engine
@@ -124,7 +124,7 @@ scheduleElementEvent elementId data engine =
             engine
 
 
-update : Time -> Keys -> Engine -> Engine
+update : Float -> Keys -> Engine -> Engine
 update elapsed keys engine =
     updateNext keys (animate elapsed engine)
 
@@ -172,20 +172,24 @@ updateNext keys engine =
                         | nextEvents = events
                         , prevEvents = event :: engine.prevEvents
                     }
+
                 else
-                    runEvents (List.reverse (engine.prevEvents))
+                    runEvents (List.reverse engine.prevEvents)
                         { engine
                             | elements = Dict.empty
                             , animations = Dict.empty
                         }
+
             else if Keys.pressed codes.left keys then
                 updatePrev engine
+
             else
                 engine
 
         [] ->
             if Keys.pressed codes.left keys then
                 updatePrev engine
+
             else
                 engine
 
@@ -219,14 +223,14 @@ updatePrev engine =
 runEvents : List Event -> Engine -> Engine
 runEvents events engine =
     case events of
-        (AddSprite elementId element position) :: events ->
-            runEvents events { engine | elements = Dict.insert elementId (elementData (SpriteElement (Sprite.sprite element)) position) engine.elements }
+        (AddSprite elementId element position) :: restEvents ->
+            runEvents restEvents { engine | elements = Dict.insert elementId (elementData (SpriteElement (Sprite.sprite element)) position) engine.elements }
 
-        (AddText elementId element position) :: events ->
-            runEvents events { engine | elements = Dict.insert elementId (elementData (TextElement (Font.text element)) position) engine.elements }
+        (AddText elementId element position) :: restEvents ->
+            runEvents restEvents { engine | elements = Dict.insert elementId (elementData (TextElement (Font.text element)) position) engine.elements }
 
-        (Move elementId { x, y }) :: events ->
-            runEvents events
+        (Move elementId { x, y }) :: restEvents ->
+            runEvents restEvents
                 { engine
                     | elements =
                         Dict.update
@@ -238,7 +242,7 @@ runEvents events engine =
                                             position =
                                                 { x = x, y = y }
                                         in
-                                            Just { data | position = position }
+                                        Just { data | position = position }
 
                                     Nothing ->
                                         Nothing
@@ -246,11 +250,11 @@ runEvents events engine =
                             engine.elements
                 }
 
-        (Del elementId) :: events ->
-            runEvents events { engine | elements = Dict.remove elementId engine.elements }
+        (Del elementId) :: restEvents ->
+            runEvents restEvents { engine | elements = Dict.remove elementId engine.elements }
 
-        KeyPress :: events ->
-            runEvents events engine
+        KeyPress :: restEvents ->
+            runEvents restEvents engine
 
         [] ->
             engine

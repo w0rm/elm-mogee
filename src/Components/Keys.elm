@@ -1,23 +1,20 @@
-module Components.Keys
-    exposing
-        ( Keys
-        , keyChange
-        , directions
-        , initial
-        , codes
-        , pressed
-        , down
-        , anykey
-        , animate
-        )
+module Components.Keys exposing
+    ( Keys
+    , animate
+    , anykey
+    , codes
+    , directions
+    , down
+    , initial
+    , keyChange
+    , pressed
+    )
 
-import Keyboard exposing (KeyCode)
 import Dict exposing (Dict)
-import Time exposing (Time)
 
 
 type alias Keys =
-    Dict KeyCode Time
+    Dict Int Float
 
 
 initial : Keys
@@ -26,14 +23,14 @@ initial =
 
 
 codes :
-    { down : KeyCode
-    , enter : KeyCode
-    , left : KeyCode
-    , right : KeyCode
-    , space : KeyCode
-    , up : KeyCode
-    , q : KeyCode
-    , escape : KeyCode
+    { down : Int
+    , enter : Int
+    , left : Int
+    , right : Int
+    , space : Int
+    , up : Int
+    , q : Int
+    , escape : Int
     }
 codes =
     { enter = 13
@@ -47,28 +44,30 @@ codes =
     }
 
 
-keyChange : Bool -> KeyCode -> Keys -> Keys
+keyChange : Bool -> Int -> Keys -> Keys
 keyChange on code keys =
     if on then
         if Dict.member code keys then
             keys
+
         else
             Dict.insert code 0 keys
+
     else
         Dict.remove code keys
 
 
-animate : Time -> Keys -> Keys
+animate : Float -> Keys -> Keys
 animate elapsed =
     Dict.map (\_ -> (+) elapsed)
 
 
-pressed : KeyCode -> Keys -> Bool
+pressed : Int -> Keys -> Bool
 pressed code keys =
     Dict.get code keys == Just 0
 
 
-down : KeyCode -> Keys -> Bool
+down : Int -> Keys -> Bool
 down =
     Dict.member
 
@@ -92,6 +91,6 @@ directions keys =
                 _ ->
                     0
     in
-        { x = direction (down codes.left keys) (down codes.right keys)
-        , y = direction (down codes.down keys) (down codes.up keys)
-        }
+    { x = direction (down codes.left keys) (down codes.right keys)
+    , y = direction (down codes.down keys) (down codes.up keys)
+    }

@@ -1,11 +1,10 @@
-module Components.Transform
-    exposing
-        ( Transform
-        , offsetBy
-        , offsetTo
-        , roundCoordinates
-        , collide
-        )
+module Components.Transform exposing
+    ( Transform
+    , collide
+    , offsetBy
+    , offsetTo
+    , roundCoordinates
+    )
 
 {-| The Transform component determines the position and
 size of each entity in the scene.

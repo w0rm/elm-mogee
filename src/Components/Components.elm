@@ -1,24 +1,23 @@
-module Components.Components
-    exposing
-        ( Components
-        , isDead
-        , initial
-        , delete
-        , mogeeOffset
-        , addScreen
-        , map
-        , filter
-        , foldl
-        , foldl2
-        , foldl3
-        )
+module Components.Components exposing
+    ( Components
+    , addScreen
+    , delete
+    , filter
+    , foldl
+    , foldl2
+    , foldl3
+    , initial
+    , isDead
+    , map
+    , mogeeOffset
+    )
 
+import Components.Direction as Direction exposing (Direction(..))
 import Components.Mogee as Mogee exposing (Mogee)
 import Components.Screen as Screen exposing (Screen)
 import Components.Transform as Transform exposing (Transform)
 import Components.Velocity as Velocity exposing (Velocity)
 import Components.Wall as Wall exposing (Wall)
-import Components.Direction as Direction exposing (Direction(..))
 import Dict exposing (Dict)
 
 
@@ -76,19 +75,19 @@ we get elements from the 1st component dict and
 then inner join with the second component dict
 -}
 foldl2 : (EntityId -> a -> b -> c -> c) -> c -> Dict EntityId a -> Dict EntityId b -> c
-foldl2 fn initial component1 component2 =
+foldl2 fn initial_ component1 component2 =
     Dict.foldl
         (\uid a ->
             Maybe.map (fn uid a)
                 (Dict.get uid component2)
                 |> Maybe.withDefault identity
         )
-        initial
+        initial_
         component1
 
 
 foldl3 : (EntityId -> a -> b -> c -> d -> d) -> d -> Dict EntityId a -> Dict EntityId b -> Dict EntityId c -> d
-foldl3 fn initial component1 component2 component3 =
+foldl3 fn initial_ component1 component2 component3 =
     Dict.foldl
         (\uid a ->
             Maybe.map2 (fn uid a)
@@ -96,7 +95,7 @@ foldl3 fn initial component1 component2 component3 =
                 (Dict.get uid component3)
                 |> Maybe.withDefault identity
         )
-        initial
+        initial_
         component1
 
 
@@ -147,6 +146,7 @@ addWalls x y from to components =
         (\d ->
             if d == Direction.opposite from || d == to then
                 identity
+
             else
                 case d of
                     Left ->

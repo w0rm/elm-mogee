@@ -1,13 +1,14 @@
 module View.Components exposing (render)
 
-import View.Common exposing (rectangle)
-import View.Mogee as Mogee
-import View.Wall as Wall
-import View.Screen as Screen
-import View.Color as Color
 import Components.Components as Components exposing (Components)
 import Components.Transform as Transform exposing (Transform)
-import WebGL exposing (Texture, Entity)
+import View.Color as Color
+import View.Common exposing (rectangle)
+import View.Mogee as Mogee
+import View.Screen as Screen
+import View.Wall as Wall
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
 
 
 viewport : Transform
@@ -58,13 +59,13 @@ render texture sprite directionX cameraOffset components =
         newComponents =
             visibleComponents cameraOffset components
     in
-        {- the order matters, screens must be drawn first,
-           because they set the stencil buffer
-        -}
-        renderWalls texture newComponents
-            >> renderMogee texture directionX newComponents
-            >> Mogee.renderBg sprite cameraOffset
-            >> renderScreens texture newComponents
+    {- the order matters, screens must be drawn first,
+       because they set the stencil buffer
+    -}
+    renderWalls texture newComponents
+        >> renderMogee texture directionX newComponents
+        >> Mogee.renderBg sprite cameraOffset
+        >> renderScreens texture newComponents
 
 
 {-| Offsets all transform components and filters the ones

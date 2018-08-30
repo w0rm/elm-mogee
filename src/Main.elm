@@ -1,14 +1,21 @@
-module Mogee exposing (main)
+module Main exposing (main)
 
-import Keyboard
+import Browser
+import Browser.Dom exposing (getViewport)
+import Browser.Events
+    exposing
+        ( onAnimationFrameDelta
+        , onKeyDown
+        , onKeyUp
+        , onResize
+        , onVisibilityChange
+        )
+import Html.Events exposing (keyCode)
+import Json.Decode as Decode exposing (Value)
+import Messages exposing (Msg(..))
 import Model exposing (Model)
 import Task exposing (Task)
-import Messages exposing (Msg(..))
 import View
-import Window
-import AnimationFrame
-import PageVisibility
-import Html
 import View.Font as Font
 import View.Sprite as Sprite
 
@@ -16,29 +23,29 @@ import View.Sprite as Sprite
 subscriptions : Model -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ AnimationFrame.diffs Animate
-        , Keyboard.downs (KeyChange True)
-        , Keyboard.ups (KeyChange False)
-        , Window.resizes Resize
-        , PageVisibility.visibilityChanges VisibilityChange
+        [ onAnimationFrameDelta Animate
+        , onKeyDown (Decode.map (KeyChange True) keyCode)
+        , onKeyUp (Decode.map (KeyChange False) keyCode)
+        , onResize Resize
+        , onVisibilityChange VisibilityChange
         ]
 
 
-init : ( Model, Cmd Msg )
-init =
+init : Value -> ( Model, Cmd Msg )
+init _ =
     ( Model.initial
     , Cmd.batch
         [ Sprite.loadTexture TextureLoaded
         , Sprite.loadSprite SpriteLoaded
         , Font.load FontLoaded
-        , Task.perform Resize Window.size
+        , Task.perform (\{ viewport } -> Resize (round viewport.width) (round viewport.height)) getViewport
         ]
     )
 
 
-main : Program Never Model Msg
+main : Program Value Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
         , view = View.view
         , subscriptions = subscriptions

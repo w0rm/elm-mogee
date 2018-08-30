@@ -12,10 +12,10 @@ Submitted to the [\#LOWREZJAM 2016](https://unsoundscapes.itch.io/mogee).
 
 1. Install elm [elm-lang.org/install](http://elm-lang.org/install)
 2. Clone this repo
-3. Run `elm reactor`
-4. Open [localhost:8000/src/Main.elm](http://localhost:8000/src/Main.elm) in the browser
+3. Run `elm make src/Main.elm --output elm.js`
+4. Open `index.html` in the browser
 
 ## Special Credits
 
 * Pixel art by [Nadya Kuzmina](https://github.com/kuzminadya)
-* Theme music by [Carlos Pazuzu](https://twitter.com/carlospazuzu)
+* Theme music and sounds by [Carlos Pazuzu](https://twitter.com/carlospazuzu)

@@ -1,4 +1,4 @@
-module Systems.CurrentScore exposing (run, CurrentScore, currentScore)
+module Systems.CurrentScore exposing (CurrentScore, currentScore, run)
 
 import Components.Components as Components exposing (Components)
 import Components.Transform as Transform
@@ -14,7 +14,7 @@ currentScore =
 
 
 run : Components -> CurrentScore -> CurrentScore
-run components currentScore =
+run components currentScore_ =
     let
         -- we assume there is only one Mogee
         collidesWithMogee =
@@ -24,14 +24,15 @@ run components currentScore =
                 components.mogees
                 components.transforms
     in
-        -- find the max screen number that collides with Mogee
-        Components.foldl2
-            (\_ { number } transform score ->
-                if collidesWithMogee transform then
-                    max score number
-                else
-                    score
-            )
-            currentScore
-            components.screens
-            components.transforms
+    -- find the max screen number that collides with Mogee
+    Components.foldl2
+        (\_ { number } transform score ->
+            if collidesWithMogee transform then
+                max score number
+
+            else
+                score
+        )
+        currentScore_
+        components.screens
+        components.transforms

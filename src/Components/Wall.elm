@@ -1,4 +1,4 @@
-module Components.Wall exposing (wall, Wall)
+module Components.Wall exposing (Wall, wall)
 
 {-| The Wall component determines the state of the wall
 -}

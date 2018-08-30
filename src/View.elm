@@ -1,57 +1,59 @@
 module View exposing (view)
 
+import Components.Components as Components
+import Components.Keys as Keys
+import Components.Menu as Menu
+import Components.Transform as Transform exposing (Transform)
 import Html exposing (Html, div)
 import Html.Attributes exposing (height, style, width)
 import Messages exposing (Msg)
-import Components.Keys as Keys
 import Model exposing (GameState(..), Model)
-import View.Common as Common
-import View.Color as Color
-import View.Lives as Lives
-import View.Components
-import Components.Components as Components
-import Components.Transform as Transform exposing (Transform)
-import WebGL exposing (Entity, Texture)
-import View.Font as Font exposing (Text)
-import View.Menu as Menu
 import Slides.View as Slides
-import Components.Menu as Menu
+import View.Color as Color
+import View.Common as Common
+import View.Components
+import View.Font as Font exposing (Text)
+import View.Lives as Lives
+import View.Menu as Menu
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
 
 
 view : Model -> Html Msg
 view model =
     let
+        ( w, h ) =
+            model.size
+
         size =
-            (max 1 ((min model.size.width model.size.height) // 64 - model.padding)) * 64
+            max 1 (min w h // 64 - model.padding) * 64
     in
-        WebGL.toHtmlWith
-            [ WebGL.depth 1
-            , WebGL.stencil 0
-            , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
-            ]
-            [ width size
-            , height size
-            , style
-                [ ( "display", "block" )
-                , ( "position", "absolute" )
-                , ( "top", "50%" )
-                , ( "left", "50%" )
-                , ( "margin-top", toString (-size // 2) ++ "px" )
-                , ( "margin-left", toString (-size // 2) ++ "px" )
-                , ( "image-rendering", "optimizeSpeed" )
-                , ( "image-rendering", "-moz-crisp-edges" )
-                , ( "image-rendering", "-webkit-optimize-contrast" )
-                , ( "image-rendering", "crisp-edges" )
-                , ( "image-rendering", "pixelated" )
-                , ( "-ms-interpolation-mode", "nearest-neighbor" )
-                ]
-            ]
-            (Maybe.map3 (render model)
-                model.texture
-                model.font
-                model.sprite
-                |> Maybe.withDefault []
-            )
+    WebGL.toHtmlWith
+        [ WebGL.depth 1
+        , WebGL.stencil 0
+        , WebGL.clearColor (22 / 255) (17 / 255) (22 / 255) 0
+        ]
+        [ width size
+        , height size
+        , style "display" "block"
+        , style "position" "absolute"
+        , style "top" "50%"
+        , style "left" "50%"
+        , style "margin-top" (String.fromInt (-size // 2) ++ "px")
+        , style "margin-left" (String.fromInt (-size // 2) ++ "px")
+        , style "image-rendering" "optimizeSpeed"
+        , style "image-rendering" "-moz-crisp-edges"
+        , style "image-rendering" "-webkit-optimize-contrast"
+        , style "image-rendering" "crisp-edges"
+        , style "image-rendering" "pixelated"
+        , style "-ms-interpolation-mode" "nearest-neighbor"
+        ]
+        (Maybe.map3 (render model)
+            model.texture
+            model.font
+            model.sprite
+            |> Maybe.withDefault []
+        )
 
 
 toMinimap : Transform -> Transform
@@ -69,6 +71,7 @@ render model texture font sprite =
         Initial menu ->
             if menu.section == Menu.SlidesSection then
                 Slides.render sprite font model.slides
+
             else
                 Menu.render model.sound font sprite menu
 
@@ -92,7 +95,9 @@ renderGame { components, systems, score, keys, lives } texture font sprite =
 
         {- camera offset must be an integer, because pixels -}
         cameraOffset =
-            ( (toFloat (round mogeeTransform.x) - 28), (toFloat (round mogeeTransform.y) - 27) )
+            ( toFloat (round mogeeTransform.x) - 28
+            , toFloat (round mogeeTransform.y) - 27
+            )
 
         mogeeMinimap =
             toMinimap mogeeTransform
@@ -117,14 +122,15 @@ renderGame { components, systems, score, keys, lives } texture font sprite =
                 0
                 (if transform == mogeeMinimap then
                     Color.yellow
+
                  else
                     Color.gray
                 )
     in
-        Lives.renderLives sprite ( 1, 1, 0 ) lives
-            ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
-            ++ List.map dot allScr
-            ++ View.Components.render texture sprite (Keys.directions keys).x cameraOffset components []
+    Lives.renderLives sprite ( 1, 1, 0 ) lives
+        ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
+        ++ List.map dot allScr
+        ++ View.Components.render texture sprite (Keys.directions keys).x cameraOffset components []
 
 
 continueText : Text

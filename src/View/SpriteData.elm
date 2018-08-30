@@ -1,4 +1,4 @@
-module View.SpriteData exposing (sprite, spriteSrc, textureSrc, SpriteInfo)
+module View.SpriteData exposing (SpriteInfo, sprite, spriteSrc, textureSrc)
 
 import Dict exposing (Dict)
 

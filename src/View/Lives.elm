@@ -1,15 +1,14 @@
-module View.Lives
-    exposing
-        ( renderLives
-        , renderScore
-        )
+module View.Lives exposing
+    ( renderLives
+    , renderScore
+    )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3)
+import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import View.Common exposing (box, texturedFragmentShader)
-import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture
 import View.Sprite as Sprite exposing (Sprite)
+import WebGL exposing (Entity, Mesh, Shader)
+import WebGL.Texture as Texture exposing (Texture)
 
 
 type alias UniformTextured =
@@ -42,12 +41,13 @@ digitsList n =
             n // 10
 
         r =
-            n % 10
+            modBy 10 n
     in
-        if nn == 0 && r == 0 then
-            []
-        else
-            r :: digitsList nn
+    if nn == 0 && r == 0 then
+        []
+
+    else
+        r :: digitsList nn
 
 
 renderScore : Texture -> ( Float, Float, Float ) -> Int -> List Entity
@@ -59,10 +59,11 @@ renderScore texture ( x, y, z ) value =
         position =
             ( x - toFloat (List.length digits) * 2, y, z )
     in
-        if value == 0 then
-            []
-        else
-            List.indexedMap (renderDigit texture position) digits
+    if value == 0 then
+        []
+
+    else
+        List.indexedMap (renderDigit texture position) digits
 
 
 renderDigit : Texture -> ( Float, Float, Float ) -> Int -> Int -> Entity
@@ -71,7 +72,7 @@ renderDigit texture ( x, y, z ) index number =
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = Vec3.fromTuple ( x + toFloat index * 4, y, z )
+        { offset = vec3 (x + toFloat index * 4) y z
         , texture = texture
         , textureOffset = vec2 (toFloat number * 3) 15
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))

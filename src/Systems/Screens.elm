@@ -1,13 +1,12 @@
-module Systems.Screens exposing (screens, Screens, run)
+module Systems.Screens exposing (Screens, run, screens)
 
-import Random
-import Dict
-import Components.Direction as Direction exposing (Direction(..))
 import Components.Components as Components exposing (Components)
-import Components.Transform as Transform exposing (Transform)
-import Components.Screen as Screen exposing (Screen, AnimationState(..))
+import Components.Direction as Direction exposing (Direction(..))
 import Components.Mogee as Mogee
-import Time exposing (Time)
+import Components.Screen as Screen exposing (AnimationState(..), Screen)
+import Components.Transform as Transform exposing (Transform)
+import Dict
+import Random
 
 
 type alias Screens =
@@ -27,8 +26,8 @@ screens =
     }
 
 
-run : Time -> Components -> Screens -> ( Components, Screens )
-run elapsed components screens =
+run : Float -> Components -> Screens -> ( Components, Screens )
+run elapsed components screens_ =
     let
         newComponents =
             update elapsed components
@@ -37,41 +36,42 @@ run elapsed components screens =
             Components.mogeeOffset newComponents
 
         screenX =
-            x + Mogee.width / 2 - Screen.size / 2 - screens.transform.x
+            x + Mogee.width / 2 - Screen.size / 2 - screens_.transform.x
 
         screenY =
-            y + Mogee.height / 2 - Screen.size / 2 - screens.transform.y
+            y + Mogee.height / 2 - Screen.size / 2 - screens_.transform.y
 
         newTransform =
             Transform.offsetTo Screen.size
-                screens.direction
-                screens.transform
+                screens_.direction
+                screens_.transform
 
         ( newDirection, newSeed ) =
-            Random.step (Direction.next screens.direction) screens.seed
+            Random.step (Direction.next screens_.direction) screens_.seed
 
         newNumber =
-            screens.number + 1
+            screens_.number + 1
     in
-        if abs screenX < Screen.size && abs screenY < Screen.size then
-            ( Components.addScreen
-                newTransform
-                screens.direction
-                newDirection
-                newNumber
-                newComponents
-            , { screens
-                | direction = newDirection
-                , seed = newSeed
-                , number = newNumber
-                , transform = newTransform
-              }
-            )
-        else
-            ( newComponents, screens )
+    if abs screenX < Screen.size && abs screenY < Screen.size then
+        ( Components.addScreen
+            newTransform
+            screens_.direction
+            newDirection
+            newNumber
+            newComponents
+        , { screens_
+            | direction = newDirection
+            , seed = newSeed
+            , number = newNumber
+            , transform = newTransform
+          }
+        )
+
+    else
+        ( newComponents, screens_ )
 
 
-shrink : Time -> Screen -> Transform -> Transform
+shrink : Float -> Screen -> Transform -> Transform
 shrink dt { to, state, velocity } transform =
     let
         { x, y, width, height } =
@@ -83,58 +83,61 @@ shrink dt { to, state, velocity } transform =
         newH =
             max 0 (height - dt * velocity)
     in
-        if state /= Moving || width == 0 || height == 0 then
-            transform
-        else
-            case to of
-                Left ->
-                    { transform | width = newW }
+    if state /= Moving || width == 0 || height == 0 then
+        transform
 
-                Right ->
-                    { transform
-                        | width = newW
-                        , x = x - newW + width
-                    }
+    else
+        case to of
+            Left ->
+                { transform | width = newW }
 
-                Top ->
-                    { transform | height = newH }
+            Right ->
+                { transform
+                    | width = newW
+                    , x = x - newW + width
+                }
 
-                Bottom ->
-                    { transform
-                        | height = newH
-                        , y = y - newH + height
-                    }
+            Top ->
+                { transform | height = newH }
+
+            Bottom ->
+                { transform
+                    | height = newH
+                    , y = y - newH + height
+                }
 
 
 activate : List Screen -> Screen -> Screen
-activate screens screen =
-    if List.all (\{ number } -> number /= screen.number - 1) screens then
+activate screens_ screen =
+    if List.all (\{ number } -> number /= screen.number - 1) screens_ then
         Screen.activate screen
+
     else
         screen
 
 
-update : Time -> Components -> Components
+update : Float -> Components -> Components
 update elapsed components =
     Components.foldl2
-        (\uid screen transform components ->
+        (\uid screen transform components_ ->
             if transform.width == 0 || transform.height == 0 then
                 -- Delete the screen
-                Components.delete uid components
+                Components.delete uid components_
+
             else
                 let
                     newScreen =
                         screen
                             |> Screen.update elapsed
-                            |> activate (Dict.values components.screens)
+                            |> activate (Dict.values components_.screens)
 
                     newTransform =
                         shrink elapsed newScreen transform
                 in
-                    { components
-                        | screens = Dict.insert uid newScreen components.screens
-                        , transforms = Dict.insert uid newTransform components.transforms
-                    }
+                { components_
+                    | screens = Dict.insert uid newScreen components_.screens
+                    , transforms = Dict.insert uid newTransform components_.transforms
+                }
         )
         components
         components.screens

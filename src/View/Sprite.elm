@@ -1,23 +1,22 @@
-module View.Sprite
-    exposing
-        ( loadTexture
-        , loadSprite
-        , sprite
-        , name
-        , Sprite
-        , render
-        , fill
-        )
+module View.Sprite exposing
+    ( Sprite
+    , fill
+    , loadSprite
+    , loadTexture
+    , name
+    , render
+    , sprite
+    )
 
-import View.SpriteData as SpriteData exposing (textureSrc, spriteSrc, SpriteInfo)
-import WebGL.Texture as Texture exposing (Error, defaultOptions)
-import Task
 import Dict
-import View.Common exposing (box, Vertex, texturedFragmentShader, cropMask)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
-import WebGL exposing (Texture, Shader, Mesh, Entity)
+import Task
+import View.Common exposing (Vertex, box, cropMask, texturedFragmentShader)
+import View.SpriteData as SpriteData exposing (SpriteInfo, spriteSrc, textureSrc)
+import WebGL exposing (Entity, Mesh, Shader)
 import WebGL.Settings.DepthTest as DepthTest
+import WebGL.Texture as Texture exposing (Error, Texture, defaultOptions)
 
 
 type Sprite
@@ -27,24 +26,24 @@ type Sprite
 {-| TODO: use union type for sprites
 -}
 sprite : String -> Sprite
-sprite name =
-    Dict.get name SpriteData.sprite
+sprite n =
+    Dict.get n SpriteData.sprite
         |> Maybe.withDefault { x = 0, y = 0, w = 0, h = 0 }
-        |> Sprite name
+        |> Sprite n
 
 
 name : Sprite -> String
-name (Sprite name _) =
-    name
+name (Sprite n _) =
+    n
 
 
 render : Sprite -> Texture -> ( Float, Float, Float ) -> Entity
-render (Sprite _ { x, y, w, h }) texture offset =
+render (Sprite _ { x, y, w, h }) texture ( dx, dy, dz ) =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = Vec3.fromTuple offset
+        { offset = vec3 dx dy dz
         , texture = texture
         , size = vec2 w h
         , frameSize = vec2 w h
@@ -57,15 +56,15 @@ render (Sprite _ { x, y, w, h }) texture offset =
 
 
 fill : Sprite -> Texture -> ( Float, Float ) -> ( Float, Float, Float ) -> Entity
-fill (Sprite _ { x, y, w, h }) texture size offset =
+fill (Sprite _ { x, y, w, h }) texture ( width, height ) ( dx, dy, dz ) =
     WebGL.entityWith
         [ cropMask 1, DepthTest.default ]
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = Vec3.fromTuple offset
+        { offset = vec3 dx dy dz
         , texture = texture
-        , size = Vec2.fromTuple size
+        , size = vec2 width height
         , frameSize = vec2 w h
         , textureOffset = vec2 x y
         , textureSize =

@@ -1,22 +1,19 @@
-port module Model
-    exposing
-        ( Model
-        , initial
-        , update
-        , GameState(..)
-        )
+port module Model exposing
+    ( GameState(..)
+    , Model
+    , initial
+    , update
+    )
 
-import Components.Keys as Keys exposing (Keys, codes)
-import Time exposing (Time)
-import WebGL.Texture exposing (Texture, Error)
-import Messages exposing (Msg(..))
-import Systems.Systems as Systems exposing (Systems)
+import Browser.Events exposing (Visibility(..))
 import Components.Components as Components exposing (Components)
+import Components.Keys as Keys exposing (Keys, codes)
 import Components.Menu as Menu exposing (Menu)
-import PageVisibility exposing (Visibility(..))
+import Messages exposing (Msg(..))
 import Slides.Engine as Engine exposing (Engine)
 import Slides.Slides as Slides
-import Window exposing (Size)
+import Systems.Systems as Systems exposing (Systems)
+import WebGL.Texture exposing (Error, Texture)
 
 
 type GameState
@@ -32,7 +29,7 @@ type alias Model =
     , state : GameState
     , lives : Int
     , score : Int
-    , size : Size
+    , size : ( Int, Int )
     , padding : Int
     , sound : Bool
     , texture : Maybe Texture
@@ -50,7 +47,7 @@ initial =
     , lives = 0
     , score = 0
     , state = Initial Menu.start
-    , size = Size 0 0
+    , size = ( 0, 0 )
     , padding = 0
     , sound = True
     , texture = Nothing
@@ -79,8 +76,8 @@ port stop : String -> Cmd msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
-        Resize size ->
-            ( { model | size = size }
+        Resize w h ->
+            ( { model | size = ( w, h ) }
             , Cmd.none
             )
 
@@ -130,6 +127,7 @@ update action model =
                 | state =
                     if model.state == Playing then
                         Paused Menu.paused
+
                     else
                         model.state
               }
@@ -137,7 +135,7 @@ update action model =
             )
 
 
-animate : Time -> Model -> ( Model, Cmd Msg )
+animate : Float -> Model -> ( Model, Cmd Msg )
 animate elapsed model =
     case model.state of
         Initial menu ->
@@ -151,7 +149,7 @@ animate elapsed model =
                 limitElapsed =
                     min elapsed 60
 
-                ( newComponents, newSystems, sound ) =
+                ( newComponents, newSystems, sound_ ) =
                     Systems.run
                         limitElapsed
                         (Keys.directions model.keys)
@@ -161,6 +159,7 @@ animate elapsed model =
                 state =
                     if Keys.pressed codes.escape model.keys || Keys.pressed codes.q model.keys then
                         Paused Menu.paused
+
                     else
                         model.state
 
@@ -172,26 +171,28 @@ animate elapsed model =
                             , state = state
                         }
             in
-                ( newState
-                , case sound of
-                    Just snd ->
-                        Cmd.batch [ cmd, play snd ]
+            ( newState
+            , case sound_ of
+                Just snd ->
+                    Cmd.batch [ cmd, play snd ]
 
-                    Nothing ->
-                        cmd
-                )
+                Nothing ->
+                    cmd
+            )
 
         Dead ->
             if Keys.pressed codes.enter model.keys then
                 if model.lives == 0 then
                     ( { model | state = Initial Menu.start }, Cmd.none )
+
                 else
                     continue model
+
             else
                 ( model, Cmd.none )
 
 
-animateKeys : Time -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+animateKeys : Float -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 animateKeys elapsed ( model, cmd ) =
     ( { model | keys = Keys.animate elapsed model.keys }
     , cmd
@@ -207,6 +208,7 @@ checkLives model =
           }
         , Cmd.batch [ play "death", stop "theme" ]
         )
+
     else
         ( model, Cmd.none )
 
@@ -236,7 +238,7 @@ start model =
     )
 
 
-updateMenu : Time -> (Menu -> GameState) -> Menu -> Model -> ( Model, Cmd Msg )
+updateMenu : Float -> (Menu -> GameState) -> Menu -> Model -> ( Model, Cmd Msg )
 updateMenu elapsed menuState menu model =
     let
         ( newMenu, cmd ) =
@@ -245,37 +247,39 @@ updateMenu elapsed menuState menu model =
         newModel =
             if menu.section == Menu.SlidesSection then
                 { model | slides = Engine.update elapsed model.keys model.slides }
+
             else
                 model
     in
-        case cmd of
-            Menu.Start ->
-                start { newModel | state = Initial newMenu }
+    case cmd of
+        Menu.Start ->
+            start { newModel | state = Initial newMenu }
 
-            Menu.ToggleSound on ->
-                ( { newModel | sound = on, state = Initial newMenu }
-                , if on then
-                    Cmd.batch [ sound on, play "action" ]
-                  else
-                    sound on
-                )
+        Menu.ToggleSound on ->
+            ( { newModel | sound = on, state = Initial newMenu }
+            , if on then
+                Cmd.batch [ sound on, play "action" ]
 
-            Menu.Resume ->
-                ( { newModel | state = Playing }
-                , play "action"
-                )
+              else
+                sound on
+            )
 
-            Menu.End ->
-                ( { newModel | state = Initial Menu.start }
-                , Cmd.batch [ stop "theme", play "action" ]
-                )
+        Menu.Resume ->
+            ( { newModel | state = Playing }
+            , play "action"
+            )
 
-            Menu.Action ->
-                ( { newModel | state = menuState newMenu }
-                , play "action"
-                )
+        Menu.End ->
+            ( { newModel | state = Initial Menu.start }
+            , Cmd.batch [ stop "theme", play "action" ]
+            )
 
-            Menu.Noop ->
-                ( { newModel | state = menuState newMenu }
-                , Cmd.none
-                )
+        Menu.Action ->
+            ( { newModel | state = menuState newMenu }
+            , play "action"
+            )
+
+        Menu.Noop ->
+            ( { newModel | state = menuState newMenu }
+            , Cmd.none
+            )
