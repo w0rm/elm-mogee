@@ -1,18 +1,17 @@
-module View.Font
-    exposing
-        ( Text
-        , load
-        , name
-        , render
-        , text
-        )
+module View.Font exposing
+    ( Text
+    , load
+    , name
+    , render
+    , text
+    )
 
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 import MogeeFont
 import Task
-import WebGL exposing (Entity, Mesh, Shader, Texture)
-import WebGL.Texture as Texture exposing (Error, defaultOptions)
+import WebGL exposing (Entity, Mesh, Shader)
+import WebGL.Texture as Texture exposing (Error, Texture, defaultOptions)
 
 
 type Text
@@ -20,8 +19,8 @@ type Text
 
 
 name : Text -> String
-name (Text name _) =
-    name
+name (Text n _) =
+    n
 
 
 type alias Vertex =
@@ -43,12 +42,12 @@ load msg =
 
 
 render : Vec3 -> Text -> Texture -> ( Float, Float, Float ) -> Entity
-render color (Text _ mesh) texture offset =
+render color (Text _ mesh) texture ( x, y, z ) =
     WebGL.entity
         texturedVertexShader
         texturedFragmentShader
         mesh
-        { offset = Vec3.fromTuple offset
+        { offset = vec3 x y z
         , texture = texture
         , color = color
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))

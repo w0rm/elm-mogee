@@ -1,13 +1,14 @@
 module Slides.View exposing (render)
 
+import Animation exposing (Animation)
 import Components.Components as Components
-import Slides.Engine as Engine exposing (Engine, Element(..))
-import WebGL exposing (Entity, Texture)
+import Dict
+import Slides.Engine as Engine exposing (Element(..), Engine)
+import View.Color as Color
 import View.Font as Font exposing (Text)
 import View.Sprite as Sprite exposing (Sprite)
-import Animation exposing (Animation)
-import View.Color as Color
-import Dict
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
 
 
 roundFloat : Float -> Float

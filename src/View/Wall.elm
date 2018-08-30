@@ -1,12 +1,12 @@
 module View.Wall exposing (render)
 
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3)
-import View.Common exposing (box, texturedFragmentShader, cropMask)
-import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture
 import Components.Transform as Transform exposing (Transform)
+import Math.Vector2 as Vec2 exposing (Vec2, vec2)
+import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import View.Common exposing (box, cropMask, texturedFragmentShader)
+import WebGL exposing (Entity, Mesh, Shader)
 import WebGL.Settings.DepthTest as DepthTest
+import WebGL.Texture as Texture exposing (Texture)
 
 
 type alias UniformTextured =
@@ -30,7 +30,7 @@ render texture { x, y, width, height } =
         texturedVertexShader
         texturedFragmentShader
         box
-        { offset = Vec3.fromTuple ( x, y, 3 )
+        { offset = vec3 x y 3
         , texture = texture
         , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
         , textureOffset = vec2 0 10
@@ -40,6 +40,7 @@ render texture { x, y, width, height } =
             vec2 width
                 (if width == 1 || height == 1 then
                     height
+
                  else
                     height + 3
                 )

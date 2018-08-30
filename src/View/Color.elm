@@ -1,11 +1,11 @@
-module View.Color exposing (white, darkGreen, darkBlue, yellow, gray)
+module View.Color exposing (darkBlue, darkGreen, gray, white, yellow)
 
-import Math.Vector3 as Vec3 exposing (Vec3)
+import Math.Vector3 as Vec3 exposing (Vec3, vec3)
 
 
 toColor : Int -> Int -> Int -> Vec3
 toColor r g b =
-    Vec3.fromTuple ( toFloat r / 255, toFloat g / 255, toFloat b / 255 )
+    vec3 (toFloat r / 255) (toFloat g / 255) (toFloat b / 255)
 
 
 white : Vec3

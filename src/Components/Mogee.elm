@@ -1,19 +1,16 @@
-module Components.Mogee
-    exposing
-        ( Mogee
-        , AnimationState(..)
-        , mogee
-        , update
-        , die
-        , width
-        , height
-        , isDead
-        )
+module Components.Mogee exposing
+    ( AnimationState(..)
+    , Mogee
+    , die
+    , height
+    , isDead
+    , mogee
+    , update
+    , width
+    )
 
 {-| The Mogee component determines the state of the main character
 -}
-
-import Time exposing (Time)
 
 
 type AnimationState
@@ -23,7 +20,7 @@ type AnimationState
 
 
 type alias Mogee =
-    { elapsed : Time
+    { elapsed : Float
     , frames : List Float
     , state : AnimationState
     }
@@ -63,62 +60,66 @@ mogee =
 
 
 die : Mogee -> Mogee
-die mogee =
-    { mogee
+die mogee_ =
+    { mogee_
         | state = Dead
         , frames = [ 7 ]
     }
 
 
-update : Time -> Float -> Mogee -> Mogee
-update dt directionX mogee =
+update : Float -> Float -> Mogee -> Mogee
+update dt directionX mogee_ =
     let
         newMogee =
-            updateState directionX mogee
+            updateState directionX mogee_
 
         timeout =
             if newMogee.state == Standing then
                 1000
+
             else
                 200
 
         newElapsed =
             newMogee.elapsed + dt
     in
-        if newElapsed > timeout then
-            { newMogee
-                | elapsed = newElapsed - timeout
-                , frames = rotate newMogee.frames
-            }
-        else
-            { newMogee
-                | elapsed = newElapsed
-            }
+    if newElapsed > timeout then
+        { newMogee
+            | elapsed = newElapsed - timeout
+            , frames = rotate newMogee.frames
+        }
+
+    else
+        { newMogee
+            | elapsed = newElapsed
+        }
 
 
 updateState : Float -> Mogee -> Mogee
-updateState directionX mogee =
-    case mogee.state of
+updateState directionX mogee_ =
+    case mogee_.state of
         Standing ->
             if directionX /= 0 then
-                { mogee
+                { mogee_
                     | state = Walking
                     , frames = walking
                 }
+
             else
-                mogee
+                mogee_
 
         Walking ->
             if directionX == 0 then
-                { mogee
+                { mogee_
                     | state = Standing
                     , frames = standing
                 }
+
             else
-                mogee
+                mogee_
 
         Dead ->
-            mogee
+            mogee_
 
 
 rotate : List a -> List a

@@ -1,20 +1,20 @@
-module View.Common
-    exposing
-        ( Vertex
-        , box
-        , rectangle
-        , writeMask
-        , cropMask
-        , texturedFragmentShader
-        )
+module View.Common exposing
+    ( Vertex
+    , box
+    , cropMask
+    , rectangle
+    , texturedFragmentShader
+    , writeMask
+    )
 
+import Components.Transform exposing (Transform)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
-import WebGL exposing (Shader, Mesh, Entity, Texture)
+import WebGL exposing (Entity, Mesh, Shader)
 import WebGL.Settings exposing (Setting)
-import WebGL.Settings.StencilTest as StencilTest
 import WebGL.Settings.DepthTest as DepthTest
-import Components.Transform exposing (Transform)
+import WebGL.Settings.StencilTest as StencilTest
+import WebGL.Texture exposing (Texture)
 
 
 type alias Vertex =
@@ -66,6 +66,7 @@ rectangle : Bool -> Transform -> Float -> Vec3 -> Entity
 rectangle mask { x, y, width, height } l color =
     (if mask then
         WebGL.entityWith [ writeMask 1, DepthTest.default ]
+
      else
         WebGL.entity
     )

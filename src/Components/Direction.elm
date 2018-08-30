@@ -1,9 +1,8 @@
-module Components.Direction
-    exposing
-        ( Direction(..)
-        , opposite
-        , next
-        )
+module Components.Direction exposing
+    ( Direction(..)
+    , next
+    , opposite
+    )
 
 import Random exposing (Generator)
 

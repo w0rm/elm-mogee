@@ -1,19 +1,17 @@
-module Components.Screen
-    exposing
-        ( AnimationState(..)
-        , Screen
-        , screen
-        , activate
-        , update
-        , size
-        )
+module Components.Screen exposing
+    ( AnimationState(..)
+    , Screen
+    , activate
+    , screen
+    , size
+    , update
+    )
 
 {-| The Screen component determines collapsing screens,
 that the map is made of.
 -}
 
 import Components.Direction as Direction exposing (Direction)
-import Time exposing (Time)
 
 
 size : Float
@@ -41,7 +39,7 @@ type alias Screen =
     { from : Direction
     , to : Direction
     , number : Int
-    , frame : Time
+    , frame : Float
     , state : AnimationState
     , velocity : Float
     }
@@ -58,27 +56,31 @@ screen from to number =
     }
 
 
-update : Time -> Screen -> Screen
-update dt screen =
-    if screen.state == Initial then
-        screen
+update : Float -> Screen -> Screen
+update dt scr =
+    if scr.state == Initial then
+        scr
+
     else
         let
             frame =
-                screen.frame + screen.velocity * dt / 2
+                scr.frame + scr.velocity * dt / 2
         in
-            if frame >= 8 then
-                { screen | frame = 8 - frame, state = Moving }
-            else
-                { screen | frame = frame }
+        if frame >= 8 then
+            { scr | frame = 8 - frame, state = Moving }
+
+        else
+            { scr | frame = frame }
 
 
 activate : Screen -> Screen
-activate screen =
-    if screen.state == Initial then
-        if screen.to == screen.from then
-            { screen | state = Moving, frame = 0 }
+activate scr =
+    if scr.state == Initial then
+        if scr.to == scr.from then
+            { scr | state = Moving, frame = 0 }
+
         else
-            { screen | state = Rotating, frame = 0 }
+            { scr | state = Rotating, frame = 0 }
+
     else
-        screen
+        scr

@@ -12,13 +12,14 @@ run components =
         screensTransforms =
             Components.foldl2 (\_ _ -> (::)) [] components.screens components.transforms
     in
-        Components.foldl2
-            (\uid _ transform components ->
-                if List.any (Transform.collide transform) screensTransforms then
-                    components
-                else
-                    Components.delete uid components
-            )
-            components
-            components.walls
-            components.transforms
+    Components.foldl2
+        (\uid _ transform components_ ->
+            if List.any (Transform.collide transform) screensTransforms then
+                components_
+
+            else
+                Components.delete uid components_
+        )
+        components
+        components.walls
+        components.transforms

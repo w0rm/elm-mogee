@@ -1,13 +1,18 @@
 module View.Menu exposing (render)
 
+import Animation exposing (Animation)
+import Components.Menu as Menu exposing (HomeItem(..), Menu, MenuItem(..), MenuSection(..), PauseItem(..))
+import Ease
+import View.Color as Color
 import View.Font as Font exposing (Text)
 import View.Sprite as Sprite exposing (Sprite)
-import Components.Menu as Menu exposing (Menu, MenuSection(..), HomeItem(..), MenuItem(..), PauseItem(..))
-import WebGL exposing (Texture, Entity)
-import View.Color as Color
-import Animation exposing (Animation)
-import Time
-import Ease
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
+
+
+second : Float
+second =
+    1000
 
 
 titleAnimation : Animation
@@ -16,16 +21,18 @@ titleAnimation =
         |> Animation.from -24
         |> Animation.to 14
         |> Animation.ease Ease.outBounce
-        |> Animation.duration (1 * Time.second)
-        |> Animation.delay (0.5 * Time.second)
+        |> Animation.duration (1 * second)
+        |> Animation.delay (0.5 * second)
 
 
 cursorPosition : Menu -> Float -> ( Float, Float, Float )
 cursorPosition { section } yOffset =
     if section == HomeSection StartTheGame || section == MenuSection SoundOnOff || section == PauseSection ResumeGame then
         ( 9, 3 + yOffset, 0 )
+
     else if section == HomeSection GoToMenu || section == MenuSection GoToCredits || section == PauseSection EndGame then
         ( 9, 14 + yOffset, 0 )
+
     else
         ( 9, 25 + yOffset, 0 )
 
@@ -100,6 +107,7 @@ soundText : Bool -> Text
 soundText on =
     if on then
         soundOnText
+
     else
         soundOffText
 
@@ -131,7 +139,7 @@ logoSprite =
 
 creditsScreenText : Text
 creditsScreenText =
-    Font.text "Art, code, sound:\n@nadya_nabl,\n@unsoundscapes,\n@carlospazuzu."
+    Font.text "Art, code, sound:\n@nadyakzmn,\n@unsoundscapes,\n@carlospazuzu."
 
 
 selectionSprite : Sprite

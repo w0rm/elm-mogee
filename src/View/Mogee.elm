@@ -1,14 +1,14 @@
 module View.Mogee exposing (render, renderBg)
 
+import Components.Mogee as Mogee exposing (AnimationState(..), Mogee)
+import Components.Transform as Transform exposing (Transform)
 import Math.Vector2 as Vec2 exposing (Vec2, vec2)
 import Math.Vector3 as Vec3 exposing (Vec3, vec3)
-import Components.Mogee as Mogee exposing (Mogee, AnimationState(..))
-import Components.Transform as Transform exposing (Transform)
-import View.Common exposing (box, texturedFragmentShader, cropMask)
-import WebGL exposing (Texture, Shader, Mesh, Entity)
-import WebGL.Texture as Texture
-import WebGL.Settings.DepthTest as DepthTest
+import View.Common exposing (box, cropMask, texturedFragmentShader)
 import View.Sprite as Sprite exposing (Sprite)
+import WebGL exposing (Entity, Mesh, Shader)
+import WebGL.Settings.DepthTest as DepthTest
+import WebGL.Texture as Texture exposing (Texture)
 
 
 type alias UniformTextured =
@@ -46,38 +46,39 @@ render texture directionX mogee { x, y } =
         mirror =
             if directionX < 0 then
                 -1
+
             else
                 1
     in
-        (++)
-            [ WebGL.entityWith [ DepthTest.default, cropMask 1 ]
-                texturedVertexShader
-                texturedFragmentShader
-                box
-                { offset = vec3 x y 4
-                , texture = texture
-                , mirror = mirror
-                , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                , frameSize = vec2 Mogee.width Mogee.height
-                , textureOffset = vec2 (Mogee.width * getFrame mogee.frames) 0
-                }
-            , WebGL.entityWith [ DepthTest.default, cropMask 0 ]
-                texturedVertexShader
-                texturedFragmentShader
-                box
-                { offset = vec3 x y 1
-                , texture = texture
-                , mirror = mirror
-                , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                , frameSize = vec2 Mogee.width Mogee.height
-                , textureOffset = vec2 (Mogee.width * 7) 0
-                }
-            ]
+    (++)
+        [ WebGL.entityWith [ DepthTest.default, cropMask 1 ]
+            texturedVertexShader
+            texturedFragmentShader
+            box
+            { offset = vec3 x y 4
+            , texture = texture
+            , mirror = mirror
+            , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
+            , frameSize = vec2 Mogee.width Mogee.height
+            , textureOffset = vec2 (Mogee.width * getFrame mogee.frames) 0
+            }
+        , WebGL.entityWith [ DepthTest.default, cropMask 0 ]
+            texturedVertexShader
+            texturedFragmentShader
+            box
+            { offset = vec3 x y 1
+            , texture = texture
+            , mirror = mirror
+            , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
+            , frameSize = vec2 Mogee.width Mogee.height
+            , textureOffset = vec2 (Mogee.width * 7) 0
+            }
+        ]
 
 
 bgOffset : ( Float, Float ) -> ( Float, Float, Float )
 bgOffset ( cameraX, cameraY ) =
-    ( toFloat -(round (cameraX / 2) % 128)
+    ( toFloat -(modBy 128 (round (cameraX / 2)))
     , toFloat -(round (cameraY / 4 + 128) |> max 0 |> min 192)
     , 5
     )
