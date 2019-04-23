@@ -30,8 +30,6 @@ carmackSlide =
     ]
 
 
-{-| color twitter and soundcloud
--}
 aboutSlide : List Event
 aboutSlide =
     [ AddText "about1" "Andrey Kuzmin\n@unsoundscapes\n     SoundCloud" { x = 2, y = 23 }
