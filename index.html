@@ -33,6 +33,23 @@
         }
     }, false);
     window.focus();
+    // Controller support
+    function listenToGamepad () {
+      if (gamepadConnected && navigator.getGamepads) {
+        var gamepad = navigator.getGamepads()[0]
+        app.ports.gamepad.send(gamepad)
+        window.requestAnimationFrame(listenToGamepad)
+      }
+    }
+    var gamepadConnected = false
+    window.addEventListener('gamepadconnected', function(e) {  
+      gamepadConnected = true  
+      window.requestAnimationFrame(listenToGamepad)
+    })
+    window.addEventListener('gamepaddisconnected', function(e) {
+      gamepadConnected = false
+    })
+
   </script>
 </body>
 </html>
