@@ -10,10 +10,12 @@ import Browser.Events
         , onResize
         , onVisibilityChange
         )
+import Components.Gamepad as Gamepad
 import Html.Events exposing (keyCode)
 import Json.Decode as Decode exposing (Value)
 import Messages exposing (Msg(..))
 import Model exposing (Model)
+import Ports exposing (gamepad)
 import Task exposing (Task)
 import View
 import View.Font as Font
@@ -28,6 +30,7 @@ subscriptions _ =
         , onKeyUp (Decode.map (KeyChange False) keyCode)
         , onResize Resize
         , onVisibilityChange VisibilityChange
+        , gamepad (Gamepad.fromJson >> GamepadChange)
         ]
 
 

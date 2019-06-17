@@ -5,11 +5,13 @@ module Components.Keys exposing
     , codes
     , directions
     , down
+    , gamepadChange
     , initial
     , keyChange
     , pressed
     )
 
+import Components.Gamepad exposing (Gamepad)
 import Dict exposing (Dict)
 
 
@@ -55,6 +57,14 @@ keyChange on code keys =
 
     else
         Dict.remove code keys
+
+
+gamepadChange : Gamepad -> Keys -> Keys
+gamepadChange gamepad =
+    keyChange gamepad.a codes.enter
+        >> keyChange gamepad.a codes.up
+        >> keyChange gamepad.left codes.left
+        >> keyChange gamepad.right codes.right
 
 
 animate : Float -> Keys -> Keys

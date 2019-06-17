@@ -1,4 +1,4 @@
-port module Model exposing
+module Model exposing
     ( GameState(..)
     , Model
     , initial
@@ -7,9 +7,11 @@ port module Model exposing
 
 import Browser.Events exposing (Visibility(..))
 import Components.Components as Components exposing (Components)
+import Components.Gamepad as Gamepad
 import Components.Keys as Keys exposing (Keys, codes)
 import Components.Menu as Menu exposing (Menu)
 import Messages exposing (Msg(..))
+import Ports exposing (play, sound, stop)
 import Slides.Engine as Engine exposing (Engine)
 import Slides.Slides as Slides
 import Systems.Systems as Systems exposing (Systems)
@@ -58,21 +60,6 @@ initial =
     }
 
 
-{-| port for turning audio on/off
--}
-port sound : Bool -> Cmd msg
-
-
-{-| port for sending audio to play
--}
-port play : String -> Cmd msg
-
-
-{-| port for sending audio to stop
--}
-port stop : String -> Cmd msg
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
@@ -101,6 +88,11 @@ update action model =
                         _ ->
                             model.padding
               }
+            , Cmd.none
+            )
+
+        GamepadChange gamepad_ ->
+            ( { model | keys = Keys.gamepadChange gamepad_ model.keys }
             , Cmd.none
             )
 
