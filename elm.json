@@ -14,7 +14,7 @@
             "elm/time": "1.0.0",
             "elm-community/easing-functions": "2.0.0",
             "elm-explorations/linear-algebra": "1.0.0",
-            "elm-explorations/webgl": "1.0.1",
+            "elm-explorations/webgl": "1.1.1",
             "kuzminadya/mogeefont": "2.0.1",
             "mgold/elm-animation": "2.0.0"
         },
