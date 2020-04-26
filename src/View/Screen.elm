@@ -4,12 +4,10 @@ import Components.Direction exposing (Direction(..))
 import Components.Screen exposing (AnimationState(..), Screen)
 import Components.Transform exposing (Transform)
 import Math.Matrix4 as Mat4 exposing (Mat4)
-import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
-import View.Common exposing (box, texturedFragmentShader, writeMask)
-import WebGL exposing (Entity, Shader)
-import WebGL.Settings.DepthTest as DepthTest
-import WebGL.Texture as Texture exposing (Texture)
+import Math.Vector3 exposing (vec3)
+import View.Sprite as Sprite exposing (Sprite)
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
 
 
 move : List Int
@@ -27,13 +25,14 @@ fadeOut =
     List.reverse fadeIn
 
 
-frameOffset : List Int -> Float -> Float
-frameOffset list frame =
+frameSprite : List Int -> Float -> Sprite
+frameSprite list frame =
     list
         |> List.drop (truncate frame)
         |> List.head
-        |> Maybe.withDefault 0
-        |> toFloat
+        |> Maybe.map (\i -> "monster-" ++ String.fromInt i)
+        |> Maybe.withDefault "monster-0"
+        |> Sprite.sprite
 
 
 movingTransform : Direction -> Mat4
@@ -73,110 +72,51 @@ fadeTransform from to =
             Mat4.makeTranslate (vec3 -64 -64 0)
 
 
-moveOffset : Transform -> Direction -> Vec3
+moveOffset : Transform -> Direction -> ( Float, Float, Float )
 moveOffset { x, y, width, height } direction =
     case direction of
         Left ->
-            vec3 (x + width) y 2
+            ( x + width, y, 2 )
 
         Top ->
-            vec3 x (y + height) 2
+            ( x, y + height, 2 )
 
         _ ->
-            vec3 x y 2
+            ( x, y, 2 )
 
 
-fadeOffset : Transform -> Vec3
+fadeOffset : Transform -> ( Float, Float, Float )
 fadeOffset { x, y } =
-    vec3 x y 2
-
-
-type alias UniformTextured =
-    { offset : Vec3
-    , transform : Mat4
-    , texture : Texture
-    , textureSize : Vec2
-    , textureOffset : Vec2
-    , frameSize : Vec2
-    }
-
-
-type alias Varying =
-    { texturePos : Vec2 }
+    ( x, y, 2 )
 
 
 render : Texture -> Transform -> Screen -> List Entity -> List Entity
-render texture transform { state, from, to, frame } =
+render sprite transform { state, from, to, frame } =
     case state of
         Initial ->
             identity
 
         Rotating ->
             (::)
-                (WebGL.entityWith
-                    [ DepthTest.default, writeMask 0 ]
-                    texturedVertexShader
-                    texturedFragmentShader
-                    box
-                    { offset = fadeOffset transform
-                    , texture = texture
-                    , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                    , textureOffset = vec2 (64 + 10 * frameOffset fadeIn frame) 0
-                    , frameSize = vec2 10 64
-                    , transform = fadeTransform from to
-                    }
+                (Sprite.renderTransformed
+                    (frameSprite fadeIn frame)
+                    sprite
+                    (fadeTransform from to)
+                    (fadeOffset transform)
                 )
                 >> (::)
-                    (WebGL.entityWith
-                        [ DepthTest.default, writeMask 0 ]
-                        texturedVertexShader
-                        texturedFragmentShader
-                        box
-                        { offset = fadeOffset transform
-                        , texture = texture
-                        , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                        , textureOffset = vec2 (64 + 10 * frameOffset fadeOut frame) 0
-                        , frameSize = vec2 10 64
-                        , transform = fadeTransform to from
-                        }
+                    (Sprite.renderTransformed
+                        (frameSprite fadeOut frame)
+                        sprite
+                        (fadeTransform to from)
+                        (fadeOffset transform)
                     )
 
         Moving ->
             (::)
-                (WebGL.entityWith
-                    [ DepthTest.default, writeMask 0 ]
-                    texturedVertexShader
-                    texturedFragmentShader
-                    box
-                    { offset = moveOffset transform to
-                    , texture = texture
-                    , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-                    , textureOffset = vec2 (64 + 10 * frameOffset move frame) 0
-                    , frameSize = vec2 10 64
-                    , transform = movingTransform to
-                    }
+                (Sprite.renderTransformed
+                    (frameSprite move frame)
+                    sprite
+                    (movingTransform to)
+                    (moveOffset transform to)
                 )
-
-
-
--- Shaders
-
-
-texturedVertexShader : Shader View.Common.Vertex UniformTextured Varying
-texturedVertexShader =
-    [glsl|
-
-        precision mediump float;
-        attribute vec2 position;
-        uniform vec3 offset;
-        uniform vec2 frameSize;
-        uniform mat4 transform;
-        varying vec2 texturePos;
-
-        void main () {
-          vec2 clipSpace = vec2(transform * vec4(position * frameSize, 0, 1)) + offset.xy - 32.0;
-          gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
-          texturePos = position * frameSize;
-        }
-
-    |]

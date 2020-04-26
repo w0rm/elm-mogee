@@ -48,8 +48,7 @@ view model =
         , style "image-rendering" "pixelated"
         , style "-ms-interpolation-mode" "nearest-neighbor"
         ]
-        (Maybe.map3 (render model)
-            model.texture
+        (Maybe.map2 (render model)
             model.font
             model.sprite
             |> Maybe.withDefault []
@@ -65,8 +64,8 @@ toMinimap { x, y } =
     }
 
 
-render : Model -> Texture -> Texture -> Texture -> List Entity
-render model texture font sprite =
+render : Model -> Texture -> Texture -> List Entity
+render model font sprite =
     case model.state of
         Initial menu ->
             if menu.section == Menu.SlidesSection then
@@ -77,18 +76,18 @@ render model texture font sprite =
 
         Paused menu ->
             Menu.render model.sound font sprite menu
-                ++ renderGame model texture sprite
+                ++ renderGame model sprite
 
         Dead ->
             Font.render Color.white continueText font ( 12, 40, 0 )
-                :: renderGame model texture sprite
+                :: renderGame model sprite
 
         Playing ->
-            renderGame model texture sprite
+            renderGame model sprite
 
 
-renderGame : Model -> Texture -> Texture -> List Entity
-renderGame { components, systems, score, keys, lives } texture sprite =
+renderGame : Model -> Texture -> List Entity
+renderGame { components, systems, score, keys, lives } sprite =
     let
         mogeeTransform =
             Components.mogeeOffset components
@@ -128,9 +127,9 @@ renderGame { components, systems, score, keys, lives } texture sprite =
                 )
     in
     Lives.renderLives sprite ( 1, 1, 0 ) lives
-        ++ Lives.renderScore texture ( 32, 1, 0 ) (systems.currentScore + score)
+        ++ Lives.renderScore sprite ( 32, 1, 0 ) (systems.currentScore + score)
         ++ List.map dot allScr
-        ++ View.Components.render texture sprite (Keys.directions keys).x cameraOffset components []
+        ++ View.Components.render sprite (Keys.directions keys).x cameraOffset components []
 
 
 continueText : Text

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """
 Generate a texture from a bunch of sprites
-Requires Pillow (pip install Pillow)
+Requires Pillow and rectpack
 """
 import os
 import fnmatch
 from io import BytesIO
 import base64
 from PIL import Image
+from rectpack import newPacker
 
 WIDTH = 256
-HEIGHT = 512
+HEIGHT = 256
 
-TEMPLATE = """module View.SpriteData exposing (sprite, spriteSrc, textureSrc, SpriteInfo)
+TEMPLATE = """module View.SpriteData exposing (sprite, spriteSrc, SpriteInfo)
 
 import Dict exposing (Dict)
 
@@ -22,6 +23,7 @@ type alias SpriteInfo =
     , y : Float
     , w : Float
     , h : Float
+    , rotate : Int
     }
 
 
@@ -34,21 +36,16 @@ sprite =
 spriteSrc : String
 spriteSrc =
     %(sprite_src)s
-
-
-textureSrc : String
-textureSrc =
-    %(texture_src)s
 """
 
 
 def main():
     "The Main Function"
-    x_dest = 0
-    y_dest = 0
-    result_img = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
     sprites = []
-    max_height = 0
+
+    packer = newPacker()
+    packer.add_bin(WIDTH, HEIGHT)
+
     for root, _, filenames in os.walk('./sprite'):
         for filename in filenames:
             if any(fnmatch.fnmatch(filename, pattern) for pattern in ('*.gif', '*.png')):
@@ -56,18 +53,25 @@ def main():
                 img = Image.open(image_path)
                 img = img.convert('RGBA')
                 width, height = img.size
-                max_height = max(max_height, height)
                 name, _ = os.path.splitext(os.path.basename(filename))
-                if x_dest + width > WIDTH:
-                    x_dest = 0
-                    y_dest += max_height
-                    max_height = 0
-                result_img.paste(img, (x_dest, y_dest))
-                sprites.append('( "%s", SpriteInfo %d %d %d %d )' % (
-                    name, x_dest, y_dest, width, height))
-                x_dest += width
+                packer.add_rect(width, height, (name, img))
+
+    packer.pack()
+    width, height = packer[0].width, packer[0].height
+    result_img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
+    for rect in packer.rect_list():
+        _, x, y, w, h, rid = rect
+        name, img = rid
+        (imgW, imgH) = img.size
+        rotate = (w,h) != (imgW, imgH)
+        if rotate:
+            img = img.rotate(90, Image.NEAREST, expand = 1)
+        result_img.paste(img, (x, y))
+        sprites.append('( "%s", SpriteInfo %d %d %d %d %s )' % (name, x, y, imgW, imgH, int(rotate)))
+
     buff = BytesIO()
     result_img.save(buff, 'png')
+    # result_img.save("sheet.png", 'png')
     sprite_info = ""
     for idx, val in enumerate(sprites):
         if idx == 0:
@@ -79,15 +83,9 @@ def main():
     sprite_info += "        ]"
     sprite_src = "\"data:image/png;base64,%s\"" % base64.b64encode(
         buff.getvalue()).decode("utf-8")
-    buff = BytesIO()
-    texture = Image.open("texture.png")
-    texture.save(buff, 'png')
-    texture_src = "\"data:image/png;base64,%s\"" % base64.b64encode(
-        buff.getvalue()).decode("utf-8")
     with open("src/view/SpriteData.elm", "w") as elm_file:
         elm_file.write(TEMPLATE % dict(
             sprite_info=sprite_info,
-            texture_src=texture_src,
             sprite_src=sprite_src
         ))
 

@@ -3,7 +3,6 @@ module View.Common exposing
     , box
     , cropMask
     , rectangle
-    , texturedFragmentShader
     , writeMask
     )
 
@@ -14,7 +13,6 @@ import WebGL exposing (Entity, Mesh, Shader)
 import WebGL.Settings exposing (Setting)
 import WebGL.Settings.DepthTest as DepthTest
 import WebGL.Settings.StencilTest as StencilTest
-import WebGL.Texture exposing (Texture)
 
 
 type alias Vertex =
@@ -105,43 +103,6 @@ coloredFragmentShader =
 
         void main () {
           gl_FragColor = vec4(color, 1);
-        }
-
-    |]
-
-
-type alias UniformTextured a =
-    { a
-        | texture : Texture
-        , textureSize : Vec2
-        , textureOffset : Vec2
-        , frameSize : Vec2
-    }
-
-
-type alias Varying =
-    { texturePos : Vec2 }
-
-
-texturedFragmentShader : Shader {} (UniformTextured a) Varying
-texturedFragmentShader =
-    [glsl|
-
-        precision mediump float;
-        uniform sampler2D texture;
-        uniform vec2 textureSize;
-        uniform vec2 textureOffset;
-        uniform vec2 frameSize;
-        varying vec2 texturePos;
-
-        void main () {
-          vec2 pos = vec2(
-            float(int(texturePos.x) - int(texturePos.x) / int(frameSize.x) * int(frameSize.x)),
-            float(int(texturePos.y) - int(texturePos.y) / int(frameSize.y) * int(frameSize.y))
-          );
-          vec2 offset = (pos + textureOffset) / textureSize;
-          gl_FragColor = texture2D(texture, offset);
-          if (gl_FragColor.a == 0.0) discard;
         }
 
     |]

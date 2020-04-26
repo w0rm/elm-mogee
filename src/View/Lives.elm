@@ -3,35 +3,21 @@ module View.Lives exposing
     , renderScore
     )
 
-import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
-import View.Common exposing (box, texturedFragmentShader)
-import View.Sprite as Sprite exposing (Sprite)
-import WebGL exposing (Entity, Shader)
-import WebGL.Texture as Texture exposing (Texture)
-
-
-type alias UniformTextured =
-    { offset : Vec3
-    , frameSize : Vec2
-    , textureOffset : Vec2
-    , texture : Texture
-    , textureSize : Vec2
-    }
-
-
-type alias Varying =
-    { texturePos : Vec2 }
-
-
-liveSprite : Sprite
-liveSprite =
-    Sprite.sprite "life"
+import View.Sprite as Sprite
+import WebGL exposing (Entity)
+import WebGL.Texture exposing (Texture)
 
 
 renderLives : Texture -> ( Float, Float, Float ) -> Int -> List Entity
 renderLives sprite ( x, y, z ) lives =
-    List.map (\i -> Sprite.render liveSprite sprite ( x + toFloat i * 6, y, z )) (List.range 0 (lives - 1))
+    List.map
+        (\i ->
+            Sprite.render
+                (Sprite.sprite "life")
+                sprite
+                ( x + toFloat i * 6, y, z )
+        )
+        (List.range 0 (lives - 1))
 
 
 digitsList : Int -> List Int
@@ -51,7 +37,7 @@ digitsList n =
 
 
 renderScore : Texture -> ( Float, Float, Float ) -> Int -> List Entity
-renderScore texture ( x, y, z ) value =
+renderScore sprite ( x, y, z ) value =
     let
         digits =
             digitsList value |> List.reverse
@@ -63,41 +49,12 @@ renderScore texture ( x, y, z ) value =
         []
 
     else
-        List.indexedMap (renderDigit texture position) digits
+        List.indexedMap (renderDigit sprite position) digits
 
 
 renderDigit : Texture -> ( Float, Float, Float ) -> Int -> Int -> Entity
-renderDigit texture ( x, y, z ) index number =
-    WebGL.entity
-        texturedVertexShader
-        texturedFragmentShader
-        box
-        { offset = vec3 (x + toFloat index * 4) y z
-        , texture = texture
-        , textureOffset = vec2 (toFloat number * 3) 15
-        , textureSize = vec2 (toFloat (Tuple.first (Texture.size texture))) (toFloat (Tuple.second (Texture.size texture)))
-        , frameSize = vec2 3 4
-        }
-
-
-
--- Shaders
-
-
-texturedVertexShader : Shader View.Common.Vertex UniformTextured Varying
-texturedVertexShader =
-    [glsl|
-
-        precision mediump float;
-        attribute vec2 position;
-        uniform vec3 offset;
-        uniform vec2 frameSize;
-        varying vec2 texturePos;
-
-        void main () {
-            vec2 clipSpace = position * frameSize + offset.xy - 32.0;
-            gl_Position = vec4(clipSpace.x, -clipSpace.y, offset.z, 32.0);
-            texturePos = position * frameSize;
-        }
-
-    |]
+renderDigit sprite ( x, y, z ) index number =
+    Sprite.render
+        (Sprite.sprite ("score-" ++ String.fromInt number))
+        sprite
+        ( x + toFloat index * 4, y, z )

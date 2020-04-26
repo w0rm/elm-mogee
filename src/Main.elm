@@ -38,8 +38,7 @@ init : Value -> ( Model, Cmd Msg )
 init _ =
     ( Model.initial
     , Cmd.batch
-        [ Sprite.loadTexture TextureLoaded
-        , Sprite.loadSprite SpriteLoaded
+        [ Sprite.loadSprite SpriteLoaded
         , Font.load FontLoaded
         , Task.perform (\{ viewport } -> Resize (round viewport.width) (round viewport.height)) getViewport
         ]
