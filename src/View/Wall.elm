@@ -1,10 +1,10 @@
 module View.Wall exposing (render)
 
-import Components.Transform as Transform exposing (Transform)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Components.Transform exposing (Transform)
+import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector3 exposing (Vec3, vec3)
 import View.Common exposing (box, cropMask, texturedFragmentShader)
-import WebGL exposing (Entity, Mesh, Shader)
+import WebGL exposing (Entity, Shader)
 import WebGL.Settings.DepthTest as DepthTest
 import WebGL.Texture as Texture exposing (Texture)
 

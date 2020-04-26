@@ -15,8 +15,8 @@ module Components.Components exposing
 import Components.Direction as Direction exposing (Direction(..))
 import Components.Mogee as Mogee exposing (Mogee)
 import Components.Screen as Screen exposing (Screen)
-import Components.Transform as Transform exposing (Transform)
-import Components.Velocity as Velocity exposing (Velocity)
+import Components.Transform exposing (Transform)
+import Components.Velocity exposing (Velocity)
 import Components.Wall as Wall exposing (Wall)
 import Dict exposing (Dict)
 

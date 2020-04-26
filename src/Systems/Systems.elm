@@ -1,6 +1,6 @@
 module Systems.Systems exposing (Systems, initial, run)
 
-import Components.Components as Components exposing (Components)
+import Components.Components exposing (Components)
 import Systems.CurrentScore as CurrentScore exposing (CurrentScore)
 import Systems.Mogee as Mogee
 import Systems.Screens as Screens exposing (Screens)

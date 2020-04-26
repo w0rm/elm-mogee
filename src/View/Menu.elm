@@ -1,7 +1,7 @@
 module View.Menu exposing (render)
 
 import Animation exposing (Animation)
-import Components.Menu as Menu exposing (HomeItem(..), Menu, MenuItem(..), MenuSection(..), PauseItem(..))
+import Components.Menu exposing (HomeItem(..), Menu, MenuItem(..), MenuSection(..), PauseItem(..))
 import Ease
 import View.Color as Color
 import View.Font as Font exposing (Text)

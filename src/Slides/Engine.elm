@@ -31,19 +31,29 @@ type Element
 
 type alias ElementData =
     { element : Element
-    , position : { x : Float, y : Float }
+    , position :
+        { x : Float
+        , y : Float
+        }
     , events : List ElementEvent
     }
 
 
 type alias Transition =
-    { x : Float, y : Float, duration : Float }
+    { x : Float
+    , y : Float
+    , duration : Float
+    }
 
 
 type alias Engine =
     { time : Float
     , elements : Dict ElementId ElementData
-    , animations : Dict ElementId { x : Animation, y : Animation }
+    , animations :
+        Dict ElementId
+            { x : Animation
+            , y : Animation
+            }
     , nextEvents : List Event
     , prevEvents : List Event
     }
@@ -117,7 +127,7 @@ scheduleElementEvent elementId data engine =
                         engine.elements
             }
 
-        DelElement :: events ->
+        DelElement :: _ ->
             { engine | elements = Dict.remove elementId engine.elements }
 
         [] ->

@@ -1,9 +1,9 @@
 module Systems.Mogee exposing (run)
 
 import Components.Components as Components exposing (Components)
-import Components.Mogee as Mogee exposing (Mogee)
+import Components.Mogee as Mogee
 import Components.Transform as Transform exposing (Transform)
-import Components.Velocity as Velocity exposing (Velocity)
+import Components.Velocity exposing (Velocity)
 import Dict
 
 

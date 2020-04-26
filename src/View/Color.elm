@@ -1,6 +1,6 @@
 module View.Color exposing (darkBlue, darkGreen, gray, white, yellow)
 
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Math.Vector3 exposing (Vec3, vec3)
 
 
 toColor : Int -> Int -> Int -> Vec3

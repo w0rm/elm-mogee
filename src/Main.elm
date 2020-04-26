@@ -16,7 +16,7 @@ import Json.Decode as Decode exposing (Value)
 import Messages exposing (Msg(..))
 import Model exposing (Model)
 import Ports exposing (gamepad)
-import Task exposing (Task)
+import Task
 import View
 import View.Font as Font
 import View.Sprite as Sprite

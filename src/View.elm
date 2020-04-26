@@ -4,7 +4,7 @@ import Components.Components as Components
 import Components.Keys as Keys
 import Components.Menu as Menu
 import Components.Transform as Transform exposing (Transform)
-import Html exposing (Html, div)
+import Html exposing (Html)
 import Html.Attributes exposing (height, style, width)
 import Messages exposing (Msg)
 import Model exposing (GameState(..), Model)
@@ -77,18 +77,18 @@ render model texture font sprite =
 
         Paused menu ->
             Menu.render model.sound font sprite menu
-                ++ renderGame model texture font sprite
+                ++ renderGame model texture sprite
 
         Dead ->
             Font.render Color.white continueText font ( 12, 40, 0 )
-                :: renderGame model texture font sprite
+                :: renderGame model texture sprite
 
         Playing ->
-            renderGame model texture font sprite
+            renderGame model texture sprite
 
 
-renderGame : Model -> Texture -> Texture -> Texture -> List Entity
-renderGame { components, systems, score, keys, lives } texture font sprite =
+renderGame : Model -> Texture -> Texture -> List Entity
+renderGame { components, systems, score, keys, lives } texture sprite =
     let
         mogeeTransform =
             Components.mogeeOffset components

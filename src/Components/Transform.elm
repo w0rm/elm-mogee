@@ -10,7 +10,7 @@ module Components.Transform exposing
 size of each entity in the scene.
 -}
 
-import Components.Direction as Direction exposing (Direction(..))
+import Components.Direction exposing (Direction(..))
 
 
 type alias Transform =

@@ -4,10 +4,10 @@ import Components.Direction exposing (Direction(..))
 import Components.Screen exposing (AnimationState(..), Screen)
 import Components.Transform exposing (Transform)
 import Math.Matrix4 as Mat4 exposing (Mat4)
-import Math.Vector2 as Vec2 exposing (Vec2, vec2)
-import Math.Vector3 as Vec3 exposing (Vec3, vec3)
+import Math.Vector2 exposing (Vec2, vec2)
+import Math.Vector3 exposing (Vec3, vec3)
 import View.Common exposing (box, texturedFragmentShader, writeMask)
-import WebGL exposing (Entity, Mesh, Shader)
+import WebGL exposing (Entity, Shader)
 import WebGL.Settings.DepthTest as DepthTest
 import WebGL.Texture as Texture exposing (Texture)
 

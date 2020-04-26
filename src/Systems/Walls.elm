@@ -1,7 +1,7 @@
 module Systems.Walls exposing (run)
 
 import Components.Components as Components exposing (Components)
-import Components.Transform as Transform exposing (Transform)
+import Components.Transform as Transform
 
 
 {-| If a wall doesn't collide with any screen, it should be removed

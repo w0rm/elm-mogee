@@ -1,6 +1,6 @@
 module Slides.Slides exposing (initial)
 
-import Slides.Engine as Engine exposing (..)
+import Slides.Engine as Engine exposing (Engine, Event(..))
 
 
 titleSlide : List Event

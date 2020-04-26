@@ -11,7 +11,7 @@ module Components.Screen exposing
 that the map is made of.
 -}
 
-import Components.Direction as Direction exposing (Direction)
+import Components.Direction exposing (Direction)
 
 
 size : Float

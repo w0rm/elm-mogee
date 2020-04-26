@@ -7,7 +7,6 @@ module Model exposing
 
 import Browser.Events exposing (Visibility(..))
 import Components.Components as Components exposing (Components)
-import Components.Gamepad as Gamepad
 import Components.Keys as Keys exposing (Keys, codes)
 import Components.Menu as Menu exposing (Menu)
 import Messages exposing (Msg(..))
@@ -15,7 +14,7 @@ import Ports exposing (play, sound, stop)
 import Slides.Engine as Engine exposing (Engine)
 import Slides.Slides as Slides
 import Systems.Systems as Systems exposing (Systems)
-import WebGL.Texture exposing (Error, Texture)
+import WebGL.Texture exposing (Texture)
 
 
 type GameState
