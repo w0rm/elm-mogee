@@ -21,7 +21,7 @@ type AnimationState
 
 type alias Mogee =
     { elapsed : Float
-    , frames : List Float
+    , frames : List Int
     , state : AnimationState
     }
 
@@ -41,12 +41,12 @@ height =
     10
 
 
-walking : List Float
+walking : List Int
 walking =
     [ 4, 5, 5, 6 ]
 
 
-standing : List Float
+standing : List Int
 standing =
     [ 2, 1, 0, 1 ]
 

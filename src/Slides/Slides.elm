@@ -193,10 +193,17 @@ textureSlide =
     , AddSprite "textureSelection" "selection" { x = 0, y = 15 }
     , KeyPress
     , Del "textureSelection"
-    , Move "textureTexture" { x = -100, y = 0, duration = 2750 }
-    , KeyPress
-    , Del "textureTexture"
     ]
+        ++ List.map (\n -> AddSprite ("textureMonster" ++ String.fromInt n) ("monster-" ++ String.fromInt n) { x = 64 + toFloat n * 10, y = 0 })
+            (List.range 0 11)
+        ++ List.map (\n -> Move ("textureMonster" ++ String.fromInt n) { x = 64 - 70 + toFloat n * 10, y = 0, duration = 2350 })
+            (List.range 0 11)
+        ++ [ Move "textureTexture" { x = -70, y = 0, duration = 2350 }
+           , KeyPress
+           , Del "textureTexture"
+           ]
+        ++ List.map (\n -> Del ("textureMonster" ++ String.fromInt n))
+            (List.range 0 11)
 
 
 wisdomSlide : List Event

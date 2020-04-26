@@ -21,40 +21,40 @@ viewport =
 
 
 renderWalls : Texture -> Components -> List Entity -> List Entity
-renderWalls texture { walls, transforms } entities =
+renderWalls sprite { walls, transforms } entities =
     {- Query by transforms first and then inner join with walls,
        because there are less transforms than walls
     -}
     Components.foldl2
-        (\_ transform _ -> Wall.render texture transform |> (::))
+        (\_ transform _ -> Wall.render sprite transform |> (::))
         entities
         transforms
         walls
 
 
 renderMogee : Texture -> Float -> Components -> List Entity -> List Entity
-renderMogee texture directionX { mogees, transforms } entities =
+renderMogee sprite directionX { mogees, transforms } entities =
     Components.foldl2
-        (\_ -> Mogee.render texture directionX)
+        (\_ -> Mogee.render sprite directionX)
         entities
         mogees
         transforms
 
 
 renderScreens : Texture -> Components -> List Entity -> List Entity
-renderScreens texture { screens, transforms } entities =
+renderScreens sprite { screens, transforms } entities =
     Components.foldl2
         (\_ screen transform ->
             (::) (rectangle True transform 6 Color.darkGreen)
-                >> Screen.render texture transform screen
+                >> Screen.render sprite transform screen
         )
         entities
         screens
         transforms
 
 
-render : Texture -> Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
-render texture sprite directionX cameraOffset components =
+render : Texture -> Float -> ( Float, Float ) -> Components -> List Entity -> List Entity
+render sprite directionX cameraOffset components =
     let
         newComponents =
             visibleComponents cameraOffset components
@@ -62,10 +62,10 @@ render texture sprite directionX cameraOffset components =
     {- the order matters, screens must be drawn first,
        because they set the stencil buffer
     -}
-    renderWalls texture newComponents
-        >> renderMogee texture directionX newComponents
+    renderWalls sprite newComponents
+        >> renderMogee sprite directionX newComponents
         >> Mogee.renderBg sprite cameraOffset
-        >> renderScreens texture newComponents
+        >> renderScreens sprite newComponents
 
 
 {-| Offsets all transform components and filters the ones

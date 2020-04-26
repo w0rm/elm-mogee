@@ -33,7 +33,6 @@ type alias Model =
     , size : ( Int, Int )
     , padding : Int
     , sound : Bool
-    , texture : Maybe Texture
     , sprite : Maybe Texture
     , font : Maybe Texture
     , keys : Keys
@@ -51,7 +50,6 @@ initial =
     , size = ( 0, 0 )
     , padding = 0
     , sound = True
-    , texture = Nothing
     , font = Nothing
     , sprite = Nothing
     , keys = Keys.initial
@@ -92,11 +90,6 @@ update action model =
 
         GamepadChange gamepad_ ->
             ( { model | keys = Keys.gamepadChange gamepad_ model.keys }
-            , Cmd.none
-            )
-
-        TextureLoaded texture ->
-            ( { model | texture = Result.toMaybe texture }
             , Cmd.none
             )
 

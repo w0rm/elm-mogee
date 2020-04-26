@@ -148,32 +148,36 @@ updateNext : Keys -> Engine -> Engine
 updateNext keys engine =
     case engine.nextEvents of
         ((AddSprite elementId element position) as event) :: events ->
-            { engine
-                | nextEvents = events
-                , prevEvents = event :: engine.prevEvents
-                , elements = Dict.insert elementId (elementData (SpriteElement (Sprite.sprite element)) position) engine.elements
-            }
+            updateNext keys
+                { engine
+                    | nextEvents = events
+                    , prevEvents = event :: engine.prevEvents
+                    , elements = Dict.insert elementId (elementData (SpriteElement (Sprite.sprite element)) position) engine.elements
+                }
 
         ((AddText elementId element position) as event) :: events ->
-            { engine
-                | nextEvents = events
-                , prevEvents = event :: engine.prevEvents
-                , elements = Dict.insert elementId (elementData (TextElement (Font.text element)) position) engine.elements
-            }
+            updateNext keys
+                { engine
+                    | nextEvents = events
+                    , prevEvents = event :: engine.prevEvents
+                    , elements = Dict.insert elementId (elementData (TextElement (Font.text element)) position) engine.elements
+                }
 
         ((Move elementId transition) as event) :: events ->
-            { engine
-                | nextEvents = events
-                , prevEvents = event :: engine.prevEvents
-                , elements = addElementEvent elementId (MoveElement transition) engine.elements
-            }
+            updateNext keys
+                { engine
+                    | nextEvents = events
+                    , prevEvents = event :: engine.prevEvents
+                    , elements = addElementEvent elementId (MoveElement transition) engine.elements
+                }
 
         ((Del elementId) as event) :: events ->
-            { engine
-                | nextEvents = events
-                , prevEvents = event :: engine.prevEvents
-                , elements = addElementEvent elementId DelElement engine.elements
-            }
+            updateNext keys
+                { engine
+                    | nextEvents = events
+                    , prevEvents = event :: engine.prevEvents
+                    , elements = addElementEvent elementId DelElement engine.elements
+                }
 
         (KeyPress as event) :: events ->
             if Keys.pressed codes.right keys then

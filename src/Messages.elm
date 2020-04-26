@@ -11,6 +11,5 @@ type Msg
     | KeyChange Bool Int
     | GamepadChange Gamepad
     | VisibilityChange Visibility
-    | TextureLoaded (Result Error Texture)
     | SpriteLoaded (Result Error Texture)
     | FontLoaded (Result Error Texture)
